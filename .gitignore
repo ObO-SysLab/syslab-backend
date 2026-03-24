@@ -22,3 +22,23 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# --- SysLab Custom Ignored Files ---
+
+### Build Outputs ###
+/build/
+/out/
+
+### Secrets & Configs (Security!) ###
+# DB 비번, API 키 등 민감 정보가 담길 파일
+src/main/resources/application-secret.yml
+*.env
+
+### IDE Settings ###
+.idea/
+.vscode/
+*.iml
+
+### OS Files ###
+.DS_Store
+Thumbs.db
