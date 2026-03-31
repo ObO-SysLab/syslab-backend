@@ -3,8 +3,7 @@ name: Backend CI/CD
 on:
   push:
     branches:
-      - main   # 운영 배포
-      - dev    # 개발 배포 (나중에 분리 예정)
+      - main
 
 jobs:
   build-and-deploy:
