@@ -1,5 +1,6 @@
 package com.diveon.backend.global.security;
 
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,5 +49,23 @@ public class JwtProvider {
                 .expiration(new Date(now.getTime() + REFRESH_TOKEN_VALIDITY_MS))
                 .signWith(key)
                 .compact();
+    }
+
+    // 토큰 유효성 검증 (서명 + 만료 체크)
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // 토큰에서 userId 추출
+    public String getUserId(String token) {
+        return Jwts.parser().verifyWith(key).build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .getSubject();
     }
 }
