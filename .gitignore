@@ -28,6 +28,11 @@ replay_pid*
 ### Build Outputs ###
 /build/
 /out/
+# [민준 추가] 스프링 빌드 관련 상세 설정
+.gradle
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 ### Secrets & Configs (Security!) ###
 # DB 비번, API 키 등 민감 정보가 담길 파일
@@ -38,7 +43,21 @@ src/main/resources/application-secret.yml
 .idea/
 .vscode/
 *.iml
+# [민준 추가] 기타 IDE 캐시 및 설정
+*.iws
+*.ipr
+.settings
+.classpath
+.project
+bin/
+.apt_generated
+.factorypath
+.springBeans
+.sts4-cache
 
 ### OS Files ###
 .DS_Store
 Thumbs.db
+
+### Others ###
+HELP.md
