@@ -1,0 +1,19 @@
+spring:
+  # 1. 프로파일 관리: 기본 실행은 local, 민감 정보는 항상 secret 포함
+  profiles:
+    active: local
+    include: secret
+
+  application:
+    name: diveon
+
+
+# 5. 서버 및 웹소켓 공통 설정
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+  error:
+    include-message: always # Validation 실패 메시지 노출을 위해 추가
