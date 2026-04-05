@@ -1,16 +1,13 @@
-# Compiled class file
+######################################################################
+## SysLab Project Standard .gitignore
+## 작성일: 2026.04.05
+######################################################################
+
+### 1. Java & Build Tools (Gradle) ###
 *.class
-
-# Log file
 *.log
-
-# BlueJ files
 *.ctxt
-
-# Mobile Tools for Java (J2ME)
 .mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
 *.nar
@@ -18,34 +15,41 @@
 *.zip
 *.tar.gz
 *.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
 
-# --- SysLab Custom Ignored Files ---
-
-### Build Outputs ###
+# Gradle build files
+.gradle
 /build/
 /out/
-# [민준 추가] 스프링 빌드 관련 상세 설정
-.gradle
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### Secrets & Configs (Security!) ###
-# DB 비번, API 키 등 민감 정보가 담길 파일
+### 2. Secrets & Configs (CRITICAL: SECURITY) ###
+# 절대 Git에 올라가면 안 되는 민감한 설정 파일들
 src/main/resources/application-secret.yml
+src/main/resources/application-local.yml
 *.env
 
-### IDE Settings ###
+# 각자 로컬 환경이 다를 수 있는 Docker 설정
+docker-compose.yml
+
+### 3. Local Database Data ###
+# 로컬 DB의 실제 데이터가 저장되는 폴더 (용량 및 보안 문제)
+postgres_data/
+
+### 4. IDE Settings (Editor Configs) ###
+# IntelliJ
 .idea/
-.vscode/
 *.iml
-# [민준 추가] 기타 IDE 캐시 및 설정
 *.iws
 *.ipr
+
+# VS Code
+.vscode/
+
+# Eclipse & General IDE
 .settings
 .classpath
 .project
@@ -55,9 +59,8 @@ bin/
 .springBeans
 .sts4-cache
 
-### OS Files ###
+### 5. OS & Misc Files ###
 .DS_Store
 Thumbs.db
-
-### Others ###
+CLAUDE.md
 HELP.md
