@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidCredentials(
             InvalidCredentialsException ex, HttpServletRequest request) {
         ErrorResponse body = new ErrorResponse(
-                "https://diveon.com/problems/invalid-credentials",
+                "https://diveon.net/problems/invalid-credentials",
                 "Unauthorized",
                 401,
                 ex.getMessage(),
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
         ErrorResponse body = new ErrorResponse(
-                "https://diveon.com/problems/bad-request",
+                "https://diveon.net/problems/bad-request",
                 "Bad Request",
                 400,
                 "필수 파라미터가 누락되었습니다.",
