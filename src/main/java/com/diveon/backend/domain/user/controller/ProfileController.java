@@ -19,6 +19,9 @@ public class ProfileController {
         this.profileService = profileService;
     }
 
+    // GET /api/profile/show
+    // JwtFilter가 SecurityContext에 저장한 인증 정보에서 userId 추출
+    // 별도로 토큰 파싱 없이 Authentication 객체로 userId 바로 사용 가능
     @GetMapping("/show")
     public ResponseEntity<ApiResponse<ProfileShowResponse>> show(Authentication authentication) {
         String userId = authentication.getName();

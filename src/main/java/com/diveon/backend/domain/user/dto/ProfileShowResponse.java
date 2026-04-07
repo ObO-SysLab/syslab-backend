@@ -5,6 +5,8 @@ import com.diveon.backend.domain.user.entity.User;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+// GET /api/profile/show 응답 DTO
+// User 엔티티에서 필요한 정보만 골라서 클라이언트에 반환함
 public class ProfileShowResponse {
 
     private final UserInfo user_info;
@@ -27,6 +29,7 @@ public class ProfileShowResponse {
         private final String belong;
         private final String interest;
 
+        // User 엔티티를 응답 DTO로 변환
         public UserInfo(User user) {
             this.nick_name = user.getNickName();
             this.profile_img_url = user.getProfileUrl();
