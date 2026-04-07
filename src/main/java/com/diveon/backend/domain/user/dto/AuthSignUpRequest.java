@@ -21,17 +21,19 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class AuthSignUpRequest {
     //현재는 api 통신시, json의 키 값과, 사용하지 않는 변수명에 대해서만 @JsonProperty 어노테이션을 부여하였음.
     //
-    
+    @JsonProperty("email")
     private String email;
 
     @JsonProperty("user_id")
     private String userId;
 
+    @JsonProperty("password")
     private String password;
 
     @JsonProperty("nick_name")
     private String nickName;
 
+    @JsonProperty("belong")
     private String belong;
 
     @JsonProperty("interest")

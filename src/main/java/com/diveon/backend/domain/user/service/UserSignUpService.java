@@ -6,7 +6,7 @@ import com.diveon.backend.domain.user.entity.User;
 
 import com.diveon.backend.domain.user.dto.AuthSignUpRequest;
 import com.diveon.backend.domain.user.repository.UserRepository;
-import com.diveon.backend.global.exception.InvalidCredentialsException;
+// import com.diveon.backend.global.exception.InvalidCredentialsException;
 
 import org.springframework.stereotype.Service;
 
@@ -44,28 +44,42 @@ public class UserSignUpService {
     public boolean signup(AuthSignUpRequest signup_request){
 
         //사용자 엔티티를, ID를 통해서 전부 가져온다.
-        //아마 추가적인 조치가 필요할 것으로 보임(사용자가 없는순간 익셉션으로 추정됨)
-        User user = userRepository.findById(signup_request.getUserId()).orElseThrow(InvalidCredentialsException::new);
-        //이거 바로 위의 예외처리 안해주면 붉은색 오류나오는것을 보니 추가 확인 필요.
+        //existsById()를 사용하여 검색만 진행한다.
+        //현재 @NonNUll을 이용하라는 것 같음, 아마 검증이 안되는 상태 인 듯 함.
+        if(userRepository.existsById(signup_request.getUserId())){
+            //이미 존재하는 아이디 임. 따라서 해당 아이디로 신규 가입 불가능
+            return false;
+        }
 
+        //인코드를 통해서 비밀번호 암호화 진행
+        String encodedPassword = passwordEncoder.encode(signup_request.getUserPassword());
 
+        //새로운 유저 객체 생성
+        //DTO 정보에서 Entity 정보로 변경
+        // 필수값이 아닌 값들은 DTO에서 null로 넘어와도, 생성자를 통해 그대로 생성된다.
+        User newUser = new User(
+            signup_request.getUserId(),
+            encodedPassword, 
+            signup_request.getUserNickName(),
+            signup_request.getUserEmail(),
+            signup_request.getUserBelong(),
+            signup_request.getUserInterest()
+        );
+        
+
+        userRepository.save(newUser);
+        return true;
+        
         //성공 시나리오
-        //사용자 존재 확인 이후
-        // 비밀번호 암호화, passwordEncoder를 사용하면 될 듯하다 
-        //이후 나머지 usertable에 대하여, 할당하고(not NULL 컬럼에 대해서),
-        // 레포지 토리 통해서 새로운 row 삽입
-        // 이후 true 반환
+        //사용자 존재 확인 이후- 구현
+        // 비밀번호 암호화, passwordEncoder를 사용하면 될 듯하다  - 구현
+        //이후 나머지 usertable에 대하여, 할당하고(not NULL 컬럼에 대해서), - 구현
+        // 레포지 토리 통해서 새로운 row 삽입 - 구현
+        // 이후 true 반환 -구현
 
         
 
 
         //사용자 가입- 즉, 계정 생성에 있어서 문제가 없다면 true, 존재한다면 fasle
-        if(true) {
-            return true;
-        }else{
-            return false;
-        }
     }
-
-
 }
