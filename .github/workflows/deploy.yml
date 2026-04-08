@@ -40,6 +40,11 @@ jobs:
               issuer: diveon
               secret: ${{ secrets.JWT_SECRET }}
               token-validity-in-seconds: 86400
+          logging:
+            level:
+              org.springframework.web.servlet.DispatcherServlet: DEBUG
+              org.springframework.web.servlet.mvc: DEBUG
+              net.diveon.backend: DEBUG
           EOF
       # 4. Gradle 빌드
       - name: Build with Gradle
