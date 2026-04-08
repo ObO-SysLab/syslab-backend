@@ -1,5 +1,5 @@
 ######################################################################
-## SysLab Project Standard .gitignore
+## diveon Project Standard .gitignore
 ## 작성일: 2026.04.05
 ######################################################################
 
@@ -64,3 +64,4 @@ bin/
 Thumbs.db
 CLAUDE.md
 HELP.md
+
