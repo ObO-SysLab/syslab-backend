@@ -2,6 +2,8 @@ package net.diveon.backend.domain.user.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.NotBlank;
+
 
 
 /**
@@ -14,22 +16,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
     "password": "{{userPwInput}}",
     "nick_name": "{{userNicknameInpu}}",
     "belong": "{{userBelongInput}}", 
-    "interset": "{{userInterstInput}}" 
+    "interest": "{{userInterestInput}}" 
     }
  * </pre>
  */
 public class AuthSignUpRequest {
-    //현재는 api 통신시, json의 키 값과, 사용하지 않는 변수명에 대해서만 @JsonProperty 어노테이션을 부여하였음.
-    //
     @JsonProperty("email")
     private String email;
 
+    @NotBlank
     @JsonProperty("user_id")
     private String userId;
 
+    @NotBlank
     @JsonProperty("password")
     private String password;
 
+    @NotBlank
     @JsonProperty("nick_name")
     private String nickName;
 
@@ -39,25 +42,56 @@ public class AuthSignUpRequest {
     @JsonProperty("interest")
     private String interest;
 
+    // 수정사항, JavaBeans 표준규격에 맞도록, 생성자, getter와 setter 수정
+    // Default constructor for JavaBeans and Jackson
+    public AuthSignUpRequest() {}
 
-    // 아래는 데이터를 확인하기 위한 getter 메서드 들
-    public String getUserId(){
-        return this.userId;
-    }
-    public String getUserPassword(){
-        return this.password;
-    }
-    public String getUserNickName(){
-        return this.nickName;
-    }
-    public String getUserBelong(){
-        return this.belong;
-    }
-    public String getUserInterest(){
-        return this.interest;
-    }
-    public String getUserEmail(){
-        return this.email;
+    // Getters and Setters
+    public String getEmail() {
+        return email;
     }
 
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getNickName() {
+        return nickName;
+    }
+
+    public void setNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public String getBelong() {
+        return belong;
+    }
+
+    public void setBelong(String belong) {
+        this.belong = belong;
+    }
+
+    public String getInterest() {
+        return interest;
+    }
+
+    public void setInterest(String interest) {
+        this.interest = interest;
+    }
 }
