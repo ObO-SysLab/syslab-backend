@@ -52,18 +52,20 @@ public class UserSignUpService {
         }
 
         //인코드를 통해서 비밀번호 암호화 진행
-        String encodedPassword = passwordEncoder.encode(signup_request.getUserPassword());
+        //수정사항 04.08 dto 변경되면서, getter 메서드 변화로 인한 수정
+        String encodedPassword = passwordEncoder.encode(signup_request.getPassword());
 
         //새로운 유저 객체 생성
         //DTO 정보에서 Entity 정보로 변경
         // 필수값이 아닌 값들은 DTO에서 null로 넘어와도, 생성자를 통해 그대로 생성된다.
+        //수정사항 04.08 dto가 변경되면서 수정
         User newUser = new User(
             signup_request.getUserId(),
             encodedPassword, 
-            signup_request.getUserNickName(),
-            signup_request.getUserEmail(),
-            signup_request.getUserBelong(),
-            signup_request.getUserInterest()
+            signup_request.getNickName(),
+            signup_request.getEmail(),
+            signup_request.getBelong(),
+            signup_request.getInterest()
         );
         
 
