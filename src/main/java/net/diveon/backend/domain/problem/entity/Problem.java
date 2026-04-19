@@ -1,0 +1,97 @@
+package net.diveon.backend.domain.problem.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.FetchType;
+
+import net.diveon.backend.domain.user.entity.User;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+
+@Entity
+@Table(name = "problem_summary")
+public class Problem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Long id;
+
+    // 출제자 정보를 담는 외래키 (유저 엔티티의 ID 타입이 String이므로 매핑 시 주의)
+    // 참고로 referencedColumnName 속성 지정안해주면, 해당 엔티티(테이블)의 pk로자동매핑
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
+
+    @Column(name = "type", length = 20, nullable = false)
+    private String type; // objective / coding / practice
+
+    @Column(name = "title", length = 200, nullable = false)
+    private String title;
+
+    @Column(name = "category", length = 50, nullable = false)
+    private String category;
+
+    @Column(name = "difficulty", length = 10, nullable = false)
+    private String difficulty; // easy / medium / hard
+
+    @Column(name = "visibility", length = 10, nullable = false)
+    private String visibility; // public / private / group
+
+    @Column(name = "solved_count", nullable = false)
+    private Integer solvedCount = 0; // 객체 생성시에 바로 0으로 되도록, 가능하면 생성자 통해서 하세용
+
+    @Column(name = "submitted_count", nullable = false)
+    private Integer submittedCount = 0; //// 객체 생성시에 바로 0으로 되도록, 가능하면 생성자 통해서 하세용
+
+    // @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    // 1. JPA를 위한 기본 생성자 (필수)
+    public Problem() {
+    }
+
+    // 2. 문제 생성을 위한 생성자
+    public Problem(User author, String type, String title, String category, 
+                   String difficulty, String visibility) {
+        this.author = author;
+        this.type = type;
+        this.title = title;
+        this.category = category;
+        this.difficulty = difficulty;
+        this.visibility = visibility;
+        this.solvedCount = 0; // 초기값 0
+        this.submittedCount = 0; // 초기값 0
+        this.createdAt = LocalDateTime.now(); // 생성 시간 기록
+    }
+
+    // 3. Getter 메서드들 (롬복 @Getter 대체)
+    public Long getId() { return id; }
+    public User getAuthor() { return author; }
+    public String getType() { return type; }
+    public String getTitle() { return title; }
+    public String getCategory() { return category; }
+    public String getDifficulty() { return difficulty; }
+    public String getVisibility() { return visibility; }
+    public Integer getSolvedCount() { return solvedCount; }
+    public Integer getSubmittedCount() { return submittedCount; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+
+    // 4. 비즈니스 로직 (Setter 대신 의미 있는 메서드 사용)
+    public void incrementSubmittedCount() {
+        this.submittedCount++;
+    }
+
+    public void incrementSolvedCount() {
+        this.solvedCount++;
+    }
+}
