@@ -2,8 +2,8 @@ package net.diveon.backend.domain.problem.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import net.diveon.backend.domain.problem.entity.ProblemObjective;
+import net.diveon.backend.domain.problem.entity.Problem;
 
-public interface ProblemRepository extends JpaRepository<ProblemObjective, Long> {
+public interface ProblemRepository extends JpaRepository<Problem, Long> {
     
 }

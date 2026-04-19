@@ -26,6 +26,7 @@ public class Problem {
     private Long id;
 
     // 출제자 정보를 담는 외래키 (유저 엔티티의 ID 타입이 String이므로 매핑 시 주의)
+    // 참고로 referencedColumnName 속성 지정안해주면, 해당 엔티티(테이블)의 pk로자동매핑
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
