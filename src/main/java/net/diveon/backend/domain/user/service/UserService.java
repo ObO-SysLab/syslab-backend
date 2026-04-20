@@ -24,7 +24,7 @@ public class UserService {
 
     public AuthLoginResponse login(AuthLoginRequest request) {
         // 아이디로 유저 조회, 없으면 401
-        User user = userRepository.findById(request.getUser_id())
+        User user = userRepository.findByUserId(request.getUser_id())
                 .orElseThrow(InvalidCredentialsException::new);
 
         // 비밀번호 검증 (BCrypt), 불일치 시 401
@@ -33,13 +33,13 @@ public class UserService {
         }
 
         // JWT access/refresh 토큰 발급
-        String accessToken = jwtProvider.generateAccessToken(user.getId());
-        String refreshToken = jwtProvider.generateRefreshToken(user.getId());
+        String accessToken = jwtProvider.generateAccessToken(String.valueOf(user.getId()));
+        String refreshToken = jwtProvider.generateRefreshToken(String.valueOf(user.getId()));
 
         // 응답 데이터 구성 (토큰 + 유저 기본 정보)
         AuthLoginResponse.UserInfo userInfo = new AuthLoginResponse.UserInfo(
-                user.getNickName(),
-                user.getProfileUrl()
+                user.getNickname(),
+                user.getProfileImgUrl()
         );
 
         return new AuthLoginResponse(accessToken, refreshToken, userInfo);

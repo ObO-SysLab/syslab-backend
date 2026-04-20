@@ -60,7 +60,7 @@ public class UserSignUpService {
         String encodedPassword = passwordEncoder.encode(signup_request.getPassword());
 
         // 만약 아이디가 존재한다면, exception 발생
-        if(userRepository.existsById(userId)){
+        if(userRepository.existsByUserId(userId)){
             //이미 존재하는 아이디 임. 따라서 해당 아이디로 신규 가입 불가능
             throw new UserAlreadyExistException();
         }

@@ -2,8 +2,8 @@ package net.diveon.backend.domain.user.dto;
 
 import net.diveon.backend.domain.user.entity.User;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 // GET /api/profile/show 응답 DTO
 // User 엔티티에서 필요한 정보만 골라서 클라이언트에 반환함
@@ -22,7 +22,7 @@ public class ProfileShowResponse {
         private final String profile_img_url;
         private final String self_comment;
         private final String real_name;
-        private final LocalTime birth_date;
+        private final LocalDate birth_date;
         private final LocalDateTime created_at;
         private final String email;
         private final String phone_number;
@@ -31,8 +31,8 @@ public class ProfileShowResponse {
 
         // User 엔티티를 응답 DTO로 변환
         public UserInfo(User user) {
-            this.nick_name = user.getNickName();
-            this.profile_img_url = user.getProfileUrl();
+            this.nick_name = user.getNickname();
+            this.profile_img_url = user.getProfileImgUrl();
             this.self_comment = user.getComment();
             this.real_name = user.getRealName();
             this.birth_date = user.getBirthday();
@@ -47,7 +47,7 @@ public class ProfileShowResponse {
         public String getProfile_img_url() { return profile_img_url; }
         public String getSelf_comment() { return self_comment; }
         public String getReal_name() { return real_name; }
-        public LocalTime getBirth_date() { return birth_date; }
+        public LocalDate getBirth_date() { return birth_date; }
         public LocalDateTime getCreated_at() { return created_at; }
         public String getEmail() { return email; }
         public String getPhone_number() { return phone_number; }
