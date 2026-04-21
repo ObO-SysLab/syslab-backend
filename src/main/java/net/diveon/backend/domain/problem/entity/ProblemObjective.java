@@ -76,4 +76,28 @@ public class ProblemObjective {
     public List<Integer> getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
     public List<ForDtoOboStep> getOboSteps() { return oboSteps; }
+    /**
+     * <pre>
+     * 수정-추가 안상완
+     * 일자: 2024-04-21
+     * 목적: 업데이트용 함수 필요
+     * 내용: 변경 가능 목록에 대해서, null이 아닌경우 변경 진행
+     * 변경 가능 내용: Spring에서 타입, DB에서 타입
+     * - summary; String, TEXT
+     * - description; String, TEXT
+     * - choices; List<Choice>, JSONB
+     * - answer; List<Integer>, JSON
+     * - oboEnabled; boolean, ???
+     * - oboSteps; List<OboStep>, JSONB
+     * </pre>
+     */
+    public void updateProblemObjective(String summary, String description,
+        List<ForDtoChoice> choices, List<Integer> answer, Boolean oboEnabled, List<ForDtoOboStep> oboSteps){
+            if(summary != null) this.summary = summary;
+            if(description != null)this.description = description;
+            if(choices != null)this.choices = choices;
+            if(answer != null)this.answer = answer;
+            if(oboEnabled != null)this.oboEnabled = oboEnabled;
+            if(oboSteps != null) this.oboSteps = oboSteps;
+    }
 }

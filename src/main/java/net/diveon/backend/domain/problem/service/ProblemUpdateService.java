@@ -1,5 +1,8 @@
 package net.diveon.backend.domain.problem.service;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdateObjectiveResponse;
@@ -9,6 +12,8 @@ import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 
+
+@Service
 public class ProblemUpdateService {
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
@@ -23,82 +28,22 @@ public class ProblemUpdateService {
         }
 
     
-    public ProblemUpdateObjectiveResponse updateProblemObjective(String userId, long prodId, 
+    @Transactional
+    public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId, 
         ProblemUpdateObjectiveRequest request){
             Problem problem = problemRepository.findById(prodId).orElseThrow();
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
 
-            //Problem entitiy 수정
-            if(request.getTitle() != null){
+            problem.updateProblem(request.getTitle(), request.getDifficulty(), request.getVisibility());
 
-            }
-            if(request.getCategory() != null){
-
-            }
-            if(request.getDifficulty() != null){
-
-            }
-            if(request.getVisibility() != null){
-
-            }
-
-            // ProblemObjective Entity 수정
-            if(request.getTitle() != null){
-
-            }
-            if(request.getDescription() != null){
-
-            }
-            if (request.getChoices() != null) {
-                
-            }
-            if (request.getAnswer() != null) {
-                
-            }            
-            Boolean oboEnabled = request.getObo() != null ? request.getObo().getEnabled() : false; 
-               
-            if((request.getObo() != null ? request.getObo().getSteps() : null)  != null){
-
-            }
-
-                // oboEnabled,
-                // request.getObo() != null ? request.getObo().getSteps() : null
-
-        //             User author = userRepository.findById(userId)
-        //         .orElseThrow();
-
-        // Problem problem = new Problem(
-        //         author,
-        //         "objective",
-        //         request.getTitle(),
-        //         request.getCategory(),
-        //         request.getDifficulty(),
-        //         request.getVisibility()
-        // );
-        // Problem savedProblem = problemRepository.save(problem);
-
-        // Boolean oboEnabled = request.getObo() != null ? request.getObo().getEnabled() : false;
-        // ProblemObjective problemObjective = new ProblemObjective(
-        //         savedProblem,
-        //         request.getTitle(), // 요놈은 summary인데 없어서 일단 가정으로 추가함.
-        //         request.getDescription(),
-        //         request.getChoices(),
-        //         request.getAnswer(),
-        //         oboEnabled,
-        //         request.getObo() != null ? request.getObo().getSteps() : null
-        // );
-        // problemObjectiveRepository.save(problemObjective);
-
-        // return new ProblemCreateObjectiveResponse(
-        //         savedProblem.getId(),
-        //         savedProblem.getType(),
-        //         savedProblem.getTitle(), 
-        //         savedProblem.getCreatedAt().toString()
-        // );
+            // 여기서 request.getObo().getEnabled() 으로 넣는데, 이때 null 이면 null.getEnabled() 라고되어서 문제 생김 나중에 수정이 필요함.
+            problemObjective.updateProblemObjective(request.getTitle(), request.getDescription(), 
+            request.getChoices(), request.getAnswer(), 
+            null, null);
 
 
-            return new ProblemUpdateObjectiveResponse(prodId, "type", "title", "updatedat");
+            return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
     }
 
     
