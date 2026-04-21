@@ -25,14 +25,14 @@ public class ProblemUpdateController {
 
 
     @PatchMapping("/{prob_id}")
-    public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(@AuthenticationPrincipal long userId, 
+    public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(@AuthenticationPrincipal String userId, 
         @RequestBody ProblemUpdateObjectiveRequest request,
-        @PathVariable long probId){
+        @PathVariable("prob_id") long probId){
 
 
             ProblemUpdateObjectiveResponse responseData = new ProblemUpdateObjectiveResponse();
             
-            responseData = problemUpdateService.updateProblemObjective(String.valueOf(userId), probId, request);
+            responseData = problemUpdateService.updateProblemObjective(Long.parseLong(userId), probId, request);
             // 요아래 대충이라 수정필요함 2024.04.21  - 안상완
             //TODO 실제로 응답 body의 data 부분 객체 할당, 이후 응답 제대로 만들기
             

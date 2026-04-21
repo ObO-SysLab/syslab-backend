@@ -76,7 +76,6 @@ public class ProblemObjective {
     public List<Integer> getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
     public List<ForDtoOboStep> getOboSteps() { return oboSteps; }
-
     /**
      * <pre>
      * 수정-추가 안상완
@@ -93,7 +92,7 @@ public class ProblemObjective {
      * </pre>
      */
     public void updateProblemObjective(String summary, String description,
-        List<Choice> choices, List<Integer> answer, Boolean oboEnabled, List<OboStep> oboSteps){
+        List<ForDtoChoice> choices, List<Integer> answer, Boolean oboEnabled, List<ForDtoOboStep> oboSteps){
             if(summary != null) this.summary = summary;
             if(description != null)this.description = description;
             if(choices != null)this.choices = choices;
@@ -101,5 +100,4 @@ public class ProblemObjective {
             if(oboEnabled != null)this.oboEnabled = oboEnabled;
             if(oboSteps != null) this.oboSteps = oboSteps;
     }
-    public List<ForDtoOboStep> getOboSteps() { return oboSteps; }
 }

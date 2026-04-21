@@ -90,7 +90,7 @@ public class Problem {
     public Integer getSolvedCount() { return solvedCount; }
     public Integer getSubmittedCount() { return submittedCount; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-
+    public LocalDateTime getUpatedAt() { return updatedAt; }
     // 4. 비즈니스 로직 (Setter 대신 의미 있는 메서드 사용)
     public void incrementSubmittedCount() {
         this.submittedCount++;
