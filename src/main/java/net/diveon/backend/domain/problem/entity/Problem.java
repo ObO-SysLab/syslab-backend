@@ -43,8 +43,9 @@ public class Problem {
     @Column(name = "difficulty", length = 10, nullable = false)
     private String difficulty; // easy / medium / hard
 
+    //변수명 오타, 수정해야함.
     @Column(name = "visibility", length = 10, nullable = false)
-    private String visibility; // public / private / group
+    private String visibility; // public / private / group 
 
     @Column(name = "solved_count", nullable = false)
     private Integer solvedCount = 0; // 객체 생성시에 바로 0으로 되도록, 가능하면 생성자 통해서 하세용
@@ -97,5 +98,27 @@ public class Problem {
 
     public void incrementSolvedCount() {
         this.solvedCount++;
+    }
+    
+    /**
+     * <pre>
+     * 수정-추가- 안상완
+     * 2024-04-21
+     * 
+     * 추가 목적
+     * update용 함수 
+     * 
+     * 변경 가능한 요소
+     * title, difficulty, visibillity
+     * 
+     * 내용
+     * null 이 아닌 값에 대해서만 변경을 진행함.
+     * </pre>
+     */
+    public void updateProblem(String title, String difficulty, String visibillity){
+        if( title != null) this.title = title;
+        if( difficulty != null) this.difficulty = difficulty;
+        if( visibillity != null) this.visibility = visibillity;
+        this.updatedAt = LocalDateTime.now();
     }
 }
