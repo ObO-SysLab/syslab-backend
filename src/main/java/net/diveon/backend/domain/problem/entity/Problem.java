@@ -53,8 +53,11 @@ public class Problem {
     private Integer submittedCount = 0; //// 객체 생성시에 바로 0으로 되도록, 가능하면 생성자 통해서 하세용
 
     // @CreationTimestamp
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
+    private LocalDateTime updatedAt;
 
     // 1. JPA를 위한 기본 생성자 (필수)
     public Problem() {
@@ -72,6 +75,7 @@ public class Problem {
         this.solvedCount = 0; // 초기값 0
         this.submittedCount = 0; // 초기값 0
         this.createdAt = LocalDateTime.now(); // 생성 시간 기록
+        this.updatedAt = this.createdAt;
     }
 
     // 3. Getter 메서드들 (롬복 @Getter 대체)
