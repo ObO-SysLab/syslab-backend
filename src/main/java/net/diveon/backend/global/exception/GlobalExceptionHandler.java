@@ -57,15 +57,57 @@ public class GlobalExceptionHandler {
 
         // 409 Conflict: 서버의 현재 상태와 요청이 충돌할 때 사용합니다. (예: 중복된 아이디 가입)
         @ExceptionHandler(UserAlreadyExistException.class)
-        public ResponseEntity<ErrorResponse> handleUserAlreadyExist( 
+        public ResponseEntity<ErrorResponse> handleUserAlreadyExist(
                 UserAlreadyExistException ex, HttpServletRequest request) {
                 ErrorResponse body = new ErrorResponse(
-                        "https://diveon.net/problems/conflict/user-already-exist", 
+                        "https://diveon.net/problems/conflict/user-already-exist",
                         "Conflict",
                         409,
                         ex.getMessage(),
                         request.getRequestURI()
                 );
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 문제를 찾을 수 없음 → 404
+        @ExceptionHandler(ProblemNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleProblemNotFound(
+                ProblemNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/problem-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 유효하지 않은 문제 유형 → 400
+        @ExceptionHandler(InvalidProblemTypeException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidProblemType(
+                InvalidProblemTypeException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-problem-type",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
+        // 유효하지 않은 테스트케이스 → 422
+        @ExceptionHandler(InvalidTestCaseException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidTestCase(
+                InvalidTestCaseException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-testcase",
+                        "Unprocessable Entity",
+                        422,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
         }
 }
