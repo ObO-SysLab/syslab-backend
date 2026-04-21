@@ -1,29 +1,35 @@
 package net.diveon.backend.domain.problem.controller;
 
+import net.diveon.backend.domain.problem.service.ProblemDeleteService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemDeleteResponse;
 import net.diveon.backend.domain.problem.service.ProblemCreateService;
 import net.diveon.backend.global.response.ApiResponse;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import net.diveon.backend.global.response.ApiResponse;
+
 
 @RestController
 @RequestMapping("/api/problems")
 public class ProblemCreateController {
     
+    private final ProblemDeleteService problemDeleteService;
     private final ProblemCreateService problemCreateService;
 
-    public ProblemCreateController(ProblemCreateService problemCreateService){
+    public ProblemCreateController(ProblemCreateService problemCreateService, ProblemDeleteService problemDeleteService){
         this.problemCreateService = problemCreateService;
+        this.problemDeleteService = problemDeleteService;
     }
 
     /**
@@ -47,4 +53,14 @@ public class ProblemCreateController {
         return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
     
+    // DELETE
+    //DELETE /api/problems/{prob_id} 
+    @DeleteMapping("/{prob_id}")
+    public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long prob_id,
+        @AuthenticationPrincipal String userId){
+
+            // responseBody = problemDeleteService
+            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblemObjective(userId, prob_id);
+            return ResponseEntity.status(200).body(ApiResponse.success("문제가 삭제되었습니다.", problemDeleteResponse));
+        }
 }
