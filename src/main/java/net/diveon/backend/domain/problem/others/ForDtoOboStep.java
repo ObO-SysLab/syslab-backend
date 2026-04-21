@@ -2,7 +2,7 @@ package net.diveon.backend.domain.problem.others;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class OboStep {
+public class ForDtoOboStep {
 
     private Integer step;
     private String description;
@@ -10,10 +10,10 @@ public class OboStep {
     @JsonProperty("image_url")
     private String imageUrl;
 
-    public OboStep() {
+    public ForDtoOboStep() {
     }
 
-    public OboStep(Integer step, String description, String imageUrl) {
+    public ForDtoOboStep(Integer step, String description, String imageUrl) {
         this.step = step;
         this.description = description;
         this.imageUrl = imageUrl;

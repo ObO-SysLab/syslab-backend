@@ -2,7 +2,7 @@ package net.diveon.backend.domain.problem.others;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Choice {
+public class ForDtoChoice {
 
     private Integer index;
     private String content;
@@ -10,10 +10,10 @@ public class Choice {
     @JsonProperty("image_url")
     private String imageUrl;
 
-    public Choice() {
+    public ForDtoChoice() {
     }
 
-    public Choice(Integer index, String content, String imageUrl) {
+    public ForDtoChoice(Integer index, String content, String imageUrl) {
         this.index = index;
         this.content = content;
         this.imageUrl = imageUrl;
