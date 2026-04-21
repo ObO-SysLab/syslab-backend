@@ -4,8 +4,8 @@ package net.diveon.backend.domain.problem.entity;
 // 이거는 세부적으로 나누는게 좋을 듯합니다, 일단 구현에 먼저 의미를 두어서 그냥 했습니다. - 안상완
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import net.diveon.backend.domain.problem.others.Choice;
-import net.diveon.backend.domain.problem.others.OboStep;
+import net.diveon.backend.domain.problem.others.ForDtoChoice;
+import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 import org.hibernate.annotations.Type;
 
 import java.util.List;
@@ -37,7 +37,7 @@ public class ProblemObjective {
     // Hypersistence Utils를 사용해서 List<Choice>를 PostgreSQL JSONB에 그대로 매핑합니다.
     @Type(JsonType.class)
     @Column(name = "choices", columnDefinition = "JSONB", nullable = false)
-    private List<Choice> choices;
+    private List<ForDtoChoice> choices;
 
     @Type(JsonType.class)
     @Column(name = "answer", columnDefinition = "JSON", nullable = false)
@@ -48,7 +48,7 @@ public class ProblemObjective {
 
     @Type(JsonType.class)
     @Column(name = "obo_steps", columnDefinition = "JSONB")
-    private List<OboStep> oboSteps;
+    private List<ForDtoOboStep> oboSteps;
 
     // 1. JPA용 기본 생성자
     public ProblemObjective() {
@@ -56,8 +56,8 @@ public class ProblemObjective {
 
     // 2. 데이터 생성을 위한 생성자
     public ProblemObjective(Problem problem, String summary, String description, 
-                            List<Choice> choices, List<Integer> answer,
-                            Boolean oboEnabled, List<OboStep> oboSteps) {
+                            List<ForDtoChoice> choices, List<Integer> answer,
+                            Boolean oboEnabled, List<ForDtoOboStep> oboSteps) {
         this.problem = problem;
         this.summary = summary;
         this.description = description;
@@ -72,8 +72,8 @@ public class ProblemObjective {
     public Problem getProblem() { return problem; }
     public String getSummary() { return summary; }
     public String getDescription() { return description; }
-    public List<Choice> getChoices() { return choices; }
+    public List<ForDtoChoice> getChoices() { return choices; }
     public List<Integer> getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
-    public List<OboStep> getOboSteps() { return oboSteps; }
+    public List<ForDtoOboStep> getOboSteps() { return oboSteps; }
 }

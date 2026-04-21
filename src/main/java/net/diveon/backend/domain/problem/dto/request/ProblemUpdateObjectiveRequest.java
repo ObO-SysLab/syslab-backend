@@ -1,8 +1,8 @@
 
 package net.diveon.backend.domain.problem.dto.request;
 
-import net.diveon.backend.domain.problem.others.Choice;
-import net.diveon.backend.domain.problem.others.OboStep;
+import net.diveon.backend.domain.problem.others.ForDtoChoice;
+import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 
 import java.util.List;
 
@@ -48,7 +48,7 @@ public class ProblemUpdateObjectiveRequest {
     private String category;
     private String difficulty;
     private String visibility;
-    private List<Choice> choices;
+    private List<ForDtoChoice> choices;
     private List<Integer> answer;
     private Obo obo;
 
@@ -95,11 +95,11 @@ public class ProblemUpdateObjectiveRequest {
         this.visibility = visibility;
     }
 
-    public List<Choice> getChoices() {
+    public List<ForDtoChoice> getChoices() {
         return choices;
     }
 
-    public void setChoices(List<Choice> choices) {
+    public void setChoices(List<ForDtoChoice> choices) {
         this.choices = choices;
     }
 
@@ -121,7 +121,7 @@ public class ProblemUpdateObjectiveRequest {
 
     public static class Obo {
         private Boolean enabled;
-        private List<OboStep> steps;
+        private List<ForDtoOboStep> steps;
 
         public Obo() {
         }
@@ -134,11 +134,11 @@ public class ProblemUpdateObjectiveRequest {
             this.enabled = enabled;
         }
 
-        public List<OboStep> getSteps() {
+        public List<ForDtoOboStep> getSteps() {
             return steps;
         }
 
-        public void setSteps(List<OboStep> steps) {
+        public void setSteps(List<ForDtoOboStep> steps) {
             this.steps = steps;
         }
     }
