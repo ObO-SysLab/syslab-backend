@@ -2,20 +2,25 @@ package net.diveon.backend.domain.user.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
-// domain_user 테이블과 매핑되는 엔티티
 @Entity
 @Table(name = "domain_user")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private String id;
+    private Long id;
+
+    @Column(name = "user_id", unique = true, nullable = false, length = 50)
+    private String userId;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -23,17 +28,17 @@ public class User {
     @Column(name = "real_name")
     private String realName;
 
-    @Column(name = "nick_name", nullable = false)
-    private String nickName;
+    @Column(name = "nickname", unique = true, nullable = false, length = 50)
+    private String nickname;
 
-    @Column(name = "profile_url")
-    private String profileUrl;
+    @Column(name = "profile_img_url", length = 500)
+    private String profileImgUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "birthday")
-    private LocalTime birthday;
+    private LocalDate birthday;
 
     @Column(name = "email")
     private String email;
@@ -45,7 +50,10 @@ public class User {
     private String comment;
 
     @Column(name = "tier", nullable = false)
-    private Short tier;
+    private Integer tier;
+
+    @Column(name = "score", nullable = false)
+    private Integer score;
 
     @Column(name = "sex", length = 1)
     private String sex;
@@ -56,37 +64,33 @@ public class User {
     @Column(name = "interest")
     private String interest;
 
-    //수정 시작 - 안상완 2026.04.07 - 
-    //유저 정보를 레포지토리에 저장하기 위한 새로운 생성자
-    // 및 기존 JPA를 이용하는 코드를 유지하기 위한 기본 생성자 생성
-    //JPA 의존성을 이용하기 위한, 기본 생성자
-    public User() {};
-    
-    // 회원가입용 생성자
-    //
-    public User(String id, String password, String nickName, String email, String belong, String interest) {
-        this.id = id;
-        this.password = password; // 주의: 실제 서비스에선 암호화 필수!
-        this.nickName = nickName;
+    public User() {}
+
+    public User(String userId, String password, String nickname, String email, String belong, String interest) {
+        this.userId = userId;
+        this.password = password;
+        this.nickname = nickname;
         this.email = email;
         this.belong = belong;
         this.interest = interest;
-        this.createdAt = LocalDateTime.now(); // 가입 시간 설정
-        this.tier = 1; // 기본 티어 설정
+        this.createdAt = LocalDateTime.now();
+        this.tier = 0;
+        this.score = 0;
     }
-     //수정 종료 - 안상완 2026.04.07 - 
-     
-    public String getId() { return id; }
+
+    public Long getId() { return id; }
+    public String getUserId() { return userId; }
     public String getPassword() { return password; }
     public String getRealName() { return realName; }
-    public String getNickName() { return nickName; }
-    public String getProfileUrl() { return profileUrl; }
+    public String getNickname() { return nickname; }
+    public String getProfileImgUrl() { return profileImgUrl; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalTime getBirthday() { return birthday; }
+    public LocalDate getBirthday() { return birthday; }
     public String getEmail() { return email; }
     public String getPhoneNumber() { return phoneNumber; }
     public String getComment() { return comment; }
-    public Short getTier() { return tier; }
+    public Integer getTier() { return tier; }
+    public Integer getScore() { return score; }
     public String getSex() { return sex; }
     public String getBelong() { return belong; }
     public String getInterest() { return interest; }

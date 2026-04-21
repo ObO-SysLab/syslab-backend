@@ -28,7 +28,7 @@ public class ProblemCreateService {
 
     @Transactional
     public ProblemCreateObjectiveResponse createObjective(ProblemCreateObjectiveRequest request, String userId){
-        User author = userRepository.findById(userId)
+        User author = userRepository.findById(Long.parseLong(userId))
                 .orElseThrow();
 
         Problem problem = new Problem(

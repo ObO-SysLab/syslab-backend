@@ -19,7 +19,7 @@ public class ProfileService {
     // userId로 유저 조회 후 ProfileShowResponse로 변환하여 반환
     // 유저가 없으면 UserNotFoundException → 404
     public ProfileShowResponse getProfile(String userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findById(Long.parseLong(userId))
                 .orElseThrow(UserNotFoundException::new);
 
         return new ProfileShowResponse(new ProfileShowResponse.UserInfo(user));
