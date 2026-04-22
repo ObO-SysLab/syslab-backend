@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.problem.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -26,11 +27,13 @@ public class ProblemCreatePracticeRequest {
     private String visibility;
 
     @NotNull
+    @JsonProperty("vm_config")
     private VmConfig vmConfig;
 
     @NotBlank
     private String flag;
 
+    @JsonProperty("docker_file_url")
     private String dockerFileUrl;
 
     public ProblemCreatePracticeRequest() {
@@ -66,12 +69,16 @@ public class ProblemCreatePracticeRequest {
     public static class VmConfig {
 
         @NotBlank
+        @JsonProperty("os_image")
         private String osImage;
 
+        @JsonProperty("allowed_commands")
         private List<String> allowedCommands;
 
+        @JsonProperty("cpu_limit")
         private String cpuLimit = "0.5";
 
+        @JsonProperty("memory_limit")
         private String memoryLimit = "512m";
 
         public VmConfig() {

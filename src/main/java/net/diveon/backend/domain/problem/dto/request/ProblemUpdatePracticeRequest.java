@@ -1,5 +1,7 @@
 package net.diveon.backend.domain.problem.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class ProblemUpdatePracticeRequest {
@@ -10,8 +12,13 @@ public class ProblemUpdatePracticeRequest {
     private String category;
     private String difficulty;
     private String visibility;
+
+    @JsonProperty("vm_config")
     private VmConfig vmConfig;
+
     private String flag;
+
+    @JsonProperty("docker_file_url")
     private String dockerFileUrl;
 
     public ProblemUpdatePracticeRequest() {
@@ -46,9 +53,16 @@ public class ProblemUpdatePracticeRequest {
 
     public static class VmConfig {
 
+        @JsonProperty("os_image")
         private String osImage;
+
+        @JsonProperty("allowed_commands")
         private List<String> allowedCommands;
+
+        @JsonProperty("cpu_limit")
         private String cpuLimit;
+
+        @JsonProperty("memory_limit")
         private String memoryLimit;
 
         public VmConfig() {
