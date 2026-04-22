@@ -7,6 +7,7 @@ import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 
 /**
@@ -45,10 +46,25 @@ public class ProblemDeleteService {
     }
 
 
-    public ProblemDeleteResponse deleteProblemObjective(String userId, Long prodId){
-        Problem problem = problemRepository.findById(prodId).orElseThrow();
-        ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
+    public ProblemDeleteResponse deleteProblemObjective(String userId, long prodId){
+
+        // // 아래 코드는 검증을 좀더 깔끔한 방식으로 할 수 있다면 좋을듯. 
+        // problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
+        // problemObjectiveRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
+
+
+        if(problemRepository.existsById(prodId)){
+            throw new ProblemNotFoundException("문제 전체 중" + prodId +"번에 해당하는 문제 자체가 존재하지 않습니다.");
+        }
+        if(problemObjectiveRepository.existsById(prodId)){
+            throw new ProblemNotFoundException("객관식 문제 중" + prodId +"번에 해당하는 문제 자체가 존재하지 않습니다.");
+        }
         
+        //아래는 다른 방식으로, 예외시 기본 생성자 말고, 다른 생성자를 사용할 수 있는 방법.
+        // Problem problem = problemRepository.findById(prodId)
+        //     .orElseThrow(() -> new ProblemNotFoundException("ID " + prodId + "번에 해당하는 문제를 찾을 수 없습니다."));
+
+        // 널값에 대항할 수 있는 로직이 필요하다. 만약 long 이 아니라 Long 을 쓴다면.
         problemObjectiveRepository.deleteById(prodId);
         problemRepository.deleteById(prodId);
         
