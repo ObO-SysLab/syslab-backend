@@ -60,6 +60,9 @@ public class ProblemCoding {
     @Column(name = "obo_enabled", nullable = false)
     private Boolean oboEnabled = false;
 
+    @Column(name = "obo_initial_image_url", length = 500)
+    private String oboInitialImageUrl;
+
     // 1. JPA용 기본 생성자
     public ProblemCoding() {
     }
@@ -69,7 +72,7 @@ public class ProblemCoding {
                          String inputDescription, String outputDescription,
                          Integer timeLimitMs, Integer memoryLimitMb,
                          List<String> allowedLanguages, List<ForDtoTestCase> testcases,
-                         String fileUrl, Boolean oboEnabled) {
+                         String fileUrl, Boolean oboEnabled, String oboInitialImageUrl) {
         this.problem = problem;
         this.summary = summary;
         this.description = description;
@@ -81,6 +84,7 @@ public class ProblemCoding {
         this.testcases = testcases;
         this.fileUrl = fileUrl;
         this.oboEnabled = (oboEnabled != null) ? oboEnabled : false;
+        this.oboInitialImageUrl = oboInitialImageUrl;
     }
 
     // 3. Getter 메서드
@@ -96,6 +100,7 @@ public class ProblemCoding {
     public List<ForDtoTestCase> getTestcases() { return testcases; }
     public String getFileUrl() { return fileUrl; }
     public Boolean getOboEnabled() { return oboEnabled; }
+    public String getOboInitialImageUrl() { return oboInitialImageUrl; }
 
     // 4. Setter 메서드
     public void setProblem(Problem problem) { this.problem = problem; }
@@ -109,13 +114,14 @@ public class ProblemCoding {
     public void setTestcases(List<ForDtoTestCase> testcases) { this.testcases = testcases; }
     public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
     public void setOboEnabled(Boolean oboEnabled) { this.oboEnabled = oboEnabled; }
+    public void setOboInitialImageUrl(String oboInitialImageUrl) { this.oboInitialImageUrl = oboInitialImageUrl; }
 
     // 5. 비즈니스 로직
     public void updateProblemCoding(String summary, String description,
                                     String inputDescription, String outputDescription,
                                     Integer timeLimitMs, Integer memoryLimitMb,
                                     List<String> allowedLanguages, List<ForDtoTestCase> testcases,
-                                    String fileUrl, Boolean oboEnabled) {
+                                    String fileUrl, Boolean oboEnabled, String oboInitialImageUrl) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
         if (inputDescription != null) this.inputDescription = inputDescription;
@@ -126,5 +132,6 @@ public class ProblemCoding {
         if (testcases != null) this.testcases = testcases;
         if (fileUrl != null) this.fileUrl = fileUrl;
         if (oboEnabled != null) this.oboEnabled = oboEnabled;
+        if (oboInitialImageUrl != null) this.oboInitialImageUrl = oboInitialImageUrl;
     }
 }
