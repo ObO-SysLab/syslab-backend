@@ -15,15 +15,16 @@ import java.util.List;
   "category": {{category}},
   "difficulty": {{medium}},
   "visibility": "{{visibility}}", // 여기까지 String
+  "summary": "{{summary}}",
   "choices": [
     { "index": 1, "content": "선점형이다", "image_url": null },
     { "index": 2, "content": "비선점형이다", "image_url": null },
     { "index": 3, "content": "우선순위 기반이다", "image_url": null },
     { "index": 4, "content": "FIFO 방식이다", "image_url": null }
   ],  // JSONB로 데이터베이스 저장될 것임.
-  "answer": {{answer}}, // Json형태로 저장될 것임.
+  "answer": {{answer}},
+  "oboEnabled": {{enabled}},
   "obo": {  // object 타입
-    "enabled": {{enabled}},
     "steps": [
       {
         "step": 1,
@@ -48,8 +49,10 @@ public class ProblemUpdateObjectiveRequest {
     private String category;
     private String difficulty;
     private String visibility;
+    private String summary;
     private List<ForDtoChoice> choices;
-    private List<Integer> answer;
+    private Integer answer;
+    private Boolean oboEnabled;
     private Obo obo;
 
     public ProblemUpdateObjectiveRequest() {
@@ -95,6 +98,14 @@ public class ProblemUpdateObjectiveRequest {
         this.visibility = visibility;
     }
 
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
     public List<ForDtoChoice> getChoices() {
         return choices;
     }
@@ -103,12 +114,20 @@ public class ProblemUpdateObjectiveRequest {
         this.choices = choices;
     }
 
-    public List<Integer> getAnswer() {
+    public Integer getAnswer() {
         return answer;
     }
 
-    public void setAnswer(List<Integer> answer) {
+    public void setAnswer(Integer answer) {
         this.answer = answer;
+    }
+
+    public Boolean getOboEnabled() {
+        return oboEnabled;
+    }
+
+    public void setOboEnabled(Boolean oboEnabled) {
+        this.oboEnabled = oboEnabled;
     }
 
     public Obo getObo() {
@@ -120,18 +139,9 @@ public class ProblemUpdateObjectiveRequest {
     }
 
     public static class Obo {
-        private Boolean enabled;
         private List<ForDtoOboStep> steps;
 
         public Obo() {
-        }
-
-        public Boolean getEnabled() {
-            return enabled;
-        }
-
-        public void setEnabled(Boolean enabled) {
-            this.enabled = enabled;
         }
 
         public List<ForDtoOboStep> getSteps() {
