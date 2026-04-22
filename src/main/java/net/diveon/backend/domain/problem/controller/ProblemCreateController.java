@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemCreatePracticeResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemDeleteResponse;
 import net.diveon.backend.domain.problem.service.ProblemCreateService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -53,8 +55,16 @@ public class ProblemCreateController {
         return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
     
+    @PostMapping("/practice")
+    public ResponseEntity<ApiResponse<ProblemCreatePracticeResponse>> createPracticeProblem(
+            @Valid @RequestBody ProblemCreatePracticeRequest request,
+            @AuthenticationPrincipal String userId) {
+        ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(request, userId);
+        return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
+    }
+
     // DELETE
-    //DELETE /api/problems/{prob_id} 
+    //DELETE /api/problems/{prob_id}
     @DeleteMapping("/{prob_id}")
     public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long prob_id,
         @AuthenticationPrincipal String userId){

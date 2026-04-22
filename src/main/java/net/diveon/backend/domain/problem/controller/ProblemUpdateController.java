@@ -9,7 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdateObjectiveRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemUpdatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdateObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemUpdatePracticeResponse;
 import net.diveon.backend.domain.problem.service.ProblemUpdateService;
 import net.diveon.backend.global.response.ApiResponse;
 
@@ -23,7 +25,7 @@ public class ProblemUpdateController {
         this.problemUpdateService = problemUpdateService;
     }
 
-
+    // 객관식
     @PatchMapping("/{prob_id}")
     public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(@AuthenticationPrincipal String userId, 
         @RequestBody ProblemUpdateObjectiveRequest request,
@@ -37,5 +39,16 @@ public class ProblemUpdateController {
             //TODO 실제로 응답 body의 data 부분 객체 할당, 이후 응답 제대로 만들기
             
             return ResponseEntity.status(200).body(ApiResponse.success("문제 변경에 성공했습니다.", responseData));
+    }
+    
+    // 실습형
+    @PatchMapping("/practice/{prob_id}")
+    public ResponseEntity<ApiResponse<ProblemUpdatePracticeResponse>> updateProblemPractice(
+            @AuthenticationPrincipal String userId,
+            @RequestBody ProblemUpdatePracticeRequest request,
+            @PathVariable("prob_id") long probId) {
+
+        ProblemUpdatePracticeResponse responseData = problemUpdateService.updateProblemPractice(userId, probId, request);
+        return ResponseEntity.status(200).body(ApiResponse.success("문제가 수정되었습니다.", responseData));
     }
 }
