@@ -5,7 +5,6 @@ package net.diveon.backend.domain.problem.entity;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import net.diveon.backend.domain.problem.others.ForDtoChoice;
-import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 import org.hibernate.annotations.Type;
 
 import java.util.List;
@@ -39,16 +38,11 @@ public class ProblemObjective {
     @Column(name = "choices", columnDefinition = "JSONB", nullable = false)
     private List<ForDtoChoice> choices;
 
-    @Type(JsonType.class)
-    @Column(name = "answer", columnDefinition = "JSON", nullable = false)
-    private List<Integer> answer;
+    @Column(name = "answer", columnDefinition = "SMALLINT", nullable = false)
+    private Integer answer;
 
     @Column(name = "obo_enabled", nullable = false)
     private Boolean oboEnabled = false;
-
-    @Type(JsonType.class)
-    @Column(name = "obo_steps", columnDefinition = "JSONB")
-    private List<ForDtoOboStep> oboSteps;
 
     // 1. JPA용 기본 생성자
     public ProblemObjective() {
@@ -56,15 +50,14 @@ public class ProblemObjective {
 
     // 2. 데이터 생성을 위한 생성자
     public ProblemObjective(Problem problem, String summary, String description, 
-                            List<ForDtoChoice> choices, List<Integer> answer,
-                            Boolean oboEnabled, List<ForDtoOboStep> oboSteps) {
+                            List<ForDtoChoice> choices, Integer answer,
+                            Boolean oboEnabled) {
         this.problem = problem;
         this.summary = summary;
         this.description = description;
         this.choices = choices;
         this.answer = answer;
         this.oboEnabled = (oboEnabled != null) ? oboEnabled : false;
-        this.oboSteps = oboSteps;
     }
 
     // 3. Getter 메서드 (데이터 조회용)
@@ -73,9 +66,8 @@ public class ProblemObjective {
     public String getSummary() { return summary; }
     public String getDescription() { return description; }
     public List<ForDtoChoice> getChoices() { return choices; }
-    public List<Integer> getAnswer() { return answer; }
+    public Integer getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
-    public List<ForDtoOboStep> getOboSteps() { return oboSteps; }
     /**
      * <pre>
      * 수정-추가 안상완
@@ -86,18 +78,16 @@ public class ProblemObjective {
      * - summary; String, TEXT
      * - description; String, TEXT
      * - choices; List<Choice>, JSONB
-     * - answer; List<Integer>, JSON
+     * - answer; Integer, SMALLINT
      * - oboEnabled; boolean, ???
-     * - oboSteps; List<OboStep>, JSONB
      * </pre>
      */
     public void updateProblemObjective(String summary, String description,
-        List<ForDtoChoice> choices, List<Integer> answer, Boolean oboEnabled, List<ForDtoOboStep> oboSteps){
+        List<ForDtoChoice> choices, Integer answer, Boolean oboEnabled){
             if(summary != null) this.summary = summary;
             if(description != null)this.description = description;
             if(choices != null)this.choices = choices;
             if(answer != null)this.answer = answer;
             if(oboEnabled != null)this.oboEnabled = oboEnabled;
-            if(oboSteps != null) this.oboSteps = oboSteps;
     }
 }
