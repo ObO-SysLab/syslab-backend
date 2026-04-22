@@ -1,16 +1,20 @@
 package net.diveon.backend.domain.problem.service;
 
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateCodingRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemCreatePracticeResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemCreateCodingResponse;
 import net.diveon.backend.domain.problem.entity.OboStep;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
+import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
-import net.diveon.backend.domain.problem.dto.response.ProblemCreateCodingResponse;
-import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
@@ -18,22 +22,28 @@ import net.diveon.backend.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 
 @Service
 public class ProblemCreateService {
     private final ProblemObjectiveRepository problemObjectiveRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final OboStepRepository oboStepRepository;
     private final ProblemCodingRepository problemCodingRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
-                              ProblemCodingRepository problemCodingRepository,
-                              ProblemRepository problemRepository,
-                              UserRepository userRepository,
-                        OboStepRepository oboStepRepository){
+        ProblemPracticeRepository problemPracticeRepository,
+        ProblemCodingRepository problemCodingRepository,
+        ProblemRepository problemRepository,
+        UserRepository userRepository,
+        OboStepRepository oboStepRepository){
         this.problemObjectiveRepository = problemObjectiveRepository;
+        this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
         this.problemRepository = problemRepository;
         this.userRepository = userRepository;
@@ -41,6 +51,7 @@ public class ProblemCreateService {
     }
 
 
+    // 객관식형
     @Transactional
     public ProblemCreateObjectiveResponse createObjective(ProblemCreateObjectiveRequest request, String userId){
         User author = userRepository.findById(Long.parseLong(userId))
@@ -98,6 +109,44 @@ public class ProblemCreateService {
         );
     }
 
+    // 실습형
+    @Transactional
+    public ProblemCreatePracticeResponse createPractice(ProblemCreatePracticeRequest request, String userId){
+        User author = userRepository.findById(Long.parseLong(userId))
+                .orElseThrow();
+
+        Problem problem = new Problem(
+                author,
+                "practice",
+                request.getTitle(),
+                request.getCategory(),
+                request.getDifficulty(),
+                request.getVisibility()
+        );
+        Problem savedProblem = problemRepository.save(problem);
+
+        ProblemPractice problemPractice = new ProblemPractice(
+                savedProblem,
+                request.getSummary(),
+                request.getDescription(),
+                request.getVmConfig().getOsImage(),
+                request.getVmConfig().getAllowedCommands(),
+                request.getVmConfig().getCpuLimit(),
+                request.getVmConfig().getMemoryLimit(),
+                hashFlag(request.getFlag()),
+                request.getDockerFileUrl()
+        );
+        problemPracticeRepository.save(problemPractice);
+
+        return new ProblemCreatePracticeResponse(
+                savedProblem.getId(),
+                savedProblem.getType(),
+                savedProblem.getTitle(),
+                savedProblem.getCreatedAt().toString()
+        );
+    }
+
+    // 코딩형
     @Transactional
     public ProblemCreateCodingResponse createCoding(ProblemCreateCodingRequest request, String userId) {
         User author = userRepository.findById(Long.parseLong(userId))
@@ -139,19 +188,18 @@ public class ProblemCreateService {
                 savedProblem.getCreatedAt().toString()
         );
     }
-    /**
-     * <pre>
-     * ForDtoOboStep 내부 List 형식에서, Obosetp 라는 엔티티로 변환하기 위한 함수 
-     * 
-     * 왜냐?
-     * 이전 JSONB에 직렬화 해서 때려박는건, JSONB한덩어리에 때려박는거라 그대로 직렬화가 됨
-     * 근데 이제는 테이블이 분리됨 + obo_step이라는 테이블의 구조가 하나의 row가 하나의 OboStep.java 객체임
-     * 따라서 각 객체 하나하나씩 DB에 삽입해야함
-     * </pre>
-     * @param problem
-     * @param step
-     * @return
-     */
+
+    // 실습형 - flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록
+    private String hashFlag(String flag) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(flag.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
+    }
+
     private OboStep toOboStep(Problem problem, ForDtoOboStep step) {
         return new OboStep(problem, step.getStep(), step.getDescription(), step.getImageUrl());
     }

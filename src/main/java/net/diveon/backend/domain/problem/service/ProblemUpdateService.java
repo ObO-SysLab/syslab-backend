@@ -4,16 +4,24 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdateObjectiveRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemUpdatePracticeRequest;
+import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
 import net.diveon.backend.domain.problem.entity.OboStep;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdateObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemUpdatePracticeResponse;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 
 
@@ -21,20 +29,23 @@ import java.util.List;
 public class ProblemUpdateService {
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final OboStepRepository oboStepRepository;
     private final UserRepository userRepository;
 
     public ProblemUpdateService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
+        ProblemPracticeRepository problemPracticeRepository,
         OboStepRepository oboStepRepository,
         UserRepository userRepository){
             this.problemObjectiveRepository = problemObjectiveRepository;
+            this.problemPracticeRepository = problemPracticeRepository;
             this.problemRepository = problemRepository;
             this.oboStepRepository = oboStepRepository;
             this.userRepository = userRepository;
         }
 
-    
+    // 객관식형
     @Transactional
     public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId, 
         ProblemUpdateObjectiveRequest request){
@@ -42,7 +53,7 @@ public class ProblemUpdateService {
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
 
-            problem.updateProblem(request.getTitle(), request.getDifficulty(), request.getVisibility());
+            problem.updateProblem(request.getTitle(), request.getCategory(), request.getDifficulty(), request.getVisibility());
 
             problemObjective.updateProblemObjective(
                 request.getSummary(),
@@ -78,6 +89,53 @@ public class ProblemUpdateService {
             }
 
             return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
+    }
+
+    // 실습형
+    @Transactional
+    public ProblemUpdatePracticeResponse updateProblemPractice(String userId, long probId,
+        ProblemUpdatePracticeRequest request){
+            Problem problem = problemRepository.findById(probId).orElseThrow();
+            ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
+
+            problem.updateProblem(
+                request.getTitle(),
+                request.getCategory(),
+                request.getDifficulty(),
+                request.getVisibility()
+            );
+
+            String flagHash = request.getFlag() != null ? hashFlag(request.getFlag()) : null;
+            ProblemUpdatePracticeRequest.VmConfig vmConfig = request.getVmConfig();
+
+            problemPractice.updatePractice(
+                request.getSummary(),
+                request.getDescription(),
+                vmConfig != null ? vmConfig.getOsImage() : null,
+                vmConfig != null ? vmConfig.getAllowedCommands() : null,
+                vmConfig != null ? vmConfig.getCpuLimit() : null,
+                vmConfig != null ? vmConfig.getMemoryLimit() : null,
+                flagHash,
+                request.getDockerFileUrl()
+            );
+
+            return new ProblemUpdatePracticeResponse(
+                probId,
+                problem.getType(),
+                problem.getTitle(),
+                problem.getUpatedAt().toString()
+            );
+    }
+
+    // flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록 (실습형)
+    private String hashFlag(String flag) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(flag.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
     }
 
     private OboStep toOboStep(Problem problem, ForDtoOboStep step) {

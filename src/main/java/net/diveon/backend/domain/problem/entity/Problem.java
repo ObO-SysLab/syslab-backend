@@ -115,8 +115,9 @@ public class Problem {
      * null 이 아닌 값에 대해서만 변경을 진행함.
      * </pre>
      */
-    public void updateProblem(String title, String difficulty, String visibillity){
+    public void updateProblem(String title, String category, String difficulty, String visibillity){
         if( title != null) this.title = title;
+        if( category != null) this.category = category;
         if( difficulty != null) this.difficulty = difficulty;
         if( visibillity != null) this.visibility = visibillity;
         this.updatedAt = LocalDateTime.now();
