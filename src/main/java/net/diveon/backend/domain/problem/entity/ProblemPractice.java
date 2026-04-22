@@ -9,17 +9,18 @@ import java.util.List;
 @Entity
 @Table(name = "problem_practice")
 public class ProblemPractice {
-
+    // problem_practice 테이블의 prob_id는 PK이면서 동시에 problem_summary.id를 참조하는 FK임! Problem이 저장될 때 id가 자동으로 들어옴!
     @Id
     @Column(name = "prob_id")
     private Long probId;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @MapsId
+    @MapsId // ProblemPractice가 별도 PK 안 만들고 Problem의 id를 그대로 자기 PK로 사용 왜냐?
+            // Problem이랑 ProblemPractice는 1:1 관계니까. 문제 하나에 실습 정보 하나
     @JoinColumn(name = "prob_id")
     private Problem problem;
 
-    @Column(name = "summary", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "summary", columnDefinition = "TEXT", nullable = false) // 이 필드가 DB의 어떤 컬럼에 매핑되는지 설명
     private String summary;
 
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)

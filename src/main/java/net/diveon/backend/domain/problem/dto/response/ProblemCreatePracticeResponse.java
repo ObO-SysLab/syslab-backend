@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProblemCreatePracticeResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("prob_id") //  Java 필드명 probId를 JSON 키 prob_id로 변환 (다시 프론트한테 돌려줘야 되니까)
     private long probId;
 
     @JsonProperty("type")
@@ -32,4 +32,3 @@ public class ProblemCreatePracticeResponse {
     public String getCreatedAt() { return createdAt; }
 }
 
-// @JsonProperty - Java 필드명(probId)을 JSON 키(prob_id)로 바꿔줌

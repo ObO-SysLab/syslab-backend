@@ -35,6 +35,7 @@ public class ProblemCreateService {
         this.userRepository = userRepository;
     }
 
+    
     @Transactional
     public ProblemCreateObjectiveResponse createObjective(ProblemCreateObjectiveRequest request, String userId){
         User author = userRepository.findById(Long.parseLong(userId))
@@ -70,9 +71,10 @@ public class ProblemCreateService {
         );
     }
 
+    // 실습형
     @Transactional
     public ProblemCreatePracticeResponse createPractice(ProblemCreatePracticeRequest request, String userId){
-        User author = userRepository.findById(Long.parseLong(userId))
+        User author = userRepository.findById(Long.parseLong(userId)) // ex. "1" -> 1 (long)
                 .orElseThrow();
 
         Problem problem = new Problem(
@@ -85,7 +87,7 @@ public class ProblemCreateService {
         );
         Problem savedProblem = problemRepository.save(problem);
 
-        ProblemPractice problemPractice = new ProblemPractice(
+        ProblemPractice problemPractice = new ProblemPractice( // Java 메모리에 객체만 만든 것, 서버 꺼지면 사라짐
                 savedProblem,
                 request.getSummary(),
                 request.getDescription(),
@@ -96,9 +98,9 @@ public class ProblemCreateService {
                 hashFlag(request.getFlag()),
                 request.getDockerFileUrl()
         );
-        problemPracticeRepository.save(problemPractice);
+        problemPracticeRepository.save(problemPractice); // DB에 실제 저장위해 INSERT, 서버 꺼져도 영구 저장
 
-        return new ProblemCreatePracticeResponse(
+        return new ProblemCreatePracticeResponse( // DB에 저장 완료 후 프론트한테 돌려줄 응답 데이터
                 savedProblem.getId(),
                 savedProblem.getType(),
                 savedProblem.getTitle(),
@@ -106,6 +108,7 @@ public class ProblemCreateService {
         );
     }
 
+    // flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록 (실습형)
     private String hashFlag(String flag) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

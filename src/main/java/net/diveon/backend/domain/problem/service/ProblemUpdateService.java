@@ -38,7 +38,7 @@ public class ProblemUpdateService {
             this.userRepository = userRepository;
         }
 
-    // 객관식
+    
     @Transactional
     public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId, 
         ProblemUpdateObjectiveRequest request){
@@ -93,6 +93,7 @@ public class ProblemUpdateService {
             );
     }
 
+    // flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록 (실습형)
     private String hashFlag(String flag) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
