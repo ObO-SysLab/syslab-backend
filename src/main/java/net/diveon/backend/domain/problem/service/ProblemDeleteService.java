@@ -8,6 +8,7 @@ import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
+import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 
@@ -37,15 +38,18 @@ public class ProblemDeleteService {
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
     private final ProblemPracticeRepository problemPracticeRepository;
+    private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
 
     public ProblemDeleteService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
+        ProblemCodingRepository problemCodingRepository,
         OboStepRepository oboStepRepository){
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
+        this.problemCodingRepository = problemCodingRepository;
         this.oboStepRepository = oboStepRepository;
     }
 
@@ -61,8 +65,9 @@ public class ProblemDeleteService {
             return deleteProblemPractice(userId, probId);
         } else if (problem.getType().equals("objective")) {
             return deleteProblemObjective(userId, probId);
+        } else if (problem.getType().equals("coding")) {
+            return deleteProblemCoding(userId, probId);
         } else {
-            // TODO: 코딩형 삭제 미구현 - deleteProblemCoding 구현 후 else if로 추가
             throw new ProblemNotFoundException(probId + "번 문제의 타입을 알 수 없습니다.");
         }
     }
@@ -108,5 +113,13 @@ public class ProblemDeleteService {
 
         return new ProblemDeleteResponse(probId);
     }
-     
+
+    // 코딩형
+    @Transactional
+    public ProblemDeleteResponse deleteProblemCoding(String userId, long probId){
+        problemCodingRepository.deleteById(probId);
+        problemRepository.deleteById(probId);
+
+        return new ProblemDeleteResponse(probId);
+    }
 }

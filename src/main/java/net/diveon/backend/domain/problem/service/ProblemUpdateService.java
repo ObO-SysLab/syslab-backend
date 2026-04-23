@@ -5,17 +5,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdatePracticeRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemUpdateCodingRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
 import net.diveon.backend.domain.problem.entity.OboStep;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdateObjectiveResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdatePracticeResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemUpdateCodingResponse;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
 import net.diveon.backend.domain.problem.entity.ProblemPractice;
+import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
+import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 
@@ -30,16 +34,19 @@ public class ProblemUpdateService {
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
     private final ProblemPracticeRepository problemPracticeRepository;
+    private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
     private final UserRepository userRepository;
 
     public ProblemUpdateService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
+        ProblemCodingRepository problemCodingRepository,
         OboStepRepository oboStepRepository,
         UserRepository userRepository){
             this.problemObjectiveRepository = problemObjectiveRepository;
             this.problemPracticeRepository = problemPracticeRepository;
+            this.problemCodingRepository = problemCodingRepository;
             this.problemRepository = problemRepository;
             this.oboStepRepository = oboStepRepository;
             this.userRepository = userRepository;
@@ -91,6 +98,40 @@ public class ProblemUpdateService {
             return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
     }
 
+    // 코딩형
+    @Transactional
+    public ProblemUpdateCodingResponse updateProblemCoding(String userId, long probId,
+        ProblemUpdateCodingRequest request) {
+        Problem problem = problemRepository.findById(probId).orElseThrow();
+        ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
+
+        problem.updateProblem(request.getTitle(), request.getCategory(), request.getDifficulty(), request.getVisibility());
+
+        ProblemUpdateCodingRequest.Constraints constraints = request.getConstraints();
+        ProblemUpdateCodingRequest.Obo obo = request.getObo();
+
+        problemCoding.updateProblemCoding(
+            request.getSummary(),
+            request.getDescription(),
+            request.getInputDescription(),
+            request.getOutputDescription(),
+            constraints != null ? constraints.getTimeLimitMs() : null,
+            constraints != null ? constraints.getMemoryLimitMb() : null,
+            constraints != null ? constraints.getAllowedLanguages() : null,
+            request.getTestcases(),
+            request.getFileUrl(),
+            obo != null ? obo.getEnabled() : null,
+            obo != null ? obo.getInitialImageUrl() : null
+        );
+
+        return new ProblemUpdateCodingResponse(
+            probId,
+            problem.getType(),
+            problem.getTitle(),
+            problem.getUpatedAt().toString()
+        );
+    }
+    
     // 실습형
     @Transactional
     public ProblemUpdatePracticeResponse updateProblemPractice(String userId, long probId,
@@ -126,7 +167,7 @@ public class ProblemUpdateService {
                 problem.getUpatedAt().toString()
             );
     }
-
+    
     // flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록 (실습형)
     private String hashFlag(String flag) {
         try {

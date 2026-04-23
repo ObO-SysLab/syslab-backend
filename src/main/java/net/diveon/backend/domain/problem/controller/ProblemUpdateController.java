@@ -10,8 +10,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemUpdatePracticeRequest;
+import net.diveon.backend.domain.problem.dto.request.ProblemUpdateCodingRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdateObjectiveResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemUpdatePracticeResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemUpdateCodingResponse;
 import net.diveon.backend.domain.problem.service.ProblemUpdateService;
 import net.diveon.backend.global.response.ApiResponse;
 
@@ -49,6 +51,17 @@ public class ProblemUpdateController {
             @PathVariable("prob_id") long probId) {
 
         ProblemUpdatePracticeResponse responseData = problemUpdateService.updateProblemPractice(userId, probId, request);
+        return ResponseEntity.status(200).body(ApiResponse.success("문제가 수정되었습니다.", responseData));
+    }
+
+    // 코딩형
+    @PatchMapping("/coding/{prob_id}")
+    public ResponseEntity<ApiResponse<ProblemUpdateCodingResponse>> updateProblemCoding(
+            @AuthenticationPrincipal String userId,
+            @RequestBody ProblemUpdateCodingRequest request,
+            @PathVariable("prob_id") long probId) {
+
+        ProblemUpdateCodingResponse responseData = problemUpdateService.updateProblemCoding(userId, probId, request);
         return ResponseEntity.status(200).body(ApiResponse.success("문제가 수정되었습니다.", responseData));
     }
 }
