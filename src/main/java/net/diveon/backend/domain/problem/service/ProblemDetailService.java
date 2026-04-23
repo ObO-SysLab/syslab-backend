@@ -1,12 +1,15 @@
 package net.diveon.backend.domain.problem.service;
 
 import net.diveon.backend.domain.problem.dto.response.ProblemDetailObjectiveResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemDetailPracticeResponse;
 import net.diveon.backend.domain.problem.dto.response.interfaces.ProblemDetailResponse;
 import net.diveon.backend.domain.problem.entity.OboStep;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
@@ -21,17 +24,20 @@ public class ProblemDetailService {
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final OboStepRepository oboStepRepository;
 
     public ProblemDetailService(
         UserRepository userRepository,
         ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
+        ProblemPracticeRepository problemPracticeRepository,
         OboStepRepository oboStepRepository
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
+        this.problemPracticeRepository = problemPracticeRepository;
         this.oboStepRepository = oboStepRepository;
     }
 
@@ -44,9 +50,16 @@ public class ProblemDetailService {
 
         if (problem.getType().equals("objective")) {
             return detailProblemObjective(problem, probId);
+        } else if (problem.getType().equals("practice")) {
+            return detailProblemPractice(problem, probId);
         } else {
             throw new ProblemNotFoundException(probId + "번 문제의 타입을 알 수 없습니다.");
         }
+    }
+
+    private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId) {
+        ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
+        return ProblemDetailPracticeResponse.of(problem, problemPractice);
     }
 
     private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId) {
