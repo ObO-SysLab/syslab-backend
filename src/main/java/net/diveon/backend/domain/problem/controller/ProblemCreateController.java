@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/problems")
 public class ProblemCreateController {
-    
+
     private final ProblemDeleteService problemDeleteService;
     private final ProblemCreateService problemCreateService;
 
@@ -37,7 +37,7 @@ public class ProblemCreateController {
     }
 
     /**
-     * 
+     *
      * @param request //dto
      * @param userId //jwt-AuthenticationPrincipal
      * @return ResponseEntity<ApiResPonse<body> //
@@ -66,7 +66,7 @@ public class ProblemCreateController {
         ProblemCreateCodingResponse responseBody = problemCreateService.createCoding(request, userId);
         return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
-    
+
     // 실습형
     @PostMapping("/practice") // 프론트 요청을 받음
     public ResponseEntity<ApiResponse<ProblemCreatePracticeResponse>> createPracticeProblem(
@@ -74,7 +74,7 @@ public class ProblemCreateController {
             @AuthenticationPrincipal String userId) {
 
             ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(request, userId); // 서비스를 호출
-            
+
             return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
 
@@ -84,8 +84,7 @@ public class ProblemCreateController {
     public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long prob_id,
         @AuthenticationPrincipal String userId){
 
-            // responseBody = problemDeleteService
-            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblemObjective(userId, prob_id);
+            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblem(userId, prob_id);
             return ResponseEntity.status(200).body(ApiResponse.success("문제가 삭제되었습니다.", problemDeleteResponse));
         }
 }

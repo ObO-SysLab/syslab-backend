@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import net.diveon.backend.domain.problem.dto.response.ProblemDeleteResponse;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 
@@ -19,40 +20,56 @@ import net.diveon.backend.global.exception.ProblemNotFoundException;
  *  Method: `DELETE`
  *  Description 본인이 생성한 문제를 삭제한다. 현재 진행 중인 대회에 속한 문제는 삭제할 수 없다.
  *  Authentication `Bearer Token`
- * 
+ *
  * @Param endpoint parameter
  * </pre>
  */
 
 @Service
 public class ProblemDeleteService {
-    // 일단은 객관식 문제에 대한 제거만 구현
     /**
      * 객관식: 구현중
      * 코드형: 놉
-     * 실습형: 놉
+     * 실습형: 구현중
      */
-
-    //
 
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final OboStepRepository oboStepRepository;
 
-    
     public ProblemDeleteService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
+        ProblemPracticeRepository problemPracticeRepository,
         OboStepRepository oboStepRepository){
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
+        this.problemPracticeRepository = problemPracticeRepository;
         this.oboStepRepository = oboStepRepository;
     }
 
+    // 분기 로직
+    @Transactional
+    public ProblemDeleteResponse deleteProblem(String userId, long probId){
+        String type = problemRepository.findById(probId)
+            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."))
+            .getType();
 
+        if (type.equals("practice")) {
+            return deleteProblemPractice(userId, probId);
+        } else if (type.equals("objective")) {
+            return deleteProblemObjective(userId, probId);
+        } else {
+            // TODO: 코딩형 삭제 미구현 - deleteProblemCoding 구현 후 else if로 추가
+            throw new ProblemNotFoundException(probId + "번 문제의 타입을 알 수 없습니다.");
+        }
+    }
+
+    // 객관식형
     @Transactional
     public ProblemDeleteResponse deleteProblemObjective(String userId, long prodId){
 
-        // // 아래 코드는 검증을 좀더 깔끔한 방식으로 할 수 있다면 좋을듯. 
+        // // 아래 코드는 검증을 좀더 깔끔한 방식으로 할 수 있다면 좋을듯.
         // problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
         // problemObjectiveRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
 
@@ -63,7 +80,7 @@ public class ProblemDeleteService {
         if(!problemObjectiveRepository.existsById(prodId)){
             throw new ProblemNotFoundException("객관식 문제 중" + prodId +"번에 해당하는 문제 자체가 존재하지 않습니다.");
         }
-        
+
         //아래는 다른 방식으로, 예외시 기본 생성자 말고, 다른 생성자를 사용할 수 있는 방법.
         // Problem problem = problemRepository.findById(prodId)
         //     .orElseThrow(() -> new ProblemNotFoundException("ID " + prodId + "번에 해당하는 문제를 찾을 수 없습니다."));
@@ -77,7 +94,17 @@ public class ProblemDeleteService {
         oboStepRepository.deleteByProblem_Id(prodId);
         problemObjectiveRepository.deleteById(prodId);
         problemRepository.deleteById(prodId);
-        
+
         return new ProblemDeleteResponse(prodId);
     }
+
+    // 실습형
+    @Transactional
+    public ProblemDeleteResponse deleteProblemPractice(String userId, long probId){
+        problemPracticeRepository.deleteById(probId);
+        problemRepository.deleteById(probId);
+
+        return new ProblemDeleteResponse(probId);
+    }
+     
 }
