@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.problem.dto.response.ProblemDeleteResponse;
+import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
@@ -51,13 +52,14 @@ public class ProblemDeleteService {
     // 분기 로직
     @Transactional
     public ProblemDeleteResponse deleteProblem(String userId, long probId){
-        String type = problemRepository.findById(probId)
-            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."))
-            .getType();
+        Problem problem = problemRepository.findById(probId)
+            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
 
-        if (type.equals("practice")) {
+        // TODO: author 권한 체크 추가 예정 (추후에 problem.getAuthor()로 접근 가능하도록 Problem 객체로 받음)
+
+        if (problem.getType().equals("practice")) {
             return deleteProblemPractice(userId, probId);
-        } else if (type.equals("objective")) {
+        } else if (problem.getType().equals("objective")) {
             return deleteProblemObjective(userId, probId);
         } else {
             // TODO: 코딩형 삭제 미구현 - deleteProblemCoding 구현 후 else if로 추가
