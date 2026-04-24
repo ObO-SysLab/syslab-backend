@@ -53,7 +53,7 @@ public class ProblemCreateController {
         ProblemCreateObjectiveResponse responseBody = new ProblemCreateObjectiveResponse();
 
         //실제 비즈니스 로직, 서비스 호출
-        responseBody = problemCreateService.createObjective(request, userId);
+        responseBody = problemCreateService.createObjective(Long.parseLong(userId), request);
 
         // 이거 호출함수 형태 수정해야함, 우리가 200 말고 다른 값을 넣을수없음(ApiResopone.success())
         return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
@@ -63,7 +63,7 @@ public class ProblemCreateController {
     @PostMapping("/coding")
     public ResponseEntity<ApiResponse<ProblemCreateCodingResponse>> createCodingProblem(@Valid @RequestBody ProblemCreateCodingRequest request,
         @AuthenticationPrincipal String userId) {
-        ProblemCreateCodingResponse responseBody = problemCreateService.createCoding(request, userId);
+        ProblemCreateCodingResponse responseBody = problemCreateService.createCoding(Long.parseLong(userId), request);
         return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
 
@@ -73,7 +73,7 @@ public class ProblemCreateController {
             @Valid @RequestBody ProblemCreatePracticeRequest request,
             @AuthenticationPrincipal String userId) {
 
-            ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(request, userId); // 서비스를 호출
+            ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(Long.parseLong(userId), request); // 서비스를 호출
 
             return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }
@@ -84,7 +84,7 @@ public class ProblemCreateController {
     public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long prob_id,
         @AuthenticationPrincipal String userId){
 
-            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblem(userId, prob_id);
+            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblem(Long.parseLong(userId), prob_id);
             return ResponseEntity.status(200).body(ApiResponse.success("문제가 삭제되었습니다.", problemDeleteResponse));
         }
 }

@@ -29,7 +29,8 @@ public class ProblemUpdateController {
 
     // 객관식
     @PatchMapping("/{prob_id}")
-    public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(@AuthenticationPrincipal String userId, 
+    public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(
+        @AuthenticationPrincipal String userId, 
         @RequestBody ProblemUpdateObjectiveRequest request,
         @PathVariable("prob_id") long probId){
 
@@ -50,7 +51,7 @@ public class ProblemUpdateController {
             @RequestBody ProblemUpdatePracticeRequest request,
             @PathVariable("prob_id") long probId) {
 
-        ProblemUpdatePracticeResponse responseData = problemUpdateService.updateProblemPractice(userId, probId, request);
+        ProblemUpdatePracticeResponse responseData = problemUpdateService.updateProblemPractice(Long.parseLong(userId), probId, request);
         return ResponseEntity.status(200).body(ApiResponse.success("문제가 수정되었습니다.", responseData));
     }
 
@@ -61,7 +62,7 @@ public class ProblemUpdateController {
             @RequestBody ProblemUpdateCodingRequest request,
             @PathVariable("prob_id") long probId) {
 
-        ProblemUpdateCodingResponse responseData = problemUpdateService.updateProblemCoding(userId, probId, request);
+        ProblemUpdateCodingResponse responseData = problemUpdateService.updateProblemCoding(Long.parseLong(userId), probId, request);
         return ResponseEntity.status(200).body(ApiResponse.success("문제가 수정되었습니다.", responseData));
     }
 }

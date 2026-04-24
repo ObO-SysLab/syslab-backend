@@ -100,7 +100,7 @@ public class ProblemUpdateService {
 
     // 코딩형
     @Transactional
-    public ProblemUpdateCodingResponse updateProblemCoding(String userId, long probId,
+    public ProblemUpdateCodingResponse updateProblemCoding(long userId, long probId,
         ProblemUpdateCodingRequest request) {
         Problem problem = problemRepository.findById(probId).orElseThrow();
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
@@ -134,7 +134,7 @@ public class ProblemUpdateService {
     
     // 실습형
     @Transactional
-    public ProblemUpdatePracticeResponse updateProblemPractice(String userId, long probId,
+    public ProblemUpdatePracticeResponse updateProblemPractice(long userId, long probId,
         ProblemUpdatePracticeRequest request){
             Problem problem = problemRepository.findById(probId).orElseThrow();
             ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
