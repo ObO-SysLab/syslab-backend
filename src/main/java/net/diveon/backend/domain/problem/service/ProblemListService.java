@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.problem.service;
 
+import jakarta.persistence.criteria.Predicate;
 import net.diveon.backend.domain.problem.dto.response.ProblemListItemResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
 import net.diveon.backend.domain.problem.entity.Problem;
@@ -70,7 +71,7 @@ public class ProblemListService {
                 predicates.add(cb.equal(root.get("difficulty"), difficulty));
             }
 
-            return cb.and(predicates.toArray(new javax.persistence.criteria.Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }
