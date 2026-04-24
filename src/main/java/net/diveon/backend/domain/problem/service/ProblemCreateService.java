@@ -53,8 +53,8 @@ public class ProblemCreateService {
 
     // 객관식형
     @Transactional
-    public ProblemCreateObjectiveResponse createObjective(ProblemCreateObjectiveRequest request, String userId){
-        User author = userRepository.findById(Long.parseLong(userId))
+    public ProblemCreateObjectiveResponse createObjective(long userId, ProblemCreateObjectiveRequest request){
+        User author = userRepository.findById(userId)
                 .orElseThrow();
 
         Problem problem = new Problem(
@@ -111,8 +111,8 @@ public class ProblemCreateService {
 
     // 실습형
     @Transactional
-    public ProblemCreatePracticeResponse createPractice(ProblemCreatePracticeRequest request, String userId){
-        User author = userRepository.findById(Long.parseLong(userId))
+    public ProblemCreatePracticeResponse createPractice(long userId, ProblemCreatePracticeRequest request){
+        User author = userRepository.findById(userId)
                 .orElseThrow();
 
         Problem problem = new Problem(
@@ -148,8 +148,8 @@ public class ProblemCreateService {
 
     // 코딩형
     @Transactional
-    public ProblemCreateCodingResponse createCoding(ProblemCreateCodingRequest request, String userId) {
-        User author = userRepository.findById(Long.parseLong(userId))
+    public ProblemCreateCodingResponse createCoding(long userId, ProblemCreateCodingRequest request) {
+        User author = userRepository.findById(userId)
                 .orElseThrow();
 
         Problem problem = new Problem(

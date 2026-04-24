@@ -55,7 +55,7 @@ public class ProblemDeleteService {
 
     // 분기 로직
     @Transactional
-    public ProblemDeleteResponse deleteProblem(String userId, long probId){
+    public ProblemDeleteResponse deleteProblem(long userId, long probId){
         Problem problem = problemRepository.findById(probId)
             .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
 
@@ -74,7 +74,7 @@ public class ProblemDeleteService {
 
     // 객관식형
     @Transactional
-    public ProblemDeleteResponse deleteProblemObjective(String userId, long prodId){
+    public ProblemDeleteResponse deleteProblemObjective(long userId, long prodId){
 
         // // 아래 코드는 검증을 좀더 깔끔한 방식으로 할 수 있다면 좋을듯.
         // problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
@@ -107,7 +107,7 @@ public class ProblemDeleteService {
 
     // 실습형
     @Transactional
-    public ProblemDeleteResponse deleteProblemPractice(String userId, long probId){
+    public ProblemDeleteResponse deleteProblemPractice(long userId, long probId){
         problemPracticeRepository.deleteById(probId);
         problemRepository.deleteById(probId);
 
@@ -116,7 +116,7 @@ public class ProblemDeleteService {
 
     // 코딩형
     @Transactional
-    public ProblemDeleteResponse deleteProblemCoding(String userId, long probId){
+    public ProblemDeleteResponse deleteProblemCoding(long userId, long probId){
         problemCodingRepository.deleteById(probId);
         problemRepository.deleteById(probId);
 
