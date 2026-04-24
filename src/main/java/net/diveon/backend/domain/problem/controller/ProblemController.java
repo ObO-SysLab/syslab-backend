@@ -1,13 +1,16 @@
 package net.diveon.backend.domain.problem.controller;
 
 import net.diveon.backend.domain.problem.dto.response.interfaces.ProblemDetailResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
 import net.diveon.backend.domain.problem.service.ProblemDetailService;
+import net.diveon.backend.domain.problem.service.ProblemListService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -15,9 +18,31 @@ import org.springframework.web.bind.annotation.RestController;
 public class ProblemController {
 
     private final ProblemDetailService problemDetailService;
+    private final ProblemListService problemListService;
 
-    public ProblemController(ProblemDetailService problemDetailService) {
+    public ProblemController(ProblemDetailService problemDetailService, ProblemListService problemListService) {
         this.problemDetailService = problemDetailService;
+        this.problemListService = problemListService;
+    }
+
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<ProblemListResponse>> listProblems(
+        @AuthenticationPrincipal String userId,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(required = false) String title,
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false) String difficulty
+    ) {
+        ProblemListResponse responseData = problemListService.listProblems(
+            Long.parseLong(userId),
+            page,
+            title,
+            category,
+            difficulty
+        );
+
+        return ResponseEntity.status(200)
+            .body(ApiResponse.success("문제 목록 조회에 성공하였습니다.", responseData));
     }
 
     /*
