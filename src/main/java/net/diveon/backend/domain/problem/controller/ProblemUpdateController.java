@@ -28,7 +28,7 @@ public class ProblemUpdateController {
     }
 
     // 객관식
-    @PatchMapping("/{prob_id}")
+    @PatchMapping("/objective/{prob_id}")
     public ResponseEntity<ApiResponse<ProblemUpdateObjectiveResponse>> updateProblemObjective(
         @AuthenticationPrincipal String userId, 
         @RequestBody ProblemUpdateObjectiveRequest request,
