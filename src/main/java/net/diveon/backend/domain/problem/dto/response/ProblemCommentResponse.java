@@ -12,9 +12,9 @@ public class ProblemCommentResponse {
         private long total;
         private int page;
         private int size;
-        private List<CommentItem> comments;
+        private List<CommentListItem> comments;
 
-        public CommentList(long total, int page, int size, List<CommentItem> comments) {
+        public CommentList(long total, int page, int size, List<CommentListItem> comments) {
             this.total = total;
             this.page = page;
             this.size = size;
@@ -24,9 +24,59 @@ public class ProblemCommentResponse {
         public long getTotal() { return total; }
         public int getPage() { return page; }
         public int getSize() { return size; }
-        public List<CommentItem> getComments() { return comments; }
+        public List<CommentListItem> getComments() { return comments; }
     }
 
+    // 댓글 목록 조회용 (replies 없음)
+    public static class CommentListItem {
+
+        @JsonProperty("comment_id")
+        private Long commentId;
+
+        @JsonProperty("author_nickname")
+        private String authorNickname;
+
+        private String content;
+
+        @JsonProperty("is_private")
+        private Boolean isPrivate;
+
+        @JsonProperty("created_at")
+        private String createdAt;
+
+        @JsonProperty("updated_at")
+        private String updatedAt;
+
+        public CommentListItem(Long commentId, String authorNickname, String content,
+                               Boolean isPrivate, String createdAt, String updatedAt) {
+            this.commentId = commentId;
+            this.authorNickname = authorNickname;
+            this.content = content;
+            this.isPrivate = isPrivate;
+            this.createdAt = createdAt;
+            this.updatedAt = updatedAt;
+        }
+
+        public static CommentListItem of(ProblemComment comment) {
+            return new CommentListItem(
+                comment.getId(),
+                comment.getAuthor().getNickname(),
+                comment.getContent(),
+                comment.getIsPrivate(),
+                comment.getCreatedAt().toString(),
+                comment.getUpdatedAt().toString()
+            );
+        }
+
+        public Long getCommentId() { return commentId; }
+        public String getAuthorNickname() { return authorNickname; }
+        public String getContent() { return content; }
+        public Boolean getIsPrivate() { return isPrivate; }
+        public String getCreatedAt() { return createdAt; }
+        public String getUpdatedAt() { return updatedAt; }
+    }
+
+    // 댓글 상세 조회용 (replies 있음)
     public static class CommentItem {
 
         @JsonProperty("comment_id")

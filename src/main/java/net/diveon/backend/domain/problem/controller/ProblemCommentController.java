@@ -43,6 +43,20 @@ public class ProblemCommentController {
             .body(ApiResponse.success("댓글 목록 조회에 성공하였습니다.", responseData));
     }
 
+    // 댓글 상세 조회
+    @GetMapping("/{prob_id}/comments/{comment_id}")
+    public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentItem>> getComment(
+        @AuthenticationPrincipal String userId,
+        @PathVariable("prob_id") long probId,
+        @PathVariable("comment_id") long commentId
+    ) {
+        ProblemCommentResponse.CommentItem responseData =
+            commentService.getComment(Long.parseLong(userId), probId, commentId);
+
+        return ResponseEntity.status(200)
+            .body(ApiResponse.success("댓글 상세 조회에 성공하였습니다.", responseData));
+    }
+
     // 댓글 생성
     @PostMapping("/{prob_id}/comments")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentCreate>> createComment(

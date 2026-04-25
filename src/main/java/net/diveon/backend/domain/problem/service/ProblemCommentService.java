@@ -13,12 +13,11 @@ import net.diveon.backend.global.exception.CommentNotFoundException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class ProblemCommentService {
@@ -37,7 +36,7 @@ public class ProblemCommentService {
         this.userRepository = userRepository;
     }
 
-    // 댓글 조회
+    // 댓글 목록 조회
     // readOnly = true: DB 읽기만 하는 메서드. 변경 감지 안 해서 성능 최적화
     @Transactional(readOnly = true)
     public ProblemCommentResponse.CommentList getComments(long userId, long probId, int page, int size) {
@@ -45,27 +44,11 @@ public class ProblemCommentService {
             .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
 
         // 최상위 댓글만 (parent = null) 페이지 단위로 가져옴. page-1인 이유: JPA는 페이지 0부터 시작
-        Page<ProblemComment> commentPage = commentRepository.findByProblem_IdAndParentIsNull(probId, PageRequest.of(page - 1, size));
+        Page<ProblemComment> commentPage = commentRepository.findByProblem_IdAndParentIsNull(probId, PageRequest.of(page - 1, size, Sort.by("createdAt").descending()));
 
-        // 댓글 객체들에서 id만 뽑아서 [1, 2, 3] 리스트로 만듦. 아래 답글 조회에 사용
-        List<Long> commentIds = commentPage.getContent().stream().map(comment -> comment.getId()).toList();
-
-        // [1, 2, 3] 댓글들의 답글을 한번에 조회하고 부모 댓글id 기준으로 그룹핑
-        // 결과: { 1 → [답글A, 답글B], 2 → [답글C] } 형태의 Map
-        Map<Long, List<ProblemCommentResponse.ReplyItem>> repliesMap = commentRepository
-            .findByParent_IdIn(commentIds)
-            .stream()
-            .collect(Collectors.groupingBy(
-                reply -> reply.getParent().getId(),
-                Collectors.mapping(reply -> ProblemCommentResponse.ReplyItem.of(reply), Collectors.toList())
-            ));
-
-        // 댓글 하나씩 돌면서 해당 답글 붙여서 CommentItem DTO로 변환. 답글 없으면 빈 리스트
-        List<ProblemCommentResponse.CommentItem> comments = commentPage.getContent().stream()
-            .map(comment -> ProblemCommentResponse.CommentItem.of(
-                comment,
-                repliesMap.getOrDefault(comment.getId(), List.of())
-            ))
+        // 댓글 하나씩 돌면서 CommentListItem DTO로 변환 (replies 없음)
+        List<ProblemCommentResponse.CommentListItem> comments = commentPage.getContent().stream()
+            .map(comment -> ProblemCommentResponse.CommentListItem.of(comment))
             .toList();
 
         // 총 댓글 수, 페이지, 사이즈, 댓글 목록 묶어서 반환
@@ -75,6 +58,21 @@ public class ProblemCommentService {
             size,
             comments
         );
+    }
+
+    // 댓글 상세 조회
+    @Transactional(readOnly = true)
+    public ProblemCommentResponse.CommentItem getComment(long userId, long probId, long commentId) {
+        ProblemComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
+
+        List<ProblemCommentResponse.ReplyItem> replies = commentRepository
+            .findByParent_IdInOrderByCreatedAtAsc(List.of(commentId))
+            .stream()
+            .map(reply -> ProblemCommentResponse.ReplyItem.of(reply))
+            .toList();
+
+        return ProblemCommentResponse.CommentItem.of(comment, replies);
     }
 
     // 댓글 생성

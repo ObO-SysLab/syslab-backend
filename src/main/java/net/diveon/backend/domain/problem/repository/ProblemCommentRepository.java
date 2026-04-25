@@ -11,5 +11,5 @@ public interface ProblemCommentRepository extends JpaRepository<ProblemComment, 
 
     Page<ProblemComment> findByProblem_IdAndParentIsNull(Long probId, Pageable pageable);
     // Page<>는 데이터 목록이랑 총 개수를 한번에 가져와 줌. (List<>로 받으면 count쿼리를 따로 날려야.)
-    List<ProblemComment> findByParent_IdIn(List<Long> parentIds);
+    List<ProblemComment> findByParent_IdInOrderByCreatedAtAsc(List<Long> parentIds);
 }
