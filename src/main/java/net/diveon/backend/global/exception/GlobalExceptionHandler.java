@@ -69,6 +69,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 댓글을 찾을 수 없음 → 404
+        @ExceptionHandler(CommentNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleCommentNotFound(
+                CommentNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/comment-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
         // 문제를 찾을 수 없음 → 404
         @ExceptionHandler(ProblemNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleProblemNotFound(
