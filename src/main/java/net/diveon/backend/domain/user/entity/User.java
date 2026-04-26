@@ -19,8 +19,8 @@ public class User {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "user_id", unique = true, nullable = false, length = 50)
-    private String userId;
+    @Column(name = "login_id", unique = true, nullable = false, length = 50)
+    private String loginId;
 
     @Column(name = "password", nullable = false)
     private String password;
@@ -66,8 +66,8 @@ public class User {
 
     public User() {}
 
-    public User(String userId, String password, String nickname, String email, String belong, String interest) {
-        this.userId = userId;
+    public User(String loginId, String password, String nickname, String email, String belong, String interest) {
+        this.loginId = loginId;
         this.password = password;
         this.nickname = nickname;
         this.email = email;
@@ -79,7 +79,7 @@ public class User {
     }
 
     public Long getId() { return id; }
-    public String getUserId() { return userId; }
+    public String getLoginId() { return loginId; }
     public String getPassword() { return password; }
     public String getRealName() { return realName; }
     public String getNickname() { return nickname; }

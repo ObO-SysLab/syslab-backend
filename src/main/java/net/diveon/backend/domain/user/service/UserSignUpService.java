@@ -53,14 +53,14 @@ public class UserSignUpService {
         // //existsById()를 사용하여 검색만 진행한다.
         // 이 아래의 한줄은 우리가 의도한 표준 에러가 아니라서 차후에 수정이 필요할 것임 2026.04.18 - 안상완
         // 일반 @valid 어노테이션으로 걸러지는거 확인은 했는데, 일단은 살려두겟습니다 - 2026.04.18 - 안상완
-        String userId = Objects.requireNonNull(signup_request.getUserId(), "아이디는 필수 입력값입니다.");
+        String loginId = Objects.requireNonNull(signup_request.getLoginId(), "아이디는 필수 입력값입니다.");
 
         //인코드를 통해서 비밀번호 암호화 진행
         //수정사항 04.08 dto 변경되면서, getter 메서드 변화로 인한 수정
         String encodedPassword = passwordEncoder.encode(signup_request.getPassword());
 
         // 만약 아이디가 존재한다면, exception 발생
-        if(userRepository.existsByUserId(userId)){
+        if(userRepository.existsByLoginId(loginId)){
             //이미 존재하는 아이디 임. 따라서 해당 아이디로 신규 가입 불가능
             throw new UserAlreadyExistException();
         }
@@ -69,7 +69,7 @@ public class UserSignUpService {
         // 필수값이 아닌 값들은 DTO에서 null로 넘어와도, 생성자를 통해 그대로 생성된다.
         //수정사항 04.08 dto가 변경되면서 수정
         User newUser = new User(
-            signup_request.getUserId(),
+            signup_request.getLoginId(),
             encodedPassword, 
             signup_request.getNickName(),
             signup_request.getEmail(),

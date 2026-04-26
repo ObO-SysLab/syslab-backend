@@ -12,7 +12,7 @@ import jakarta.validation.constraints.NotBlank;
  * 현재 회원 가입 기능의 request body는 다음과 같음
  * {
     "email": "{{userEmailAddrInput}}",
-    "user_id": "{{userIdInput}}",
+    "login_id": "{{userIdInput}}",
     "password": "{{userPwInput}}",
     "nick_name": "{{userNicknameInpu}}",
     "belong": "{{userBelongInput}}", 
@@ -25,8 +25,8 @@ public class AuthSignUpRequest {
     private String email;
 
     @NotBlank
-    @JsonProperty("user_id")
-    private String userId;
+    @JsonProperty("login_id")
+    private String loginId;
 
     @NotBlank
     @JsonProperty("password")
@@ -55,12 +55,12 @@ public class AuthSignUpRequest {
         this.email = email;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getLoginId() {
+        return loginId;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
     }
 
     public String getPassword() {
