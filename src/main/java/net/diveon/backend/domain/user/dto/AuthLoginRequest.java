@@ -5,11 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 public class AuthLoginRequest {
 
     @NotBlank
-    private String user_id;
+    private String login_id;
 
     @NotBlank
     private String password;
 
-    public String getUser_id() { return user_id; }
+    public String getLogin_id() { return login_id; }
     public String getPassword() { return password; }
 }

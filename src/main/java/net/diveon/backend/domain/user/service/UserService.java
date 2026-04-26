@@ -24,7 +24,7 @@ public class UserService {
 
     public AuthLoginResponse login(AuthLoginRequest request) {
         // 아이디로 유저 조회, 없으면 401
-        User user = userRepository.findByUserId(request.getUser_id())
+        User user = userRepository.findByLoginId(request.getLogin_id())
                 .orElseThrow(InvalidCredentialsException::new);
 
         // 비밀번호 검증 (BCrypt), 불일치 시 401
