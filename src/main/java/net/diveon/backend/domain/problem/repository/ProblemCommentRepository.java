@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ProblemCommentRepository extends JpaRepository<ProblemComment, Long> {
-
+    // 최상위 댓글만 (parent = null)
     Page<ProblemComment> findByProblem_IdAndParentIsNull(Long probId, Pageable pageable);
-    // Page<>는 데이터 목록이랑 총 개수를 한번에 가져와 줌. (List<>로 받으면 count쿼리를 따로 날려야.)
+    // 특정 댓글들의 답글 한번에 가져오기
     List<ProblemComment> findByParent_IdInOrderByCreatedAtAsc(List<Long> parentIds);
 }

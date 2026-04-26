@@ -76,7 +76,7 @@ public class ProblemCommentResponse {
         public String getUpdatedAt() { return updatedAt; }
     }
 
-    // 댓글 상세 조회용 (replies 있음)
+    // 댓글 상세 조회용 (replies 있음, 원댓글 + 그 아래 답글 목록을 같이 담는 컨테이너)
     public static class CommentItem {
 
         @JsonProperty("comment_id")
@@ -131,6 +131,8 @@ public class ProblemCommentResponse {
         public List<ReplyItem> getReplies() { return replies; }
     }
 
+
+    // 답글 하나짜리 데이터
     public static class ReplyItem {
 
         @JsonProperty("comment_id")
@@ -179,6 +181,7 @@ public class ProblemCommentResponse {
         public String getUpdatedAt() { return updatedAt; }
     }
 
+    // 댓글, 답글 생성
     public static class CommentCreate {
 
         @JsonProperty("comment_id")

@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.problem.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -8,11 +9,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import net.diveon.backend.domain.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "comments")
@@ -34,6 +38,9 @@ public class ProblemComment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id") // 자기 자신 테이블 참조 FK
     private ProblemComment parent;
+
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.REMOVE, orphanRemoval = true) // 원댓글 삭제 시 답글 전체 삭제
+    private List<ProblemComment> replies = new ArrayList<>();
 
     @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
