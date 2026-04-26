@@ -1,17 +1,22 @@
 package net.diveon.backend.domain.problem.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.FetchType;
 
+import net.diveon.backend.domain.problem.entity.ProblemComment;
 import net.diveon.backend.domain.user.entity.User;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -30,6 +35,9 @@ public class Problem {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
+
+    @OneToMany(mappedBy = "problem", cascade = CascadeType.REMOVE, orphanRemoval = true) // 문제 삭제 시 댓글 전체 삭제
+    private List<ProblemComment> comments = new ArrayList<>();
 
     @Column(name = "type", length = 20, nullable = false)
     private String type; // objective / coding / practice
