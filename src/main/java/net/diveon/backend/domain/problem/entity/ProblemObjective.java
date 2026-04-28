@@ -38,8 +38,9 @@ public class ProblemObjective {
     @Column(name = "choices", columnDefinition = "JSONB", nullable = false)
     private List<ForDtoChoice> choices;
 
-    @Column(name = "answer", columnDefinition = "SMALLINT", nullable = false)
-    private Integer answer;
+    @Type(JsonType.class)
+    @Column(name = "answer", columnDefinition = "JSONB", nullable = false)
+    private List<Integer> answer;
 
     @Column(name = "obo_enabled", nullable = false)
     private Boolean oboEnabled = false;
@@ -50,7 +51,7 @@ public class ProblemObjective {
 
     // 2. 데이터 생성을 위한 생성자
     public ProblemObjective(Problem problem, String summary, String description, 
-                            List<ForDtoChoice> choices, Integer answer,
+                            List<ForDtoChoice> choices, List<Integer> answer,
                             Boolean oboEnabled) {
         this.problem = problem;
         this.summary = summary;
@@ -66,7 +67,7 @@ public class ProblemObjective {
     public String getSummary() { return summary; }
     public String getDescription() { return description; }
     public List<ForDtoChoice> getChoices() { return choices; }
-    public Integer getAnswer() { return answer; }
+    public List<Integer> getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
     /**
      * <pre>
@@ -78,12 +79,12 @@ public class ProblemObjective {
      * - summary; String, TEXT
      * - description; String, TEXT
      * - choices; List<Choice>, JSONB
-     * - answer; Integer, SMALLINT
+     * - answer; List<Integer>, JSONB
      * - oboEnabled; boolean, ???
      * </pre>
      */
     public void updateProblemObjective(String summary, String description,
-        List<ForDtoChoice> choices, Integer answer, Boolean oboEnabled){
+        List<ForDtoChoice> choices, List<Integer> answer, Boolean oboEnabled){
             if(summary != null) this.summary = summary;
             if(description != null)this.description = description;
             if(choices != null)this.choices = choices;

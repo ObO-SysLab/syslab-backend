@@ -30,7 +30,7 @@ import java.util.List;
  *     "choices": [
  *       { "index": 1, "content": "선점형이다", "image_url": null }
  *     ],
- *     "answer": 1,
+ *     "answer": [1, 2],
  *     "obo_enabled": true,
  *     "obo_steps": [
  *       { "step": 1, "description": "설명", "image_url": null }
@@ -57,7 +57,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     private String summary;
     private String description;
     private List<ForDtoChoice> choices;
-    private Integer answer;
+    private List<Integer> answer;
 
     @JsonProperty("obo_enabled")
     private Boolean oboEnabled;
@@ -91,7 +91,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
         String summary,
         String description,
         List<ForDtoChoice> choices,
-        Integer answer,
+        List<Integer> answer,
         Boolean oboEnabled,
         List<ForDtoOboStep> oboSteps,
         Integer solvedCount,
@@ -208,7 +208,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
         return choices;
     }
 
-    public Integer getAnswer() {
+    public List<Integer> getAnswer() {
         return answer;
     }
 

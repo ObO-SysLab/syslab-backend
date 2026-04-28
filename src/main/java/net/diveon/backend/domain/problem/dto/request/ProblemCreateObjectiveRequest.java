@@ -21,7 +21,7 @@ import java.util.List;
     { "index": 3, "content": "우선순위 기반이다", "image_url": null },
     { "index": 4, "content": "FIFO 방식이다", "image_url": null }
   ],  // JSONB로 데이터베이스 저장될 것임.
-  "answer": {{answer}},
+  "answer": [1, 2],
   "oboEnabled": {{enabled}},
   "obo": {  // object 타입
     "steps": [
@@ -50,7 +50,7 @@ public class ProblemCreateObjectiveRequest {
     private String visibility;
     private String summary;
     private List<ForDtoChoice> choices;
-    private Integer answer;
+    private List<Integer> answer;
     private Boolean oboEnabled;
     private Obo obo;
 
@@ -113,11 +113,11 @@ public class ProblemCreateObjectiveRequest {
         this.choices = choices;
     }
 
-    public Integer getAnswer() {
+    public List<Integer> getAnswer() {
         return answer;
     }
 
-    public void setAnswer(Integer answer) {
+    public void setAnswer(List<Integer> answer) {
         this.answer = answer;
     }
 
