@@ -124,4 +124,46 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
         }
+
+        // 이미 실행 중인 VM 있음 → 409
+        @ExceptionHandler(VmAlreadyExistsException.class)
+        public ResponseEntity<ErrorResponse> handleVmAlreadyExists(
+                VmAlreadyExistsException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/vm-already-exists",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // VM을 찾을 수 없음 → 404
+        @ExceptionHandler(VmNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleVmNotFound(
+                VmNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/vm-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 본인 VM이 아닌 경우 → 403
+        @ExceptionHandler(VmAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleVmAccessDenied(
+                VmAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/vm-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
 }

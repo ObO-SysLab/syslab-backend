@@ -35,6 +35,7 @@ public class VmContainer {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
+    // JPA용 기본 생성자
     public VmContainer() {}
 
     public VmContainer(Long userId, String containerId, Long probId, String image,
