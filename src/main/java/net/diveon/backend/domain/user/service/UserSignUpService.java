@@ -7,6 +7,10 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.dto.AuthSignUpRequest;
 import net.diveon.backend.domain.user.repository.UserRepository;
 // import net.diveon.backend.global.exception.InvalidCredentialsException;
+import net.diveon.backend.global.exception.UserAlreadyExistException;
+
+import java.util.Objects;
+
 
 import org.springframework.stereotype.Service;
 
@@ -31,7 +35,6 @@ public class UserSignUpService {
         this.passwordEncoder = passwordEncoder;
     }
 
-
     /**<pre>
      * 사용자 가입 함수 - 계정생성
      * 계정 생성이 되었다면 true, 모든 생성의 반대 되는상황(오류,불가,기존재 등)에는 false를 반환.
@@ -41,45 +44,39 @@ public class UserSignUpService {
      * @param signup_request
      * @return boolen
      */
-    public boolean signup(AuthSignUpRequest signup_request){
+    // 수정사항 - 04.18 - 안상완 - 표준 에러 출력을 위해, 기존의 boolean 반환에서 exception throw로 변경
+    public void signup(AuthSignUpRequest signup_request){
 
-        //사용자 엔티티를, ID를 통해서 전부 가져온다.
-        //existsById()를 사용하여 검색만 진행한다.
-        //현재 @NonNUll을 이용하라는 것 같음, 아마 검증이 안되는 상태 인 듯 함.
-        if(userRepository.existsById(signup_request.getUserId())){
-            //이미 존재하는 아이디 임. 따라서 해당 아이디로 신규 가입 불가능
-            return false;
-        }
+
+
+        // //사용자 엔티티를, ID를 통해서 전부 가져온다.
+        // //existsById()를 사용하여 검색만 진행한다.
+        // 이 아래의 한줄은 우리가 의도한 표준 에러가 아니라서 차후에 수정이 필요할 것임 2026.04.18 - 안상완
+        // 일반 @valid 어노테이션으로 걸러지는거 확인은 했는데, 일단은 살려두겟습니다 - 2026.04.18 - 안상완
+        String loginId = Objects.requireNonNull(signup_request.getLoginId(), "아이디는 필수 입력값입니다.");
 
         //인코드를 통해서 비밀번호 암호화 진행
-        String encodedPassword = passwordEncoder.encode(signup_request.getUserPassword());
+        //수정사항 04.08 dto 변경되면서, getter 메서드 변화로 인한 수정
+        String encodedPassword = passwordEncoder.encode(signup_request.getPassword());
 
+        // 만약 아이디가 존재한다면, exception 발생
+        if(userRepository.existsByLoginId(loginId)){
+            //이미 존재하는 아이디 임. 따라서 해당 아이디로 신규 가입 불가능
+            throw new UserAlreadyExistException();
+        }
         //새로운 유저 객체 생성
         //DTO 정보에서 Entity 정보로 변경
         // 필수값이 아닌 값들은 DTO에서 null로 넘어와도, 생성자를 통해 그대로 생성된다.
+        //수정사항 04.08 dto가 변경되면서 수정
         User newUser = new User(
-            signup_request.getUserId(),
+            signup_request.getLoginId(),
             encodedPassword, 
-            signup_request.getUserNickName(),
-            signup_request.getUserEmail(),
-            signup_request.getUserBelong(),
-            signup_request.getUserInterest()
+            signup_request.getNickName(),
+            signup_request.getEmail(),
+            signup_request.getBelong(),
+            signup_request.getInterest()
         );
-        
-
         userRepository.save(newUser);
-        return true;
-        
-        //성공 시나리오
-        //사용자 존재 확인 이후- 구현
-        // 비밀번호 암호화, passwordEncoder를 사용하면 될 듯하다  - 구현
-        //이후 나머지 usertable에 대하여, 할당하고(not NULL 컬럼에 대해서), - 구현
-        // 레포지 토리 통해서 새로운 row 삽입 - 구현
-        // 이후 true 반환 -구현
-
-        
-
-
-        //사용자 가입- 즉, 계정 생성에 있어서 문제가 없다면 true, 존재한다면 fasle
+        return;
     }
 }

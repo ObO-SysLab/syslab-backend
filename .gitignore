@@ -1,6 +1,5 @@
 ######################################################################
 ## diveon Project Standard .gitignore
-## 작성일: 2026.04.05
 ######################################################################
 
 ### 1. Java & Build Tools (Gradle) ###
@@ -64,4 +63,6 @@ bin/
 Thumbs.db
 CLAUDE.md
 HELP.md
-
+GEMINI.md
+Codex.md
+AGENTS.md
