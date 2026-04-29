@@ -3,6 +3,7 @@ package net.diveon.backend.domain.vm.controller;
 import jakarta.validation.Valid;
 import net.diveon.backend.domain.vm.dto.request.VmCreateRequest;
 import net.diveon.backend.domain.vm.dto.response.VmCreateResponse;
+import net.diveon.backend.domain.vm.dto.response.VmDeleteResponse;
 import net.diveon.backend.domain.vm.service.VmService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -35,12 +36,12 @@ public class VmController {
     }
 
     @DeleteMapping("/{container_id}")
-    public ResponseEntity<ApiResponse<Void>> deleteVm(
+    public ResponseEntity<ApiResponse<VmDeleteResponse>> deleteVm(
             @AuthenticationPrincipal String userId,
             @PathVariable("container_id") String containerId
     ) {
-        vmService.deleteVm(Long.parseLong(userId), containerId);
+        VmDeleteResponse response = vmService.deleteVm(Long.parseLong(userId), containerId);
         return ResponseEntity.ok()
-                .body(ApiResponse.success("VM이 성공적으로 삭제되었습니다.", null));
+                .body(ApiResponse.success("VM이 성공적으로 종료 및 삭제되었습니다.", response));
     }
 }

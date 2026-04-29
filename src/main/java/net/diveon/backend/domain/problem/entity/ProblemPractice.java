@@ -48,6 +48,9 @@ public class ProblemPractice {
     @Column(name = "hint", columnDefinition = "TEXT")
     private String hint;
 
+    @Column(name = "ecr_image_uri", length = 500)
+    private String ecrImageUri;
+
     @Column(name = "is_draft")
     private Boolean isDraft = false;
 
@@ -84,6 +87,7 @@ public class ProblemPractice {
     public String getFlagHash() { return flagHash; }
     public String getDockerFileUrl() { return dockerFileUrl; }
     public String getHint() { return hint; }
+    public String getEcrImageUri() { return ecrImageUri; }
     public Boolean getIsDraft() { return isDraft; }
     public Integer getTimeLimitSec() { return timeLimitSec; }
 

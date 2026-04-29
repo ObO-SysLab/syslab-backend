@@ -33,6 +33,7 @@ public class ProblemCreatePracticeRequest {
     @NotBlank
     private String flag;
 
+    @NotBlank
     @JsonProperty("docker_file_url")
     private String dockerFileUrl;
 

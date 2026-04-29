@@ -10,7 +10,7 @@ import java.util.UUID;
 public class DockerServiceMock implements DockerService {
 
     @Override
-    public String createContainer(Long probId) {
+    public String createContainer(String image) {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 

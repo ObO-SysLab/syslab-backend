@@ -1,8 +1,10 @@
 package net.diveon.backend.domain.vm.service;
 
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.vm.dto.request.VmCreateRequest;
 import net.diveon.backend.domain.vm.dto.response.VmCreateResponse;
+import net.diveon.backend.domain.vm.dto.response.VmDeleteResponse;
 import net.diveon.backend.domain.vm.entity.VmContainer;
 import net.diveon.backend.domain.vm.repository.VmContainerRepository;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
@@ -33,16 +35,15 @@ public class VmService {
     public VmCreateResponse createVm(Long userId, VmCreateRequest request) {
         Long probId = request.getProbId();
 
-        if (!problemPracticeRepository.existsById(probId)) {
-            throw new ProblemNotFoundException("존재하지 않는 실습 문제입니다.");
-        }
+        ProblemPractice practice = problemPracticeRepository.findById(probId)
+                .orElseThrow(() -> new ProblemNotFoundException("존재하지 않는 실습 문제입니다."));
 
         if (vmContainerRepository.existsByUserId(userId)) {
             throw new VmAlreadyExistsException("이미 실행 중인 VM이 있습니다.");
         }
 
-        String image = "jotriever/syslab-prob" + probId + ":latest";
-        String containerId = dockerService.createContainer(probId);
+        String image = practice.getEcrImageUri();
+        String containerId = dockerService.createContainer(image);
 
         LocalDateTime now = LocalDateTime.now();
         VmContainer vm = new VmContainer(userId, containerId, probId, image, now, now.plusHours(2));
@@ -52,7 +53,7 @@ public class VmService {
     }
 
     @Transactional
-    public void deleteVm(Long userId, String containerId) {
+    public VmDeleteResponse deleteVm(Long userId, String containerId) {
         VmContainer vm = vmContainerRepository.findByContainerId(containerId)
                 .orElseThrow(() -> new VmNotFoundException("존재하지 않는 컨테이너입니다."));
 
@@ -62,5 +63,7 @@ public class VmService {
 
         dockerService.removeContainer(containerId);
         vmContainerRepository.delete(vm);
+
+        return new VmDeleteResponse(containerId, LocalDateTime.now());
     }
 }

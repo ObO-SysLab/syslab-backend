@@ -2,7 +2,7 @@ package net.diveon.backend.domain.vm.service;
 
 public interface DockerService {
 
-    String createContainer(Long probId);
+    String createContainer(String image);
 
     void removeContainer(String containerId);
 }

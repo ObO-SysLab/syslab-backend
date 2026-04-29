@@ -23,9 +23,7 @@ public class DockerServiceImpl implements DockerService {
     } // dockerBaseUrl → http://{VM EC2 IP}:2375 로 조합. 모든 Docker API 요청이 여기로 감
 
     @Override
-    public String createContainer(Long probId) {
-        String image = "jotriever/syslab-prob" + probId + ":latest";
-
+    public String createContainer(String image) {
         Map<String, Object> hostConfig = new HashMap<>();
         hostConfig.put("NetworkMode", "none");
         hostConfig.put("Memory", 512 * 1024 * 1024L);
