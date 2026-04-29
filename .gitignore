@@ -61,6 +61,7 @@ bin/
 ### 5. OS & Misc Files ###
 .DS_Store
 Thumbs.db
+docs/
 CLAUDE.md
 HELP.md
 GEMINI.md
