@@ -166,4 +166,18 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
+
+        // 이미지 준비 안 됨 → 400
+        @ExceptionHandler(ImageNotReadyException.class)
+        public ResponseEntity<ErrorResponse> handleImageNotReady(
+                ImageNotReadyException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/vm/image-not-ready",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
 }

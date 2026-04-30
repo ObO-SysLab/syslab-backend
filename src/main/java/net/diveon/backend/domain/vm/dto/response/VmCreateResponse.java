@@ -1,48 +1,35 @@
 package net.diveon.backend.domain.vm.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import net.diveon.backend.domain.vm.entity.VmContainer;
+import net.diveon.backend.domain.vm.entity.VmSession;
 
 import java.time.LocalDateTime;
 
 public class VmCreateResponse {
 
+    private String status;
+
     @JsonProperty("container_id")
     private String containerId;
 
-    @JsonProperty("prob_id")
-    private Long probId;
-
-    private String image;
-
-    @JsonProperty("created_at")
-    private LocalDateTime createdAt;
+    private String message;
 
     @JsonProperty("expires_at")
     private LocalDateTime expiresAt;
 
-    public VmCreateResponse(String containerId, Long probId, String image,
-                            LocalDateTime createdAt, LocalDateTime expiresAt) {
+    public VmCreateResponse(String status, String containerId, String message, LocalDateTime expiresAt) {
+        this.status = status;
         this.containerId = containerId;
-        this.probId = probId;
-        this.image = image;
-        this.createdAt = createdAt;
+        this.message = message;
         this.expiresAt = expiresAt;
     }
 
-    public static VmCreateResponse from(VmContainer vm) {
-        return new VmCreateResponse(
-                vm.getContainerId(),
-                vm.getProbId(),
-                vm.getImage(),
-                vm.getCreatedAt(),
-                vm.getExpiresAt()
-        );
+    public static VmCreateResponse from(VmSession session, String message) {
+        return new VmCreateResponse("success", session.getContainerId(), message, session.getExpiresAt());
     }
 
+    public String getStatus() { return status; }
     public String getContainerId() { return containerId; }
-    public Long getProbId() { return probId; }
-    public String getImage() { return image; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getMessage() { return message; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
 }

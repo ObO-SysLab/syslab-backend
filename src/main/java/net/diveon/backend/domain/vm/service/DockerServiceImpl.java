@@ -1,72 +1,102 @@
 package net.diveon.backend.domain.vm.service;
 
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 @Service
 @Profile("prod")
 public class DockerServiceImpl implements DockerService {
 
-    private final String dockerBaseUrl;
-    private final RestTemplate restTemplate = new RestTemplate(); // Spring에서 HTTP 요청 보내는 도구. Docker Remote API가 HTTP 기반이라 이걸로 호출
+    private final String vmHost;
+    private final String vmUser;
+    private final String vmKeyPath;
 
-    public DockerServiceImpl(@Value("${aws.vm-ec2-host}") String vmEc2Host) {
-        this.dockerBaseUrl = "http://" + vmEc2Host + ":2375";
-    } // dockerBaseUrl → http://{VM EC2 IP}:2375 로 조합. 모든 Docker API 요청이 여기로 감
-
-    @Override
-    public String createContainer(String image) {
-        Map<String, Object> hostConfig = new HashMap<>();
-        hostConfig.put("NetworkMode", "none");
-        hostConfig.put("Memory", 512 * 1024 * 1024L);
-        hostConfig.put("NanoCpus", 500_000_000L);
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("Image", image);
-        body.put("HostConfig", hostConfig);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        DockerCreateResponse response = restTemplate.postForObject(
-                dockerBaseUrl + "/containers/create",
-                new HttpEntity<>(body, headers),
-                DockerCreateResponse.class
-        );
-
-        String containerId = response.getId();
-
-        restTemplate.postForObject(
-                dockerBaseUrl + "/containers/" + containerId + "/start",
-                new HttpEntity<>(null, headers),
-                Void.class
-        );
-
-        return containerId;
+    public DockerServiceImpl(
+            @Value("${vm.ec2-host}") String vmHost,
+            @Value("${vm.ec2-user}") String vmUser,
+            @Value("${vm.ec2-key-path}") String vmKeyPath) {
+        this.vmHost = vmHost;
+        this.vmUser = vmUser;
+        this.vmKeyPath = vmKeyPath;
     }
 
+    // VM EC2에서 docker run 명령어 실행하고 컨테이너 ID 받아오기
     @Override
-    public void removeContainer(String containerId) {
-        restTemplate.postForObject(
-                dockerBaseUrl + "/containers/" + containerId + "/stop?t=0",
-                null,
-                Void.class
+    public String runContainer(String image, Long userId, Long probId) {
+        String command = String.format(
+                "docker run -d --memory 256m --cpus 0.3 --network none --name syslab-vm-%d-%d %s sleep infinity",
+                userId, probId, image
         );
-
-        restTemplate.delete(dockerBaseUrl + "/containers/" + containerId);
+        return executeCommand(command).trim();
     }
 
-    private static class DockerCreateResponse {
-        private String Id;
-        public String getId() { return Id; }
-        public void setId(String id) { this.Id = id; }
+
+    // // SSH로 VM EC2 접속 후 컨테이너 중지 및 삭제
+    @Override
+    public void stopAndRemoveContainer(String containerId) {
+        executeCommand("docker stop " + containerId + " && docker rm " + containerId);
+    }
+
+    private String executeCommand(String command) {
+        Session session = null;
+        ChannelExec channel = null;
+        try {
+            JSch jsch = new JSch();
+            jsch.addIdentity(vmKeyPath); // PEM 키 파일 로드
+
+
+            // VM EC2 SSH 연결
+            session = jsch.getSession(vmUser, vmHost, 22);
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            // 연결된 SSH 세션에서 명령어 실행 채널열고, command 실행
+            channel = (ChannelExec) session.openChannel("exec");
+            channel.setCommand(command);
+            channel.setErrStream(System.err);
+
+            // 실행결과 (컨테이너 ID)를 한 줄씩 읽어서 반환
+            BufferedReader reader = new BufferedReader(new InputStreamReader(channel.getInputStream()));
+            channel.connect();
+
+            StringBuilder output = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line);
+            }
+
+            return output.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("VM EC2 SSH 명령 실행 실패: " + e.getMessage(), e);
+        } finally { // 끝나면 SSH 연결 끊기 (안 끊으면 연결이 계속 쌓여서 문제 발생 위험)
+            if (channel != null) channel.disconnect();
+            if (session != null) session.disconnect();
+        }
     }
 }
+
+
+/* 요약
+1. PEM 키 파일 로드
+        ↓
+2. VM EC2에 SSH 연결 (10.0.1.19:22)
+        ↓
+3. "docker run -d ..." 명령어 실행
+        ↓
+4. VM EC2가 출력한 컨테이너 ID 읽기
+        ↓
+5. SSH 연결 끊기
+        ↓
+6. 컨테이너 ID 반환
+
+터미널에서 직접 VM EC2에 SSH 접속해서
+docker run 치는 것과 완전히 동일한 동작을
+코드로 자동화한 것임
+*/

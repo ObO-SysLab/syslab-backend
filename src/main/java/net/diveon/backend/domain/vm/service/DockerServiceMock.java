@@ -10,11 +10,11 @@ import java.util.UUID;
 public class DockerServiceMock implements DockerService {
 
     @Override
-    public String createContainer(String image) {
+    public String runContainer(String image, Long userId, Long probId) {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 
     @Override
-    public void removeContainer(String containerId) {
+    public void stopAndRemoveContainer(String containerId) {
     }
 }

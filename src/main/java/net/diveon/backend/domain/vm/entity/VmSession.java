@@ -10,8 +10,8 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "vm_container")
-public class VmContainer {
+@Table(name = "vm_sessions")
+public class VmSession {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,39 +20,40 @@ public class VmContainer {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "container_id", nullable = false, length = 64)
-    private String containerId;
-
     @Column(name = "prob_id", nullable = false)
     private Long probId;
 
-    @Column(name = "image", nullable = false, length = 200)
-    private String image;
+    @Column(name = "container_id", length = 100)
+    private String containerId;
+
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "RUNNING";
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
-    // JPA용 기본 생성자
-    public VmContainer() {}
+    public VmSession() {}
 
-    public VmContainer(Long userId, String containerId, Long probId, String image,
-                       LocalDateTime createdAt, LocalDateTime expiresAt) {
+    public VmSession(Long userId, Long probId, String containerId,
+                     LocalDateTime createdAt, LocalDateTime expiresAt) {
         this.userId = userId;
-        this.containerId = containerId;
         this.probId = probId;
-        this.image = image;
+        this.containerId = containerId;
+        this.status = "RUNNING";
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
     }
 
     public Long getId() { return id; }
     public Long getUserId() { return userId; }
-    public String getContainerId() { return containerId; }
     public Long getProbId() { return probId; }
-    public String getImage() { return image; }
+    public String getContainerId() { return containerId; }
+    public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
+
+    public void stop() { this.status = "STOPPED"; }
 }

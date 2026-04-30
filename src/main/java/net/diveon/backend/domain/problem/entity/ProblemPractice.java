@@ -51,6 +51,9 @@ public class ProblemPractice {
     @Column(name = "ecr_image_uri", length = 500)
     private String ecrImageUri;
 
+    @Column(name = "image_status", length = 20)
+    private String imageStatus = "PENDING";
+
     @Column(name = "is_draft")
     private Boolean isDraft = false;
 
@@ -88,6 +91,11 @@ public class ProblemPractice {
     public String getDockerFileUrl() { return dockerFileUrl; }
     public String getHint() { return hint; }
     public String getEcrImageUri() { return ecrImageUri; }
+    public String getImageStatus() { return imageStatus; }
+    public void updateImageStatus(String imageStatus, String ecrImageUri) {
+        this.imageStatus = imageStatus;
+        if (ecrImageUri != null) this.ecrImageUri = ecrImageUri;
+    }
     public Boolean getIsDraft() { return isDraft; }
     public Integer getTimeLimitSec() { return timeLimitSec; }
 
