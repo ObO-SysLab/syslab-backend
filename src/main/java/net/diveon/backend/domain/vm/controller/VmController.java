@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
-// 실습형 VM 환경 상태 확인/생성/종료/초기화 API
+// 실습형 VM 환경 상태 조회/생성/종료/초기화 API
 @RestController
 @RequestMapping("/api/vm")
 public class VmController {
@@ -30,6 +30,7 @@ public class VmController {
         this.vmService = vmService;
     }
 
+    // VM 상태 조회
     @GetMapping("/status/{probId}")
     public ResponseEntity<ApiResponse<VmStatusResponse>> getStatus(
             @AuthenticationPrincipal String userId,
@@ -39,6 +40,7 @@ public class VmController {
         return ResponseEntity.ok(ApiResponse.success("VM 상태를 조회했습니다.", response));
     }
 
+    // VM 생성
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<VmCreateResponse>> createVm(
             @AuthenticationPrincipal String userId,
@@ -49,6 +51,7 @@ public class VmController {
                 .body(ApiResponse.success(response.getMessage(), response));
     }
 
+    // VM 중지
     @DeleteMapping("/stop")
     public ResponseEntity<ApiResponse<VmStopResponse>> stopVm(
             @AuthenticationPrincipal String userId,
@@ -58,6 +61,7 @@ public class VmController {
         return ResponseEntity.ok(ApiResponse.success(response.getMessage(), response));
     }
 
+    // VM 리셋
     @PostMapping("/reset")
     public ResponseEntity<ApiResponse<VmCreateResponse>> resetVm(
             @AuthenticationPrincipal String userId,
