@@ -18,10 +18,11 @@ public class DockerServiceImpl implements DockerService {
     private final String vmUser;
     private final String vmKeyPath;
 
-    public DockerServiceImpl(
-            @Value("${vm.ec2-host}") String vmHost,
-            @Value("${vm.ec2-user}") String vmUser,
-            @Value("${vm.ec2-key-path}") String vmKeyPath) {
+    public DockerServiceImpl( 
+        // application-secret.yml에서 @Value로 주입받는 것들
+            @Value("${vm.ec2-host}") String vmHost, // VM EC2 IP (10.0.1.19)
+            @Value("${vm.ec2-user}") String vmUser, // ec2-user
+            @Value("${vm.ec2-key-path}") String vmKeyPath) {  // PEM 키 파일 경로
         this.vmHost = vmHost;
         this.vmUser = vmUser;
         this.vmKeyPath = vmKeyPath;
@@ -34,16 +35,18 @@ public class DockerServiceImpl implements DockerService {
                 "docker run -d --memory 256m --cpus 0.3 --network none --name syslab-vm-%d-%d %s sleep infinity",
                 userId, probId, image
         );
-        return executeCommand(command).trim();
+        return executeCommand(command).trim(); // docker run 명령어 만들어서 executeCommand에 넘김
     }
 
 
-    // // SSH로 VM EC2 접속 후 컨테이너 중지 및 삭제
+    // SSH로 VM EC2 접속 후 컨테이너 중지 및 삭제
     @Override
     public void stopAndRemoveContainer(String containerId) {
         executeCommand("docker stop " + containerId + " && docker rm " + containerId);
-    }
+    } // stop + rm 명령어 만들어서 executeCommand에 넘김
 
+
+    // 실제 SSH실행 담당
     private String executeCommand(String command) {
         Session session = null;
         ChannelExec channel = null;
