@@ -44,6 +44,9 @@ dependencies {
 	// SSH로 VM EC2 제어
 	implementation 'com.github.mwiede:jsch:0.2.17'
 
+	// SQS Worker
+	implementation 'software.amazon.awssdk:sqs:2.26.31'
+
 	// 커스텀 설정값 자동완성
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
