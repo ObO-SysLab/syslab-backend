@@ -46,7 +46,7 @@ public class PracticeBuildResultConsumer {
 
     @Scheduled(fixedDelay = 5000) // 5초마다 SQS 폴링
     public void poll() {
-        ReceiveMessageResponse response = sqsClient.receiveMessage(
+        ReceiveMessageResponse response = sqsClient.receiveMessage( // SQS에서 메시지 꺼냄
                 ReceiveMessageRequest.builder()
                         .queueUrl(queueUrl)
                         .maxNumberOfMessages(5)
@@ -80,7 +80,7 @@ public class PracticeBuildResultConsumer {
                     log.warn("빌드 실패 - prob_id: {}", probId);
                 }
 
-                // 처리 완료된 메시지 SQS에서 삭제
+                // 처리 완료된 메시지 SQS에서 삭제 (안 지우면 5초 뒤에 또 처리하는 문제 발생)
                 sqsClient.deleteMessage(
                         DeleteMessageRequest.builder()
                                 .queueUrl(queueUrl)

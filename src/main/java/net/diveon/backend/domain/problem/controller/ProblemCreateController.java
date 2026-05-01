@@ -18,6 +18,7 @@ import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -68,12 +69,12 @@ public class ProblemCreateController {
     }
 
     // 실습형
-    @PostMapping("/practice") // 프론트 요청을 받음
+    @PostMapping(value = "/practice", consumes = "multipart/form-data") // 파일 포함된 요청만 받겠다는 뜻
     public ResponseEntity<ApiResponse<ProblemCreatePracticeResponse>> createPracticeProblem(
-            @Valid @RequestBody ProblemCreatePracticeRequest request,
+            @Valid @ModelAttribute ProblemCreatePracticeRequest request,
             @AuthenticationPrincipal String userId) {
 
-            ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(Long.parseLong(userId), request); // 서비스를 호출
+            ProblemCreatePracticeResponse responseBody = problemCreateService.createPractice(Long.parseLong(userId), request);
 
             return ResponseEntity.status(201).body(ApiResponse.success("문제가 등록되었습니다.", responseBody));
     }

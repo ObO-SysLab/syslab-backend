@@ -1,8 +1,8 @@
 package net.diveon.backend.domain.problem.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,16 +26,24 @@ public class ProblemCreatePracticeRequest {
     @NotBlank
     private String visibility;
 
-    @NotNull
-    @JsonProperty("vm_config")
-    private VmConfig vmConfig;
+    @NotBlank
+    private String osImage;
+
+    private List<String> allowedCommands;
+
+    private String cpuLimit = "0.3";
+
+    private String memoryLimit = "256m";
 
     @NotBlank
     private String flag;
 
-    @NotBlank
-    @JsonProperty("docker_file_url")
-    private String dockerFileUrl;
+    private String hint;
+
+    private Integer timeLimitSec;
+
+    @NotNull
+    private MultipartFile dockerfile;
 
     public ProblemCreatePracticeRequest() {
     }
@@ -58,43 +66,27 @@ public class ProblemCreatePracticeRequest {
     public String getVisibility() { return visibility; }
     public void setVisibility(String visibility) { this.visibility = visibility; }
 
-    public VmConfig getVmConfig() { return vmConfig; }
-    public void setVmConfig(VmConfig vmConfig) { this.vmConfig = vmConfig; }
+    public String getOsImage() { return osImage; }
+    public void setOsImage(String osImage) { this.osImage = osImage; }
+
+    public List<String> getAllowedCommands() { return allowedCommands; }
+    public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
+
+    public String getCpuLimit() { return cpuLimit; }
+    public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }
+
+    public String getMemoryLimit() { return memoryLimit; }
+    public void setMemoryLimit(String memoryLimit) { this.memoryLimit = memoryLimit; }
 
     public String getFlag() { return flag; }
     public void setFlag(String flag) { this.flag = flag; }
 
-    public String getDockerFileUrl() { return dockerFileUrl; }
-    public void setDockerFileUrl(String dockerFileUrl) { this.dockerFileUrl = dockerFileUrl; }
+    public String getHint() { return hint; }
+    public void setHint(String hint) { this.hint = hint; }
 
-    public static class VmConfig {
+    public Integer getTimeLimitSec() { return timeLimitSec; }
+    public void setTimeLimitSec(Integer timeLimitSec) { this.timeLimitSec = timeLimitSec; }
 
-        @NotBlank
-        @JsonProperty("os_image")
-        private String osImage;
-
-        @JsonProperty("allowed_commands")
-        private List<String> allowedCommands;
-
-        @JsonProperty("cpu_limit")
-        private String cpuLimit = "0.5";
-
-        @JsonProperty("memory_limit")
-        private String memoryLimit = "512m";
-
-        public VmConfig() {
-        }
-
-        public String getOsImage() { return osImage; }
-        public void setOsImage(String osImage) { this.osImage = osImage; }
-
-        public List<String> getAllowedCommands() { return allowedCommands; }
-        public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
-
-        public String getCpuLimit() { return cpuLimit; }
-        public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }
-
-        public String getMemoryLimit() { return memoryLimit; }
-        public void setMemoryLimit(String memoryLimit) { this.memoryLimit = memoryLimit; }
-    }
+    public MultipartFile getDockerfile() { return dockerfile; }
+    public void setDockerfile(MultipartFile dockerfile) { this.dockerfile = dockerfile; }
 }
