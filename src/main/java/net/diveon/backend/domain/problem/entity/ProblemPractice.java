@@ -101,7 +101,7 @@ public class ProblemPractice {
 
     public void updatePractice(String summary, String description, String osImage,
                                List<String> allowedCommands, String cpuLimit,
-                               String memoryLimit, String flagHash, String dockerFileUrl) {
+                               String memoryLimit, String flagHash) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
         if (osImage != null) this.osImage = osImage;
@@ -109,6 +109,5 @@ public class ProblemPractice {
         if (cpuLimit != null) this.cpuLimit = cpuLimit;
         if (memoryLimit != null) this.memoryLimit = memoryLimit;
         if (flagHash != null) this.flagHash = flagHash;
-        if (dockerFileUrl != null) this.dockerFileUrl = dockerFileUrl;
     }
 }
