@@ -37,15 +37,20 @@ public class SubmissionGradeController {
     ){
         SubmissionGradeResponse initResponse = submissionGradeStarterService.submissionGradeStart(Long.parseLong(userId), reqeust);
         long submissionId = initResponse.getSubmissionId();
+        String problemType = initResponse.getProblemType();
 
         //long probId, 
         // long submitterId, 
         // long submissionId
 
-        if(Long.parseLong(userId) < 2){
+        if(problemType.equals("objective")){
             submissionGradeAsyncService.gradeProblemObjective(reqeust.getProdId(), Long.parseLong(userId), submissionId);
-        }else{
+        }else if(problemType.equals("practice")){
             submissionGradeAsyncService.gradeProblemPractice(reqeust.getProdId(), Long.parseLong(userId), submissionId);
+        }else if(problemType.equals("coding")){
+            submissionGradeAsyncService.gradeProblemCoding(reqeust.getProdId(), Long.parseLong(userId), submissionId);
+        }else{
+            throw new RuntimeException("문제 유형이 3가지중 어느것도 아닙니다.");
         }
 
         return ResponseEntity.status(200).body(ApiResponse.success("접수되었습니다.", initResponse));

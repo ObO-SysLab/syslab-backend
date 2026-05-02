@@ -25,13 +25,20 @@ public class SolveSubmissionCoding {
     @Column(name = "answer", nullable =  false, columnDefinition = "TEXT")
     private String answer;
 
+    @Column(name = "language", nullable = false, length = 20)
+    private String language;
+
     public SolveSubmissionCoding () {}
-    public SolveSubmissionCoding (SolveSubmission submission, String userAnswer) {
+    public SolveSubmissionCoding (SolveSubmission submission, String userAnswer, String language) {
         this.submission = submission;
         this.answer = userAnswer;
+        this.language = language;
     }
     public String getAnswer() {
         return answer;
+    }
+    public String getLanguage() {
+        return language;
     }
     public long getId() {
         return id;

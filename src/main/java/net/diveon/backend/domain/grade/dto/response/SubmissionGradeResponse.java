@@ -34,16 +34,22 @@ public class SubmissionGradeResponse {
     @JsonProperty("submissionStatus")
     private String submissionStatus;
 
+    @NonNull
+    @JsonProperty("problemType")
+    private String problemType;
+
     //생성자
     public SubmissionGradeResponse() {}
 
     public SubmissionGradeResponse(long submissionId, 
         long probId, 
-        String submissionStatus
+        String submissionStatus,
+        String problemType
     ){
         this.submissionId = submissionId;
         this.probId = probId;
         this.submissionStatus = submissionStatus;
+        this.problemType = problemType;
     }
 
     //getter
@@ -55,6 +61,9 @@ public class SubmissionGradeResponse {
     }
     public String getSubmissionStatus() {
         return submissionStatus;
+    }
+    public String getProblemType() {
+        return problemType;
     }
 
 
