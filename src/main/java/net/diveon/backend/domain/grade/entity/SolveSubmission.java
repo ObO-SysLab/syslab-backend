@@ -111,4 +111,10 @@ public class SolveSubmission {
     public LocalDateTime getSubmittedAt(){
         return submittedAt;
     }
+
+    //아래는 setter
+    public SubmissionState setSubmissionState(SolveSubmission.SubmissionState state){
+        this.submissionState = state;
+        return submissionState;
+    }
 }
