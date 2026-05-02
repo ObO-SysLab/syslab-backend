@@ -1,11 +1,15 @@
 package net.diveon.backend.domain.grade.service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionObjective;
+import net.diveon.backend.domain.grade.entity.SolveSubmissionPractice;
 import net.diveon.backend.domain.grade.entity.SovleResult;
 import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
 import net.diveon.backend.domain.grade.entity.SovleResult.SovleResultState;
@@ -16,6 +20,7 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionPracticeReposit
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
@@ -85,6 +90,8 @@ public class SubmissionGradeAsyncService {
     }
 
 
+
+    //추가로 디자인 패턴 적용해서, 이거는 수정하는게 좋을 듯합니다.
     /**
      * <pre>
      * 채점로직은 다음과 같이 동작함
@@ -103,7 +110,7 @@ public class SubmissionGradeAsyncService {
         long submitterId, 
         long submissionId
     ){
-        System.out.println("출력시작>>>>" + probId + "<<문제번호" + submissionId +"<<제출번호" + submitterId + "<<제출자 번호");
+        System.out.println("객관식 문제 채점시작>>>>" + probId + "<<문제번호" + submissionId +"<<제출번호" + submitterId + "<<제출자 번호");
         //Seqeunce 1 -  data check - start
         //grade objective problems
         //TODO: must be improved
@@ -146,30 +153,53 @@ public class SubmissionGradeAsyncService {
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
         }
-
-
-
-
-        //Seqeunce 2 -  grading - end
-
-
-        //Seqeunce 3 -  data check - end
-        //Seqeunce 3 -  data check - end
-        
-        //Seqeunce 4 -  data check - end
-        //Seqeunce 4 -  data check - end
-
-        //Seqeunce 5 -  data check - end
-        //Seqeunce 5 -  data check - end
-
-        //Seqeunce 6 -  data check - end
-        //Seqeunce 6 -  data check - end  
     }
     public void gradeProblemPractice(long probId, 
         long submitterId, 
         long submissionId
     ){
+        System.out.println("실습형 문제 채점 시작>>>>" + probId + "<<문제번호" + submissionId +"<<제출번호" + submitterId + "<<제출자 번호");
+        //Seqeunce 1 -  data check - start
+        //grade objective problems
+        //TODO: must be improved
+        User submitter = userRepository.findById(submitterId).orElseThrow();
         
+        //TODO: must be improved
+        SolveSubmission submission = solveSubmissionRepository.findById(submissionId)
+        .orElseThrow();
+
+        //TODO: must be improved
+        SolveSubmissionPractice solveSubmissionPractice = solveSubmissionPracticeRepository.findById(submissionId)
+        .orElseThrow();
+
+        //TODO: must be improved
+        Problem problem = problemRepository.findById(probId)
+        .orElseThrow();
+
+        //TODO: must be improved
+        ProblemPractice problemPractice = problemPracticeRepository.findById(probId)
+        .orElseThrow();
+
+
+        submission.setSubmissionState(SubmissionState.INPROGRESS);
+        //Seqeunce 1 -  data check - end
+
+        //Seqeunce 2 -  grading - start
+        String correctAnswer = problemPractice.getFlagHash();
+        String userAnswer = hashFlag(solveSubmissionPractice.getAnswer());
+        boolean correctness = correctAnswer.equals(userAnswer);
+
+        if(correctness){
+            //정답
+            SovleResult result = new SovleResult(submission, SovleResultState.CORRECT, "정답입니다.");
+            solveResultRepository.save(result);
+            submission.setSubmissionState(SubmissionState.COMPLETED);
+        }else{
+            //오답
+            SovleResult result = new SovleResult(submission, SovleResultState.WRONG, "오답입니다..");
+            solveResultRepository.save(result);
+            submission.setSubmissionState(SubmissionState.COMPLETED);
+        }    
     }
 
     public void gradeProblemCoding(long probId, 
@@ -177,6 +207,16 @@ public class SubmissionGradeAsyncService {
         long submissionId
     ){
         
+    }
+
+    private String hashFlag(String flag) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(flag.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
     }
 
     
