@@ -1,10 +1,13 @@
 package net.diveon.backend.domain.grade.service;
 
 import net.diveon.backend.domain.grade.dto.response.GradeBoardObjectiveResponse;
+import net.diveon.backend.domain.grade.dto.response.GradeBoardPracticeResponse;
+import net.diveon.backend.domain.grade.dto.response.interfaces.GradeBoardResponse;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SovleResult;
 import net.diveon.backend.domain.grade.repository.SolveResultRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
+import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,16 +34,34 @@ public class GradeBoardService {
         this.problemRepository = problemRepository;
     }
 
-    public GradeBoardObjectiveResponse getObjectiveBoard(Long probId, int page, int size, String result, String sort) {
-        problemRepository.findById(probId).orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
+    public GradeBoardResponse getBoard(Long probId, int page, int size, String result, String sort) {
+        Problem problem = problemRepository.findById(probId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
 
         Sort sortOption = sort.equals("oldest")
-                ? Sort.by("submittedAt").ascending() // 오래된 것부터
-                : Sort.by("submittedAt").descending(); // 최신 것부터
+                ? Sort.by("submittedAt").ascending()
+                : Sort.by("submittedAt").descending();
 
-        Pageable pageable = PageRequest.of(page - 1, size, sortOption); // 1페이지부터 시작인데 Spring은 0부터 시작이라 -1, 한 페이지에 기본 20개씩 보여줌
-        Page<SolveSubmission> submissionPage = solveSubmissionRepository.findCompletedByProbId(probId, pageable); // prob_id=42(예시), COMPLETED 상태인 제출들을 페이지 단위로 가져옴
-        Long total = solveSubmissionRepository.countCompletedByProbId(probId); // 전체 제출이 몇 건인지 카운트
+        Pageable pageable = PageRequest.of(page - 1, size, sortOption);
+
+        String type = problem.getType();
+
+        if (type.equals("objective")) {
+            return buildObjectiveBoard(probId, pageable, result);
+        } else if (type.equals("practice")) {
+            return buildPracticeBoard(probId, pageable, result);
+        }
+
+        throw new RuntimeException("지원하지 않는 문제 유형입니다.");
+    }
+
+    // 객, 코, 실 유형별로 응답 필드가 달라질 수 있어 메소드 분리
+
+    // 객관식
+
+    private GradeBoardObjectiveResponse buildObjectiveBoard(Long probId, Pageable pageable, String result) {
+        Page<SolveSubmission> submissionPage = solveSubmissionRepository.findCompletedByProbId(probId, pageable);
+        Long total = solveSubmissionRepository.countCompletedByProbId(probId);
 
         List<GradeBoardObjectiveResponse.SubmissionItem> items = submissionPage.getContent().stream()
                 .map(submission -> {
@@ -58,7 +79,7 @@ public class GradeBoardService {
 
                     if (!result.equals("all")) {
                         boolean wantCorrect = result.equals("correct");
-                        if (isCorrect == null || isCorrect != wantCorrect) return null; // 둘 중 하나라도 해당되면 null 반환 -> 목록에서 제외
+                        if (isCorrect == null || isCorrect != wantCorrect) return null;
                     }
 
                     return new GradeBoardObjectiveResponse.SubmissionItem(
@@ -70,10 +91,49 @@ public class GradeBoardService {
                             judgedAt
                     );
                 })
-                .filter(item -> item != null) // null 제외
-                .toList(); // 리스트로 반환
-                
-        // prob_id, 전체 건수, 제출 목록 조합해서 반환
+                .filter(item -> item != null)
+                .toList();
+
         return new GradeBoardObjectiveResponse(probId, total, items);
+    }
+
+    // 실습형
+
+    private GradeBoardPracticeResponse buildPracticeBoard(Long probId, Pageable pageable, String result) {
+        Page<SolveSubmission> submissionPage = solveSubmissionRepository.findCompletedByProbId(probId, pageable);
+        Long total = solveSubmissionRepository.countCompletedByProbId(probId);
+
+        List<GradeBoardPracticeResponse.SubmissionItem> items = submissionPage.getContent().stream()
+                .map(submission -> {
+                    SovleResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
+
+                    Boolean isCorrect = null;
+                    Short score = null;
+                    String judgedAt = null;
+
+                    if (solveResult != null) {
+                        isCorrect = solveResult.getResultState() == SovleResult.SovleResultState.CORRECT;
+                        score = solveResult.getScore();
+                        judgedAt = solveResult.getCreatedAt().toString();
+                    }
+
+                    if (!result.equals("all")) {
+                        boolean wantCorrect = result.equals("correct");
+                        if (isCorrect == null || isCorrect != wantCorrect) return null;
+                    }
+
+                    return new GradeBoardPracticeResponse.SubmissionItem(
+                            submission.getId(),
+                            submission.getUser().getNickname(),
+                            isCorrect,
+                            score,
+                            submission.getSubmittedAt().toString(),
+                            judgedAt
+                    );
+                })
+                .filter(item -> item != null)
+                .toList();
+
+        return new GradeBoardPracticeResponse(probId, total, items);
     }
 }

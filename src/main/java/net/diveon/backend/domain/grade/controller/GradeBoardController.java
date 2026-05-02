@@ -1,6 +1,6 @@
 package net.diveon.backend.domain.grade.controller;
 
-import net.diveon.backend.domain.grade.dto.response.GradeBoardObjectiveResponse;
+import net.diveon.backend.domain.grade.dto.response.interfaces.GradeBoardResponse;
 import net.diveon.backend.domain.grade.service.GradeBoardService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +21,8 @@ public class GradeBoardController {
         this.gradeBoardService = gradeBoardService;
     }
 
-    @GetMapping("/{prob_id}/board/multiple-choice")
-    public ResponseEntity<ApiResponse<GradeBoardObjectiveResponse>> getObjectiveBoard(
+    @GetMapping("/{prob_id}/board")
+    public ResponseEntity<ApiResponse<GradeBoardResponse>> getBoard(
             @AuthenticationPrincipal String userId,
             @PathVariable("prob_id") Long probId,
             @RequestParam(defaultValue = "1") int page,
@@ -30,7 +30,7 @@ public class GradeBoardController {
             @RequestParam(defaultValue = "all") String result,
             @RequestParam(defaultValue = "latest") String sort
     ) {
-        GradeBoardObjectiveResponse response = gradeBoardService.getObjectiveBoard(probId, page, size, result, sort);
-        return ResponseEntity.ok(ApiResponse.success("객관식 채점 보드 조회에 성공하였습니다.", response));
+        GradeBoardResponse response = gradeBoardService.getBoard(probId, page, size, result, sort);
+        return ResponseEntity.ok(ApiResponse.success("채점 보드 조회에 성공하였습니다.", response));
     }
 }

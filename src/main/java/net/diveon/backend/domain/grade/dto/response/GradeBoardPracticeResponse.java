@@ -5,7 +5,7 @@ import net.diveon.backend.domain.grade.dto.response.interfaces.GradeBoardRespons
 
 import java.util.List;
 
-public class GradeBoardObjectiveResponse implements GradeBoardResponse {
+public class GradeBoardPracticeResponse implements GradeBoardResponse {
 
     @JsonProperty("prob_id")
     private Long probId;
@@ -14,7 +14,7 @@ public class GradeBoardObjectiveResponse implements GradeBoardResponse {
 
     private List<SubmissionItem> submissions;
 
-    public GradeBoardObjectiveResponse(Long probId, Long total, List<SubmissionItem> submissions) {
+    public GradeBoardPracticeResponse(Long probId, Long total, List<SubmissionItem> submissions) {
         this.probId = probId;
         this.total = total;
         this.submissions = submissions;
