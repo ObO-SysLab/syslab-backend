@@ -41,8 +41,12 @@ public class SubmissionGradeController {
         //long probId, 
         // long submitterId, 
         // long submissionId
-        submissionGradeAsyncService.gradeProblemObjective(reqeust.getProdId(), Long.parseLong(userId), submissionId);
-        
+
+        if(Long.parseLong(userId) < 2){
+            submissionGradeAsyncService.gradeProblemObjective(reqeust.getProdId(), Long.parseLong(userId), submissionId);
+        }else{
+            submissionGradeAsyncService.gradeProblemPractice(reqeust.getProdId(), Long.parseLong(userId), submissionId);
+        }
 
         return ResponseEntity.status(200).body(ApiResponse.success("접수되었습니다.", initResponse));
     }

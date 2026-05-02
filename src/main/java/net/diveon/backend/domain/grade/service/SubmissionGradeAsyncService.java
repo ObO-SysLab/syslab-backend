@@ -1,5 +1,8 @@
 package net.diveon.backend.domain.grade.service;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -183,7 +186,7 @@ public class SubmissionGradeAsyncService {
 
         //Seqeunce 2 -  grading - start
         String correctAnswer = problemPractice.getFlagHash();
-        String userAnswer = solveSubmissionPractice.getAnswer();
+        String userAnswer = hashFlag(solveSubmissionPractice.getAnswer());
         boolean correctness = correctAnswer.equals(userAnswer);
 
         if(correctness){
@@ -204,6 +207,16 @@ public class SubmissionGradeAsyncService {
         long submissionId
     ){
         
+    }
+
+    private String hashFlag(String flag) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(flag.getBytes());
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
     }
 
     

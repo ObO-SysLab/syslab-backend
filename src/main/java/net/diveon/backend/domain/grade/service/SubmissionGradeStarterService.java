@@ -11,6 +11,7 @@ import net.diveon.backend.domain.grade.dto.response.SubmissionGradeResponse;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionCoding;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionObjective;
+import net.diveon.backend.domain.grade.entity.SolveSubmissionPractice;
 import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
 import net.diveon.backend.domain.grade.repository.SolveResultRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
@@ -121,7 +122,14 @@ public class SubmissionGradeStarterService {
         }else if(problemType.equals("coding")){
 
         }else if(problemType.equals("practice")){
-
+            if (request.getAnswer() instanceof String) {
+                String answer = (String) request.getAnswer();
+                SolveSubmissionPractice submissionPractice = new SolveSubmissionPractice(submission, answer);
+                solveSubmissionPracticeRepository.save(submissionPractice);
+            }else{
+                //TODO : exception must be improved
+                throw new RuntimeException("실습형 정답 문자열 형식 변환에 문제가 있습니다.");
+            }
         }else{
             //eception
             //TODO: must be improved.
