@@ -35,19 +35,22 @@ public class ProblemCreateService {
     private final ProblemCodingRepository problemCodingRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
         ProblemCodingRepository problemCodingRepository,
         ProblemRepository problemRepository,
         UserRepository userRepository,
-        OboStepRepository oboStepRepository){
+        OboStepRepository oboStepRepository,
+        S3Service s3Service){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
         this.problemRepository = problemRepository;
         this.userRepository = userRepository;
         this.oboStepRepository = oboStepRepository;
+        this.s3Service = s3Service;
     }
 
 
@@ -129,14 +132,17 @@ public class ProblemCreateService {
                 savedProblem,
                 request.getSummary(),
                 request.getDescription(),
-                request.getVmConfig().getOsImage(),
-                request.getVmConfig().getAllowedCommands(),
-                request.getVmConfig().getCpuLimit(),
-                request.getVmConfig().getMemoryLimit(),
+                request.getOsImage(),
+                request.getAllowedCommands(),
+                request.getCpuLimit(),
+                request.getMemoryLimit(),
                 hashFlag(request.getFlag()),
-                request.getDockerFileUrl()
+                null
         );
         problemPracticeRepository.save(problemPractice);
+
+        // DB 저장 후 S3에 Dockerfile zip 업로드 → EventBridge가 감지해서 CodeBuild 자동 트리거
+        s3Service.uploadDockerfileZip(savedProblem.getId(), request.getDockerfile());
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),
