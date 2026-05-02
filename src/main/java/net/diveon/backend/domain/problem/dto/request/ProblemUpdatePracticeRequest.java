@@ -13,13 +13,19 @@ public class ProblemUpdatePracticeRequest {
     private String difficulty;
     private String visibility;
 
-    @JsonProperty("vm_config")
-    private VmConfig vmConfig;
+    @JsonProperty("os_image")
+    private String osImage;
+
+    @JsonProperty("allowed_commands")
+    private List<String> allowedCommands;
+
+    @JsonProperty("cpu_limit")
+    private String cpuLimit;
+
+    @JsonProperty("memory_limit")
+    private String memoryLimit;
 
     private String flag;
-
-    @JsonProperty("docker_file_url")
-    private String dockerFileUrl;
 
     public ProblemUpdatePracticeRequest() {
     }
@@ -42,42 +48,18 @@ public class ProblemUpdatePracticeRequest {
     public String getVisibility() { return visibility; }
     public void setVisibility(String visibility) { this.visibility = visibility; }
 
-    public VmConfig getVmConfig() { return vmConfig; }
-    public void setVmConfig(VmConfig vmConfig) { this.vmConfig = vmConfig; }
+    public String getOsImage() { return osImage; }
+    public void setOsImage(String osImage) { this.osImage = osImage; }
+
+    public List<String> getAllowedCommands() { return allowedCommands; }
+    public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
+
+    public String getCpuLimit() { return cpuLimit; }
+    public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }
+
+    public String getMemoryLimit() { return memoryLimit; }
+    public void setMemoryLimit(String memoryLimit) { this.memoryLimit = memoryLimit; }
 
     public String getFlag() { return flag; }
     public void setFlag(String flag) { this.flag = flag; }
-
-    public String getDockerFileUrl() { return dockerFileUrl; }
-    public void setDockerFileUrl(String dockerFileUrl) { this.dockerFileUrl = dockerFileUrl; }
-
-    public static class VmConfig {
-
-        @JsonProperty("os_image")
-        private String osImage;
-
-        @JsonProperty("allowed_commands")
-        private List<String> allowedCommands;
-
-        @JsonProperty("cpu_limit")
-        private String cpuLimit;
-
-        @JsonProperty("memory_limit")
-        private String memoryLimit;
-
-        public VmConfig() {
-        }
-
-        public String getOsImage() { return osImage; }
-        public void setOsImage(String osImage) { this.osImage = osImage; }
-
-        public List<String> getAllowedCommands() { return allowedCommands; }
-        public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
-
-        public String getCpuLimit() { return cpuLimit; }
-        public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }
-
-        public String getMemoryLimit() { return memoryLimit; }
-        public void setMemoryLimit(String memoryLimit) { this.memoryLimit = memoryLimit; }
-    }
 }

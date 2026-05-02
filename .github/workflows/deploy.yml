@@ -31,8 +31,13 @@ jobs:
             s3:
               bucket-code: syslab-code
               bucket-frontend: syslab-frontend
+              bucket-practice-dockerfile: ${{ secrets.S3_PRACTICE_BUCKET }}
+            ecr:
+              practice-registry: 290373175858.dkr.ecr.ap-northeast-2.amazonaws.com
+              practice-repository: ${{ secrets.ECR_PRACTICE_REPOSITORY }}
             sqs:
               url: https://sqs.ap-northeast-2.amazonaws.com/290373175858/syslab-grading-queue
+              practice-build-url: ${{ secrets.SQS_PRACTICE_BUILD_URL }}
             vm-ec2-host: http://10.0.1.19:2376
           auth:
             jwt:

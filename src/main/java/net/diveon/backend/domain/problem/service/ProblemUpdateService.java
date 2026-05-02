@@ -147,17 +147,15 @@ public class ProblemUpdateService {
             );
 
             String flagHash = request.getFlag() != null ? hashFlag(request.getFlag()) : null;
-            ProblemUpdatePracticeRequest.VmConfig vmConfig = request.getVmConfig();
 
             problemPractice.updatePractice(
                 request.getSummary(),
                 request.getDescription(),
-                vmConfig != null ? vmConfig.getOsImage() : null,
-                vmConfig != null ? vmConfig.getAllowedCommands() : null,
-                vmConfig != null ? vmConfig.getCpuLimit() : null,
-                vmConfig != null ? vmConfig.getMemoryLimit() : null,
-                flagHash,
-                request.getDockerFileUrl()
+                request.getOsImage(),
+                request.getAllowedCommands(),
+                request.getCpuLimit(),
+                request.getMemoryLimit(),
+                flagHash
             );
 
             return new ProblemUpdatePracticeResponse(

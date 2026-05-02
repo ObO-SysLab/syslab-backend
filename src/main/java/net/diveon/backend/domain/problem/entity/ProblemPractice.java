@@ -48,6 +48,12 @@ public class ProblemPractice {
     @Column(name = "hint", columnDefinition = "TEXT")
     private String hint;
 
+    @Column(name = "ecr_image_uri", length = 500)
+    private String ecrImageUri;
+
+    @Column(name = "image_status", length = 20)
+    private String imageStatus = "PENDING";
+
     @Column(name = "is_draft")
     private Boolean isDraft = false;
 
@@ -84,12 +90,18 @@ public class ProblemPractice {
     public String getFlagHash() { return flagHash; }
     public String getDockerFileUrl() { return dockerFileUrl; }
     public String getHint() { return hint; }
+    public String getEcrImageUri() { return ecrImageUri; }
+    public String getImageStatus() { return imageStatus; }
+    public void updateImageStatus(String imageStatus, String ecrImageUri) {
+        this.imageStatus = imageStatus;
+        if (ecrImageUri != null) this.ecrImageUri = ecrImageUri;
+    }
     public Boolean getIsDraft() { return isDraft; }
     public Integer getTimeLimitSec() { return timeLimitSec; }
 
     public void updatePractice(String summary, String description, String osImage,
                                List<String> allowedCommands, String cpuLimit,
-                               String memoryLimit, String flagHash, String dockerFileUrl) {
+                               String memoryLimit, String flagHash) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
         if (osImage != null) this.osImage = osImage;
@@ -97,6 +109,5 @@ public class ProblemPractice {
         if (cpuLimit != null) this.cpuLimit = cpuLimit;
         if (memoryLimit != null) this.memoryLimit = memoryLimit;
         if (flagHash != null) this.flagHash = flagHash;
-        if (dockerFileUrl != null) this.dockerFileUrl = dockerFileUrl;
     }
 }
