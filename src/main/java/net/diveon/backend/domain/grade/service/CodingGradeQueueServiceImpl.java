@@ -71,7 +71,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         uploadCode(s3Key, submissionCoding.getAnswer());
         sendMessage(createMessage(submissionId, s3Key, language, probId, problemCoding));
 
-        submission.setSubmissionState(SubmissionState.RECEIVED);
+        submission.setSubmissionState(SubmissionState.JUDGING);
     }
 
     private void uploadCode(String s3Key, String code) {
