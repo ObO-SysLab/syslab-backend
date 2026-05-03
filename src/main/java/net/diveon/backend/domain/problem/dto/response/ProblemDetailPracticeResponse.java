@@ -9,7 +9,7 @@ import java.util.List;
 
 public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private String author;
@@ -21,19 +21,19 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     private String summary;
     private String description;
 
-    @JsonProperty("vm_info")
+    @JsonProperty("vmInfo")
     private VmInfo vmInfo;
 
-    @JsonProperty("solved_count")
+    @JsonProperty("solvedCount")
     private Integer solvedCount;
 
-    @JsonProperty("submitted_count")
+    @JsonProperty("submittedCount")
     private Integer submittedCount;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private String updatedAt;
 
     public ProblemDetailPracticeResponse() {
@@ -112,10 +112,10 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
 
     public static class VmInfo {
 
-        @JsonProperty("os_image")
+        @JsonProperty("osImage")
         private String osImage;
 
-        @JsonProperty("allowed_commands")
+        @JsonProperty("allowedCommands")
         private List<String> allowedCommands;
 
         public VmInfo() {

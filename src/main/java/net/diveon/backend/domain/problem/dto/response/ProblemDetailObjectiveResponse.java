@@ -18,7 +18,7 @@ import java.util.List;
  *   "status": 200,
  *   "message": "객관식 문제 상세 조회에 성공하였습니다.",
  *   "data": {
- *     "prob_id": 42,
+ *     "probId": 42,
  *     "author": "박단용",
  *     "type": "objective",
  *     "title": "프로세스 스케줄링 이해하기",
@@ -28,24 +28,24 @@ import java.util.List;
  *     "summary": "Round Robin 스케줄링 개념 이해 문제",
  *     "description": "다음 중 Round Robin 스케줄링에 대한 설명으로 옳은 것은?",
  *     "choices": [
- *       { "index": 1, "content": "선점형이다", "image_url": null }
+ *       { "index": 1, "content": "선점형이다", "imageUrl": null }
  *     ],
  *     "answer": [1, 2],
- *     "obo_enabled": true,
- *     "obo_steps": [
- *       { "step": 1, "description": "설명", "image_url": null }
+ *     "oboEnabled": true,
+ *     "oboSteps": [
+ *       { "step": 1, "description": "설명", "imageUrl": null }
  *     ],
- *     "solved_count": 317,
- *     "submitted_count": 412,
- *     "created_at": "2025-03-01T09:00:00",
- *     "updated_at": "2025-03-10T14:30:00"
+ *     "solvedCount": 317,
+ *     "submittedCount": 412,
+ *     "createdAt": "2025-03-01T09:00:00",
+ *     "updatedAt": "2025-03-10T14:30:00"
  *   }
  * }
  * </pre>
  */
 public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private String author;
@@ -59,22 +59,22 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     private List<ForDtoChoice> choices;
     private List<Integer> answer;
 
-    @JsonProperty("obo_enabled")
+    @JsonProperty("oboEnabled")
     private Boolean oboEnabled;
 
-    @JsonProperty("obo_steps")
+    @JsonProperty("oboSteps")
     private List<ForDtoOboStep> oboSteps;
 
-    @JsonProperty("solved_count")
+    @JsonProperty("solvedCount")
     private Integer solvedCount;
 
-    @JsonProperty("submitted_count")
+    @JsonProperty("submittedCount")
     private Integer submittedCount;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private String updatedAt;
 
     public ProblemDetailObjectiveResponse() {

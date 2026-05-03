@@ -29,10 +29,10 @@ public class ProblemCommentController {
     }
 
     // 댓글 조회
-    @GetMapping("/{prob_id}/comments")
+    @GetMapping("/{probId}/comments")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentList>> getComments(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId,
+        @PathVariable("probId") long probId,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(defaultValue = "20") int size
     ) {
@@ -44,11 +44,11 @@ public class ProblemCommentController {
     }
 
     // 댓글 상세 조회
-    @GetMapping("/{prob_id}/comments/{comment_id}")
+    @GetMapping("/{probId}/comments/{commentId}")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentItem>> getComment(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId,
-        @PathVariable("comment_id") long commentId
+        @PathVariable("probId") long probId,
+        @PathVariable("commentId") long commentId
     ) {
         ProblemCommentResponse.CommentItem responseData =
             commentService.getComment(Long.parseLong(userId), probId, commentId);
@@ -58,10 +58,10 @@ public class ProblemCommentController {
     }
 
     // 댓글 생성
-    @PostMapping("/{prob_id}/comments")
+    @PostMapping("/{probId}/comments")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentCreate>> createComment(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId,
+        @PathVariable("probId") long probId,
         @Valid @RequestBody ProblemCommentCreateRequest request
     ) {
         ProblemCommentResponse.CommentCreate responseData =
@@ -72,11 +72,11 @@ public class ProblemCommentController {
     }
 
     // 댓글 수정
-    @PatchMapping("/{prob_id}/comments/{comment_id}")
+    @PatchMapping("/{probId}/comments/{commentId}")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentUpdate>> updateComment(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId,
-        @PathVariable("comment_id") long commentId,
+        @PathVariable("probId") long probId,
+        @PathVariable("commentId") long commentId,
         @RequestBody ProblemCommentUpdateRequest request
     ) {
         ProblemCommentResponse.CommentUpdate responseData =
@@ -87,11 +87,11 @@ public class ProblemCommentController {
     }
 
     // 댓글 삭제
-    @DeleteMapping("/{prob_id}/comments/{comment_id}")
+    @DeleteMapping("/{probId}/comments/{commentId}")
     public ResponseEntity<ApiResponse<ProblemCommentResponse.CommentDelete>> deleteComment(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId,
-        @PathVariable("comment_id") long commentId
+        @PathVariable("probId") long probId,
+        @PathVariable("commentId") long commentId
     ) {
         ProblemCommentResponse.CommentDelete responseData =
             commentService.deleteComment(Long.parseLong(userId), probId, commentId);

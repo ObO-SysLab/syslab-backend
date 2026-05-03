@@ -16,10 +16,10 @@ import java.util.List;
   "visibility": "{{visibility}}", // 여기까지 String
   "summary": "{{summary}}",
   "choices": [
-    { "index": 1, "content": "선점형이다", "image_url": null },
-    { "index": 2, "content": "비선점형이다", "image_url": null },
-    { "index": 3, "content": "우선순위 기반이다", "image_url": null },
-    { "index": 4, "content": "FIFO 방식이다", "image_url": null }
+    { "index": 1, "content": "선점형이다", "imageUrl": null },
+    { "index": 2, "content": "비선점형이다", "imageUrl": null },
+    { "index": 3, "content": "우선순위 기반이다", "imageUrl": null },
+    { "index": 4, "content": "FIFO 방식이다", "imageUrl": null }
   ],  // JSONB로 데이터베이스 저장될 것임.
   "answer": [1, 2],
   "oboEnabled": {{enabled}},
@@ -28,12 +28,12 @@ import java.util.List;
       {
         "step": 1,
         "description": "프로세스 A가 CPU를 점유합니다.",
-        "image_url": "https://cdn.dk-world.com/problems/p42_obo_step1.png"
+        "imageUrl": "https://cdn.dk-world.com/problems/p42_obo_step1.png"
       },
       {
         "step": 2,
         "description": "타임 퀀텀이 만료되어 프로세스 B로 전환됩니다.",
-        "image_url": "https://cdn.dk-world.com/problems/p42_obo_step2.png"
+        "imageUrl": "https://cdn.dk-world.com/problems/p42_obo_step2.png"
       }
     ]
   }
