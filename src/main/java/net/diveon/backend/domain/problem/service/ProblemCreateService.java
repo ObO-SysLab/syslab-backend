@@ -136,7 +136,7 @@ public class ProblemCreateService {
                 request.getAllowedCommands(),
                 request.getCpuLimit(),
                 request.getMemoryLimit(),
-                hashFlag(request.getFlag()),
+                hashFlag(request.getFlag().trim()),
                 null
         );
         problemPracticeRepository.save(problemPractice);

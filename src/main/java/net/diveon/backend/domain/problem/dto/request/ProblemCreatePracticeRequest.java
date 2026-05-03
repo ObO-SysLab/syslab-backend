@@ -7,6 +7,17 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public class ProblemCreatePracticeRequest {
+    /*
+    실습형 문제 생성의 경우, 현재는 파일 업로드(.zip)가 필요해서 multipart/form-data형식으로만 가능.
+    근데 이 형식은 @ModelAttribute로 받는데, 이건 @JsonProperty 무시하고 Java 필드명 그대로 매핑
+    그래서 osImage, allowedCommands, cpuLimit, memoryLimit 전부 camelCase로 보내야 함
+    다른 API들은 JSON이라 snake_case인데 이 API만 예외
+
+    -> 이후 zip파일을 직접 올리는 방식이아니라, 자동 생성 방식으로 고도화 되면 아마 form-data형식을 버리게 될 거 같아서
+       그땐 다시 snake_case로 가능할듯합니다.
+
+    */
+    
 
     @NotBlank
     private String title;
