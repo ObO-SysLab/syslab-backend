@@ -5,8 +5,8 @@ public class ProblemDeleteResponse {
 
     public ProblemDeleteResponse(){}
 
-    public ProblemDeleteResponse(long prod_id){
-        this.probId = prod_id;
+    public ProblemDeleteResponse(long probId){
+        this.probId = probId;
     }
 
     public long getProbId() {

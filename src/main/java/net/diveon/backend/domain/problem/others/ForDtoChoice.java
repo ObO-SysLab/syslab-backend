@@ -7,7 +7,7 @@ public class ForDtoChoice {
     private Integer index;
     private String content;
 
-    @JsonProperty("image_url")
+    @JsonProperty("imageUrl")
     private String imageUrl;
 
     public ForDtoChoice() {

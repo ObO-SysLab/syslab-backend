@@ -9,23 +9,23 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *   "status": 200,
  *   "message": "문제가 수정되었습니다.",
  *   "data": {
- *     "prob_id": 99,
+ *     "probId": 99,
  *     "type": "coding",
  *     "title": "프로세스 우선순위 정렬 심화",
- *     "updated_at": "2025-04-13T11:00:00Z"
+ *     "updatedAt": "2025-04-13T11:00:00Z"
  *   }
  * }
  * </pre>
  */
 public class ProblemUpdateCodingResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private String type;
     private String title;
 
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private String updatedAt;
 
     public ProblemUpdateCodingResponse() {

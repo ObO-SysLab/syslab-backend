@@ -6,7 +6,7 @@ public class VmStatusResponse {
 
     private String status;
 
-    @JsonProperty("container_id")
+    @JsonProperty("containerId")
     private String containerId;
 
     private String message;

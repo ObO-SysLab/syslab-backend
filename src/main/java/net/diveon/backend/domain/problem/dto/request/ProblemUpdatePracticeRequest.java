@@ -13,16 +13,16 @@ public class ProblemUpdatePracticeRequest {
     private String difficulty;
     private String visibility;
 
-    @JsonProperty("os_image")
+    @JsonProperty("osImage")
     private String osImage;
 
-    @JsonProperty("allowed_commands")
+    @JsonProperty("allowedCommands")
     private List<String> allowedCommands;
 
-    @JsonProperty("cpu_limit")
+    @JsonProperty("cpuLimit")
     private String cpuLimit;
 
-    @JsonProperty("memory_limit")
+    @JsonProperty("memoryLimit")
     private String memoryLimit;
 
     private String flag;

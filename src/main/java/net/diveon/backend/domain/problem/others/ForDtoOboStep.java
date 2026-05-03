@@ -7,7 +7,7 @@ public class ForDtoOboStep {
     private Integer step;
     private String description;
 
-    @JsonProperty("image_url")
+    @JsonProperty("imageUrl")
     private String imageUrl;
 
     public ForDtoOboStep() {

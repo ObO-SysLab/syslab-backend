@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public class VmStopRequest {
 
     @NotNull
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     public VmStopRequest() {}

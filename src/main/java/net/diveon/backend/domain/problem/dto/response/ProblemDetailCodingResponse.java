@@ -16,7 +16,7 @@ import java.util.List;
  *   "status": 200,
  *   "message": "문제 상세 조회에 성공하였습니다.",
  *   "data": {
- *     "prob_id": 99,
+ *     "probId": 99,
  *     "author": "박단용",
  *     "type": "coding",
  *     "title": "프로세스 우선순위 정렬",
@@ -26,32 +26,32 @@ import java.util.List;
  *     "visibility": "public",
  *     "summary": "프로세스 우선순위 정렬 문제",
  *     "constraints": {
- *       "time_limit_ms": 1000,
- *       "memory_limit_mb": 256,
- *       "allowed_languages": ["python", "java", "c", "cpp"]
+ *       "timeLimitMs": 1000,
+ *       "memoryLimitMb": 256,
+ *       "allowedLanguages": ["python", "java", "c", "cpp"]
  *     },
- *     "input_description": "첫째 줄에 N(1 ≤ N ≤ 100), 이후 N줄에 걸쳐 프로세스 ID와 우선순위가 주어진다.",
- *     "output_description": "우선순위가 높은 순으로 프로세스 ID를 한 줄씩 출력한다.",
+ *     "inputDescription": "첫째 줄에 N(1 ≤ N ≤ 100), 이후 N줄에 걸쳐 프로세스 ID와 우선순위가 주어진다.",
+ *     "outputDescription": "우선순위가 높은 순으로 프로세스 ID를 한 줄씩 출력한다.",
  *     "testcases": [
  *       {
  *         "index": 1,
  *         "input": "3\n1 5\n2 3\n3 8",
  *         "output": "3\n1\n2",
- *         "is_sample": true
+ *         "isSample": true
  *       }
  *     ],
- *     "file_url": null,
- *     "solved_count": 45,
- *     "submitted_count": 78,
- *     "created_at": "2025-01-20T08:30:00Z",
- *     "updated_at": "2025-01-25T14:15:00Z"
+ *     "fileUrl": null,
+ *     "solvedCount": 45,
+ *     "submittedCount": 78,
+ *     "createdAt": "2025-01-20T08:30:00Z",
+ *     "updatedAt": "2025-01-25T14:15:00Z"
  *   }
  * }
  * </pre>
  */
 public class ProblemDetailCodingResponse implements ProblemDetailResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private String author;
@@ -64,27 +64,27 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     private String summary;
     private Constraints constraints;
 
-    @JsonProperty("input_description")
+    @JsonProperty("inputDescription")
     private String inputDescription;
 
-    @JsonProperty("output_description")
+    @JsonProperty("outputDescription")
     private String outputDescription;
 
     private List<ForDtoTestCase> testcases;
 
-    @JsonProperty("file_url")
+    @JsonProperty("fileUrl")
     private String fileUrl;
 
-    @JsonProperty("solved_count")
+    @JsonProperty("solvedCount")
     private Integer solvedCount;
 
-    @JsonProperty("submitted_count")
+    @JsonProperty("submittedCount")
     private Integer submittedCount;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private String updatedAt;
 
     public ProblemDetailCodingResponse() {
@@ -183,13 +183,13 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     public String getUpdatedAt() { return updatedAt; }
 
     public static class Constraints {
-        @JsonProperty("time_limit_ms")
+        @JsonProperty("timeLimitMs")
         private Integer timeLimitMs;
 
-        @JsonProperty("memory_limit_mb")
+        @JsonProperty("memoryLimitMb")
         private Integer memoryLimitMb;
 
-        @JsonProperty("allowed_languages")
+        @JsonProperty("allowedLanguages")
         private List<String> allowedLanguages;
 
         public Constraints() {

@@ -30,21 +30,21 @@ public class ProblemCommentResponse {
     // 댓글 목록 조회용 (replies 없음)
     public static class CommentListItem {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
-        @JsonProperty("author_nickname")
+        @JsonProperty("authorNickname")
         private String authorNickname;
 
         private String content;
 
-        @JsonProperty("is_private")
+        @JsonProperty("isPrivate")
         private Boolean isPrivate;
 
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         private String createdAt;
 
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         private String updatedAt;
 
         public CommentListItem(Long commentId, String authorNickname, String content,
@@ -79,21 +79,21 @@ public class ProblemCommentResponse {
     // 댓글 상세 조회용 (replies 있음, 원댓글 + 그 아래 답글 목록을 같이 담는 컨테이너)
     public static class CommentItem {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
-        @JsonProperty("author_nickname")
+        @JsonProperty("authorNickname")
         private String authorNickname;
 
         private String content;
 
-        @JsonProperty("is_private")
+        @JsonProperty("isPrivate")
         private Boolean isPrivate;
 
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         private String createdAt;
 
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         private String updatedAt;
 
         private List<ReplyItem> replies;
@@ -135,21 +135,21 @@ public class ProblemCommentResponse {
     // 답글 하나짜리 데이터
     public static class ReplyItem {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
-        @JsonProperty("author_nickname")
+        @JsonProperty("authorNickname")
         private String authorNickname;
 
         private String content;
 
-        @JsonProperty("is_private")
+        @JsonProperty("isPrivate")
         private Boolean isPrivate;
 
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         private String createdAt;
 
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         private String updatedAt;
 
         public ReplyItem(Long commentId, String authorNickname, String content,
@@ -184,18 +184,18 @@ public class ProblemCommentResponse {
     // 댓글, 답글 생성
     public static class CommentCreate {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
-        @JsonProperty("prob_id")
+        @JsonProperty("probId")
         private Long probId;
 
-        @JsonProperty("author_nickname")
+        @JsonProperty("authorNickname")
         private String authorNickname;
 
         private String content;
 
-        @JsonProperty("created_at")
+        @JsonProperty("createdAt")
         private String createdAt;
 
         public CommentCreate(Long commentId, Long probId, String authorNickname,
@@ -226,15 +226,15 @@ public class ProblemCommentResponse {
 
     public static class CommentUpdate {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
         private String content;
 
-        @JsonProperty("is_private")
+        @JsonProperty("isPrivate")
         private Boolean isPrivate;
 
-        @JsonProperty("updated_at")
+        @JsonProperty("updatedAt")
         private String updatedAt;
 
         public CommentUpdate(Long commentId, String content, Boolean isPrivate, String updatedAt) {
@@ -261,7 +261,7 @@ public class ProblemCommentResponse {
 
     public static class CommentDelete {
 
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private Long commentId;
 
         public CommentDelete(Long commentId) {
