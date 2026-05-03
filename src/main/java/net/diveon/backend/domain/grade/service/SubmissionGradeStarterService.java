@@ -19,6 +19,7 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionObjectiveReposi
 import net.diveon.backend.domain.grade.repository.SolveSubmissionPracticeRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
@@ -120,7 +121,31 @@ public class SubmissionGradeStarterService {
                 throw new RuntimeException("객관식 정답 리스트 형식 변환에 문제가 있습니다.");
             }
         }else if(problemType.equals("coding")){
+            if (request.getAnswer() instanceof String) {
+                String answer = (String) request.getAnswer();
+                String language = request.getLanguage();
 
+                if (answer.isBlank()) {
+                    throw new RuntimeException("코딩형 정답 문자열이 비어 있습니다.");
+                }
+
+                if (language == null || language.isBlank()) {
+                    throw new RuntimeException("코딩형 문제는 언어 정보가 필요합니다.");
+                }
+
+                ProblemCoding problemCoding = problemCodingRepository.findById(probId)
+                    .orElseThrow(() -> new RuntimeException("코딩형 문제가 없습니다."));
+
+                if (!problemCoding.getAllowedLanguages().contains(language)) {
+                    throw new RuntimeException("허용되지 않은 언어입니다.");
+                }
+
+                SolveSubmissionCoding submissionCoding = new SolveSubmissionCoding(submission, answer, language);
+                solveSubmissionCodingRepository.save(submissionCoding);
+            }else{
+                //TODO : exception must be improved
+                throw new RuntimeException("코딩형 정답 문자열 형식 변환에 문제가 있습니다.");
+            }
         }else if(problemType.equals("practice")){
             if (request.getAnswer() instanceof String) {
                 String answer = (String) request.getAnswer();
@@ -156,6 +181,6 @@ public class SubmissionGradeStarterService {
 
 
         // 그냥 오류 방지용, 바꿔야함
-        return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name());
+        return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name(), problemType);
     }
 }

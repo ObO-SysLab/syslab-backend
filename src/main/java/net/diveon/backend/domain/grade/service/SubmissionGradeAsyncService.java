@@ -64,6 +64,7 @@ public class SubmissionGradeAsyncService {
     private final SolveSubmissionPracticeRepository solveSubmissionPracticeRepository;
 
     private final SolveResultRepository solveResultRepository;
+    private final CodingGradeQueueService codingGradeQueueService;
 
     public SubmissionGradeAsyncService(UserRepository userRepository,
         ProblemRepository problemRepository,
@@ -74,7 +75,8 @@ public class SubmissionGradeAsyncService {
         SolveSubmissionObjectiveRepository solveSubmissionObjectiveRepository,
         SolveSubmissionCodingRepository solveSubmissionCodingRepository,
         SolveSubmissionPracticeRepository solveSubmissionPracticeRepository,
-        SolveResultRepository solveResultRepository
+        SolveResultRepository solveResultRepository,
+        CodingGradeQueueService codingGradeQueueService
     ){
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -87,6 +89,7 @@ public class SubmissionGradeAsyncService {
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.solveSubmissionPracticeRepository = solveSubmissionPracticeRepository;
         this.solveSubmissionObjectiveRepository = solveSubmissionObjectiveRepository;
+        this.codingGradeQueueService = codingGradeQueueService;
     }
 
 
@@ -206,7 +209,7 @@ public class SubmissionGradeAsyncService {
         long submitterId, 
         long submissionId
     ){
-        
+        codingGradeQueueService.sendGradeRequest(probId, submitterId, submissionId);
     }
 
     private String hashFlag(String flag) {
