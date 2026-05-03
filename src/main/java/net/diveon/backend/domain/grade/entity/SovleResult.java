@@ -27,16 +27,9 @@ import jakarta.persistence.OneToOne;
 @Entity
 public class SovleResult {
     public static enum SovleResultState{
-        NOGRADE,
         CORRECT,
         WRONG,
-        ERROR,
-        ACCEPTED,
-        WRONG_ANSWER,
-        TIME_LIMIT_EXCEEDED,
-        RUNTIME_ERROR,
-        COMPILE_ERROR,
-        SYSTEM_ERROR
+        ERROR
     }
 
     @Id
@@ -49,7 +42,7 @@ public class SovleResult {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "is_passed", nullable = false)
-    private SovleResultState resultState = SovleResultState.NOGRADE;
+    private SovleResultState resultState;
 
     @Column(name = "message")
     private String message;

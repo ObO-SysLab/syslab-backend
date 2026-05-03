@@ -80,7 +80,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
         if ("python".equals(language)) {
             return SovleResultState.CORRECT;
         }
-        return SovleResultState.WRONG_ANSWER;
+        return SovleResultState.WRONG;
     }
 
     private String getMockMessage(SovleResultState resultState) {

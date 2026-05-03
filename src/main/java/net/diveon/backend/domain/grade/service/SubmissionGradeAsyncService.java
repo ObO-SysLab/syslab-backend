@@ -136,7 +136,7 @@ public class SubmissionGradeAsyncService {
         .orElseThrow();
 
 
-        submission.setSubmissionState(SubmissionState.INPROGRESS);
+        submission.setSubmissionState(SubmissionState.JUDGING);
         //Seqeunce 1 -  data check - end
 
         //Seqeunce 2 -  grading - start
@@ -184,7 +184,7 @@ public class SubmissionGradeAsyncService {
         .orElseThrow();
 
 
-        submission.setSubmissionState(SubmissionState.INPROGRESS);
+        submission.setSubmissionState(SubmissionState.JUDGING);
         //Seqeunce 1 -  data check - end
 
         //Seqeunce 2 -  grading - start
