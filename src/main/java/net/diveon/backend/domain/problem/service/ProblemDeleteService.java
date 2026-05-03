@@ -16,9 +16,9 @@ import net.diveon.backend.global.exception.ProblemNotFoundException;
 /**
  * <pre>
  * 해당 서비스는 문제를 제거하는 서비스
- * 입력은 /api/problems/{prob_id} 와 같은식으로 path parameter로써 부여
+ * 입력은 /api/problems/{probId} 와 같은식으로 path parameter로써 부여
  * 사용자 인증은 JWT 토큰을 이용하여 id를 추출
- * Endpoint `/api/problems/{prob_id}`
+ * Endpoint `/api/problems/{probId}`
  *  Method: `DELETE`
  *  Description 본인이 생성한 문제를 삭제한다. 현재 진행 중인 대회에 속한 문제는 삭제할 수 없다.
  *  Authentication `Bearer Token`

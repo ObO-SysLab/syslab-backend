@@ -9,48 +9,48 @@ import java.time.LocalDateTime;
 // User 엔티티에서 필요한 정보만 골라서 클라이언트에 반환함
 public class ProfileShowResponse {
 
-    private final UserInfo user_info;
+    private final UserInfo userInfo;
 
-    public ProfileShowResponse(UserInfo user_info) {
-        this.user_info = user_info;
+    public ProfileShowResponse(UserInfo userInfo) {
+        this.userInfo = userInfo;
     }
 
-    public UserInfo getUser_info() { return user_info; }
+    public UserInfo getUserInfo() { return userInfo; }
 
     public static class UserInfo {
-        private final String nick_name;
-        private final String profile_img_url;
-        private final String self_comment;
-        private final String real_name;
-        private final LocalDate birth_date;
-        private final LocalDateTime created_at;
+        private final String nickname;
+        private final String profileImgUrl;
+        private final String selfComment;
+        private final String realName;
+        private final LocalDate birthDate;
+        private final LocalDateTime createdAt;
         private final String email;
-        private final String phone_number;
+        private final String phoneNumber;
         private final String belong;
         private final String interest;
 
         // User 엔티티를 응답 DTO로 변환
         public UserInfo(User user) {
-            this.nick_name = user.getNickname();
-            this.profile_img_url = user.getProfileImgUrl();
-            this.self_comment = user.getComment();
-            this.real_name = user.getRealName();
-            this.birth_date = user.getBirthday();
-            this.created_at = user.getCreatedAt();
+            this.nickname = user.getNickname();
+            this.profileImgUrl = user.getProfileImgUrl();
+            this.selfComment = user.getComment();
+            this.realName = user.getRealName();
+            this.birthDate = user.getBirthday();
+            this.createdAt = user.getCreatedAt();
             this.email = user.getEmail();
-            this.phone_number = user.getPhoneNumber();
+            this.phoneNumber = user.getPhoneNumber();
             this.belong = user.getBelong();
             this.interest = user.getInterest();
         }
 
-        public String getNick_name() { return nick_name; }
-        public String getProfile_img_url() { return profile_img_url; }
-        public String getSelf_comment() { return self_comment; }
-        public String getReal_name() { return real_name; }
-        public LocalDate getBirth_date() { return birth_date; }
-        public LocalDateTime getCreated_at() { return created_at; }
+        public String getNickname() { return nickname; }
+        public String getProfileImgUrl() { return profileImgUrl; }
+        public String getSelfComment() { return selfComment; }
+        public String getRealName() { return realName; }
+        public LocalDate getBirthDate() { return birthDate; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
         public String getEmail() { return email; }
-        public String getPhone_number() { return phone_number; }
+        public String getPhoneNumber() { return phoneNumber; }
         public String getBelong() { return belong; }
         public String getInterest() { return interest; }
     }

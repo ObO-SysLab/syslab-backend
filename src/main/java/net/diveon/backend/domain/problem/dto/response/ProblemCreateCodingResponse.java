@@ -4,13 +4,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProblemCreateCodingResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private String type;
     private String title;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
     public ProblemCreateCodingResponse() {

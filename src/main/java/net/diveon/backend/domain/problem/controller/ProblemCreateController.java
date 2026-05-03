@@ -80,12 +80,12 @@ public class ProblemCreateController {
     }
 
     // DELETE
-    //DELETE /api/problems/{prob_id}
-    @DeleteMapping("/{prob_id}")
-    public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long prob_id,
+    //DELETE /api/problems/{probId}
+    @DeleteMapping("/{probId}")
+    public ResponseEntity<ApiResponse<ProblemDeleteResponse>> deleteProblem(@PathVariable long probId,
         @AuthenticationPrincipal String userId){
 
-            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblem(Long.parseLong(userId), prob_id);
+            ProblemDeleteResponse problemDeleteResponse = problemDeleteService.deleteProblem(Long.parseLong(userId), probId);
             return ResponseEntity.status(200).body(ApiResponse.success("문제가 삭제되었습니다.", problemDeleteResponse));
         }
 }

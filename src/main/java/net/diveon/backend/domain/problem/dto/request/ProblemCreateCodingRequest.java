@@ -15,15 +15,15 @@ public class ProblemCreateCodingRequest {
     private String visibility;
     private Constraints constraints;
 
-    @JsonProperty("input_description")
+    @JsonProperty("inputDescription")
     private String inputDescription;
 
-    @JsonProperty("output_description")
+    @JsonProperty("outputDescription")
     private String outputDescription;
 
     private List<ForDtoTestCase> testcases;
 
-    @JsonProperty("file_url")
+    @JsonProperty("fileUrl")
     private String fileUrl;
 
     private Obo obo;
@@ -68,13 +68,13 @@ public class ProblemCreateCodingRequest {
     public void setObo(Obo obo) { this.obo = obo; }
 
     public static class Constraints {
-        @JsonProperty("time_limit_ms")
+        @JsonProperty("timeLimitMs")
         private Integer timeLimitMs;
 
-        @JsonProperty("memory_limit_mb")
+        @JsonProperty("memoryLimitMb")
         private Integer memoryLimitMb;
 
-        @JsonProperty("allowed_languages")
+        @JsonProperty("allowedLanguages")
         private List<String> allowedLanguages;
 
         public Constraints() {
@@ -93,7 +93,7 @@ public class ProblemCreateCodingRequest {
     public static class Obo {
         private Boolean enabled;
 
-        @JsonProperty("initial_image_url")
+        @JsonProperty("initialImageUrl")
         private String initialImageUrl;
 
         public Obo() {

@@ -50,10 +50,10 @@ public class ProblemController {
      * 추후 practice, coding 상세 조회 DTO가 추가되면 해당 DTO들도 ProblemDetailResponse를 구현하여
      * 같은 endpoint에서 문제 유형별 상세 응답을 반환할 수 있습니다.
      */
-    @GetMapping("/{prob_id}")
+    @GetMapping("/{probId}")
     public ResponseEntity<ApiResponse<ProblemDetailResponse>> detailProblem(
         @AuthenticationPrincipal String userId,
-        @PathVariable("prob_id") long probId
+        @PathVariable("probId") long probId
     ) {
         ProblemDetailResponse responseData =
             problemDetailService.detailProblem(Long.parseLong(userId), probId);

@@ -8,10 +8,10 @@ public class ProblemCommentCreateRequest {
     @NotBlank
     private String content;
 
-    @JsonProperty("is_private")
+    @JsonProperty("isPrivate")
     private Boolean isPrivate = false;
 
-    @JsonProperty("parent_id")
+    @JsonProperty("parentId")
     private Long parentId;
 
     public ProblemCommentCreateRequest() {

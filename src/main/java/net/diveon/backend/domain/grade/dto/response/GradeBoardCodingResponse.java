@@ -7,7 +7,7 @@ import java.util.List;
 
 public class GradeBoardCodingResponse implements GradeBoardResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private Long total;
@@ -26,30 +26,30 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
 
     public static class SubmissionItem {
 
-        @JsonProperty("submission_id")
+        @JsonProperty("submissionId")
         private Long submissionId;
 
         private String nickname;
 
         private String language;
 
-        @JsonProperty("is_correct")
+        @JsonProperty("isCorrect")
         private Boolean isCorrect;
 
         private Short score;
 
         private Integer runtime;
 
-        @JsonProperty("memory_usage")
+        @JsonProperty("memoryUsage")
         private Integer memoryUsage;
 
-        @JsonProperty("code_size")
+        @JsonProperty("codeSize")
         private Integer codeSize;
 
-        @JsonProperty("submitted_at")
+        @JsonProperty("submittedAt")
         private String submittedAt;
 
-        @JsonProperty("judged_at")
+        @JsonProperty("judgedAt")
         private String judgedAt;
 
         public SubmissionItem(Long submissionId, String nickname, String language, Boolean isCorrect,

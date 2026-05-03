@@ -20,7 +20,7 @@ public interface ProblemDetailResponse {
 
     /**
      * 문제 상세 조회의 기준이 되는 Problem 엔티티의 id입니다.
-     * 응답 JSON에서는 prob_id로 내려갑니다.
+     * 응답 JSON에서는 probId로 내려갑니다.
      */
     Long getProbId();
 

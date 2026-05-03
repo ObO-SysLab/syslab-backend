@@ -18,8 +18,8 @@ public class AdService {
     // Placement별 광고 규격 (width, height)
     private static final Map<String, int[]> PLACEMENT_DIMENSIONS = Map.of(
         "main", new int[]{1200, 250},
-        "prob_list", new int[]{1200, 250},
-        "prob_detail", new int[]{300, 600}
+        "probList", new int[]{1200, 250},
+        "probDetail", new int[]{300, 600}
     );
 
     public AdService(AdRepository adRepository) {
@@ -28,7 +28,7 @@ public class AdService {
 
     public AdListResponse getAdsByPlacement(String placement) {
         if (!PLACEMENT_DIMENSIONS.containsKey(placement)) {
-            throw new IllegalArgumentException("유효하지 않은 placement 값입니다. 허용값: main, prob_list, prob_detail");
+            throw new IllegalArgumentException("유효하지 않은 placement 값입니다. 허용값: main, probList, probDetail");
         }
 
         List<Ad> ads = adRepository.findByPlacementAndExpiresAtAfter(placement, LocalDateTime.now());

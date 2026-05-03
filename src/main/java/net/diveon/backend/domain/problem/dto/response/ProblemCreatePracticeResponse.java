@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProblemCreatePracticeResponse {
 
-    @JsonProperty("prob_id") //  Java 필드명 probId를 JSON 키 prob_id로 변환 (다시 프론트한테 돌려줘야 되니까)
+    @JsonProperty("probId")
     private long probId;
 
     @JsonProperty("type")
@@ -13,7 +13,7 @@ public class ProblemCreatePracticeResponse {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
     public ProblemCreatePracticeResponse() {
@@ -31,4 +31,3 @@ public class ProblemCreatePracticeResponse {
     public String getTitle() { return title; }
     public String getCreatedAt() { return createdAt; }
 }
-

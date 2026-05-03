@@ -13,15 +13,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
   "status": 201,
   "message": "문제가 등록되었습니다.",
   "data": {
-    "prob_id": 42,
+    "probId": 42,
     "type": "objective",
     "title": "프로세스 스케줄링 이해하기",
-    "created_at": "2025-04-13T10:00:00Z"
+    "createdAt": "2025-04-13T10:00:00Z"
     }
   }
  */
 public class ProblemCreateObjectiveResponse {
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private long probId;
 
     @JsonProperty("type")
@@ -30,7 +30,7 @@ public class ProblemCreateObjectiveResponse {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("created_at")
+    @JsonProperty("createdAt")
     private String createdAt;
 
     public ProblemCreateObjectiveResponse(){}

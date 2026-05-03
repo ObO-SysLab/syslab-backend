@@ -6,7 +6,7 @@ public class ProblemCommentUpdateRequest {
 
     private String content;
 
-    @JsonProperty("is_private")
+    @JsonProperty("isPrivate")
     private Boolean isPrivate;
 
     public ProblemCommentUpdateRequest() {

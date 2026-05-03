@@ -15,25 +15,25 @@ import java.util.List;
  *   "difficulty": "hard",
  *   "visibility": "public",
  *   "summary": "프로세스 우선순위 정렬 심화 문제",
- *   "input_description": "첫째 줄에 N...",
- *   "output_description": "우선순위가 높은 순으로...",
+ *   "inputDescription": "첫째 줄에 N...",
+ *   "outputDescription": "우선순위가 높은 순으로...",
  *   "constraints": {
- *     "time_limit_ms": 2000,
- *     "memory_limit_mb": 512,
- *     "allowed_languages": ["python", "java", "c", "cpp", "go"]
+ *     "timeLimitMs": 2000,
+ *     "memoryLimitMb": 512,
+ *     "allowedLanguages": ["python", "java", "c", "cpp", "go"]
  *   },
  *   "testcases": [
  *     {
  *       "index": 1,
  *       "input": "3\n1 5\n2 3\n3 8",
  *       "output": "3\n1\n2",
- *       "is_sample": true
+ *       "isSample": true
  *     }
  *   ],
- *   "file_url": null,
+ *   "fileUrl": null,
  *   "obo": {
  *     "enabled": true,
- *     "initial_image_url": "https://cdn.dk-world.com/problems/p99_init.png"
+ *     "initialImageUrl": "https://cdn.dk-world.com/problems/p99_init.png"
  *   }
  * }
  * </pre>
@@ -48,15 +48,15 @@ public class ProblemUpdateCodingRequest {
     private String visibility;
     private Constraints constraints;
 
-    @JsonProperty("input_description")
+    @JsonProperty("inputDescription")
     private String inputDescription;
 
-    @JsonProperty("output_description")
+    @JsonProperty("outputDescription")
     private String outputDescription;
 
     private List<ForDtoTestCase> testcases;
 
-    @JsonProperty("file_url")
+    @JsonProperty("fileUrl")
     private String fileUrl;
 
     private Obo obo;
@@ -101,13 +101,13 @@ public class ProblemUpdateCodingRequest {
     public void setObo(Obo obo) { this.obo = obo; }
 
     public static class Constraints {
-        @JsonProperty("time_limit_ms")
+        @JsonProperty("timeLimitMs")
         private Integer timeLimitMs;
 
-        @JsonProperty("memory_limit_mb")
+        @JsonProperty("memoryLimitMb")
         private Integer memoryLimitMb;
 
-        @JsonProperty("allowed_languages")
+        @JsonProperty("allowedLanguages")
         private List<String> allowedLanguages;
 
         public Constraints() {
@@ -126,7 +126,7 @@ public class ProblemUpdateCodingRequest {
     public static class Obo {
         private Boolean enabled;
 
-        @JsonProperty("initial_image_url")
+        @JsonProperty("initialImageUrl")
         private String initialImageUrl;
 
         public Obo() {

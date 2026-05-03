@@ -7,7 +7,7 @@ import java.util.List;
 
 public class GradeBoardObjectiveResponse implements GradeBoardResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private Long probId;
 
     private Long total;
@@ -26,18 +26,18 @@ public class GradeBoardObjectiveResponse implements GradeBoardResponse {
 
     public static class SubmissionItem {
 
-        @JsonProperty("submission_id")
+        @JsonProperty("submissionId")
         private Long submissionId;
 
         private String nickname;
 
-        @JsonProperty("is_correct")
+        @JsonProperty("isCorrect")
         private Boolean isCorrect;
 
-        @JsonProperty("submitted_at")
+        @JsonProperty("submittedAt")
         private String submittedAt;
 
-        @JsonProperty("judged_at")
+        @JsonProperty("judgedAt")
         private String judgedAt;
 
         public SubmissionItem(Long submissionId, String nickname, Boolean isCorrect,
