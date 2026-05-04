@@ -20,7 +20,7 @@ public class DockerServiceImpl implements DockerService {
 
     public DockerServiceImpl( 
         // application-secret.yml에서 @Value로 주입받는 것들
-            @Value("${vm.ec2-host}") String vmHost, // VM EC2 IP (10.0.1.19)
+            @Value("${vm.ec2-host}") String vmHost, // VM EC2 IP
             @Value("${vm.ec2-user}") String vmUser, // ec2-user
             @Value("${vm.ec2-key-path}") String vmKeyPath) {  // PEM 키 파일 경로
         this.vmHost = vmHost;

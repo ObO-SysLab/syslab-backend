@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface VmSessionRepository extends JpaRepository<VmSession, Long> {
 
-    Optional<VmSession> findByUserIdAndStatus(Long userId, String status);
+    Optional<VmSession> findFirstByUserIdAndStatus(Long userId, String status);
 }
