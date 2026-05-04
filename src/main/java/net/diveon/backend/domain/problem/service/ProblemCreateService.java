@@ -186,6 +186,7 @@ public class ProblemCreateService {
                 oboInitialImageUrl
         );
         problemCodingRepository.save(problemCoding);
+        s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
 
         return new ProblemCreateCodingResponse(
                 savedProblem.getId(),
