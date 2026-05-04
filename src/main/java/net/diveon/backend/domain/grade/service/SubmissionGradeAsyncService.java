@@ -10,9 +10,9 @@ import org.springframework.stereotype.Service;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionObjective;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionPractice;
-import net.diveon.backend.domain.grade.entity.SovleResult;
+import net.diveon.backend.domain.grade.entity.SolveResult;
 import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
-import net.diveon.backend.domain.grade.entity.SovleResult.SovleResultState;
+import net.diveon.backend.domain.grade.entity.SolveResult.SolveResultState;
 import net.diveon.backend.domain.grade.repository.SolveResultRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionObjectiveRepository;
@@ -147,12 +147,12 @@ public class SubmissionGradeAsyncService {
 
         if(correctness){
             //정답
-            SovleResult result = new SovleResult(submission, SovleResultState.CORRECT, "정답입니다.");
+            SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
         }else{
             //오답
-            SovleResult result = new SovleResult(submission, SovleResultState.WRONG, "오답입니다..");
+            SolveResult result = new SolveResult(submission, SolveResultState.WRONG);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
         }
@@ -194,12 +194,12 @@ public class SubmissionGradeAsyncService {
 
         if(correctness){
             //정답
-            SovleResult result = new SovleResult(submission, SovleResultState.CORRECT, "정답입니다.");
+            SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
         }else{
             //오답
-            SovleResult result = new SovleResult(submission, SovleResultState.WRONG, "오답입니다..");
+            SolveResult result = new SolveResult(submission, SolveResultState.WRONG);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
         }    
