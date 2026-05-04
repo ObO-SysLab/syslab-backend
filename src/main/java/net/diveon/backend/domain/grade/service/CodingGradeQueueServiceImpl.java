@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import net.diveon.backend.domain.grade.dto.message.CodingGradeMessage;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
-import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionCoding;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
@@ -70,8 +69,6 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
 
         uploadCode(s3Key, submissionCoding.getAnswer());
         sendMessage(createMessage(submissionId, s3Key, language, probId, problemCoding));
-
-        submission.setSubmissionState(SubmissionState.JUDGING);
     }
 
     private void uploadCode(String s3Key, String code) {
