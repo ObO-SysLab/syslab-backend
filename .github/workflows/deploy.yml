@@ -41,9 +41,9 @@ jobs:
               url: https://sqs.ap-northeast-2.amazonaws.com/290373175858/syslab-grading-queue
               practice-build-url: ${{ secrets.SQS_PRACTICE_BUILD_URL }}
             vm-ec2-host: 10.0.3.30
-          vm:                                      
-            ec2-host: 10.0.3.30                    
-            ec2-user: ec2-user                   
+          vm:
+            ec2-host: 10.0.3.30
+            ec2-user: ec2-user
             ec2-key-path: /app/syslab-key.pem
           auth:
             jwt:
@@ -102,5 +102,5 @@ jobs:
               --name syslab-backend \
               --restart always \
               -p 8080:8080 \
-              -v /home/ec2-user/syslab-key.pem:/app/syslab-key.pem:ro \    # ← 추가
+              -v /home/ec2-user/syslab-key.pem:/app/syslab-key.pem:ro \
               ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
