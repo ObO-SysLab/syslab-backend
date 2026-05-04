@@ -5,13 +5,13 @@ import net.diveon.backend.domain.grade.dto.response.GradeBoardObjectiveResponse;
 import net.diveon.backend.domain.grade.dto.response.GradeBoardPracticeResponse;
 import net.diveon.backend.domain.grade.dto.response.interfaces.GradeBoardResponse;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
-import net.diveon.backend.domain.grade.entity.SovleResult;
-import net.diveon.backend.domain.grade.entity.SovleResultCoding;
+import net.diveon.backend.domain.grade.entity.SolveResult;
+import net.diveon.backend.domain.grade.entity.SolveResultCoding;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionCoding;
 import net.diveon.backend.domain.grade.repository.SolveResultRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
-import net.diveon.backend.domain.grade.repository.SovleResultCodingRepository;
+import net.diveon.backend.domain.grade.repository.SolveResultCodingRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import org.springframework.data.domain.Page;
@@ -30,13 +30,13 @@ public class GradeBoardService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final SolveResultRepository solveResultRepository;
-    private final SovleResultCodingRepository solveResultCodingRepository;
+    private final SolveResultCodingRepository solveResultCodingRepository;
     private final ProblemRepository problemRepository;
 
     public GradeBoardService(SolveSubmissionRepository solveSubmissionRepository,
                              SolveSubmissionCodingRepository solveSubmissionCodingRepository,
                              SolveResultRepository solveResultRepository,
-                             SovleResultCodingRepository solveResultCodingRepository,
+                             SolveResultCodingRepository solveResultCodingRepository,
                              ProblemRepository problemRepository) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
@@ -79,13 +79,13 @@ public class GradeBoardService {
 
         List<GradeBoardObjectiveResponse.SubmissionItem> items = submissionPage.getContent().stream()
                 .map(submission -> {
-                    SovleResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
+                    SolveResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
 
                     Boolean isCorrect = null;
                     String judgedAt = null;
 
                     if (solveResult != null) {
-                        isCorrect = solveResult.getResultState() == SovleResult.SovleResultState.CORRECT;
+                        isCorrect = solveResult.getResultState() == SolveResult.SolveResultState.CORRECT;
                         judgedAt = solveResult.getCreatedAt().toString();
                     }
 
@@ -116,13 +116,13 @@ public class GradeBoardService {
 
         List<GradeBoardPracticeResponse.SubmissionItem> items = submissionPage.getContent().stream()
                 .map(submission -> {
-                    SovleResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
+                    SolveResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
 
                     Boolean isCorrect = null;
                     String judgedAt = null;
 
                     if (solveResult != null) {
-                        isCorrect = solveResult.getResultState() == SovleResult.SovleResultState.CORRECT;
+                        isCorrect = solveResult.getResultState() == SolveResult.SolveResultState.CORRECT;
                         judgedAt = solveResult.getCreatedAt().toString();
                     }
 
@@ -153,7 +153,7 @@ public class GradeBoardService {
 
         List<GradeBoardCodingResponse.SubmissionItem> items = submissionPage.getContent().stream()
                 .map(submission -> {
-                    SovleResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
+                    SolveResult solveResult = solveResultRepository.findBySubmissionId(submission.getId()).orElse(null);
                     SolveSubmissionCoding submissionCoding = solveSubmissionCodingRepository.findById(submission.getId()).orElse(null);
 
                     Boolean isCorrect = null;
@@ -165,10 +165,10 @@ public class GradeBoardService {
                     String language = submissionCoding != null ? submissionCoding.getLanguage() : null;
 
                     if (solveResult != null) {
-                        isCorrect = solveResult.getResultState() == SovleResult.SovleResultState.CORRECT; // CORRECT면 true
+                        isCorrect = solveResult.getResultState() == SolveResult.SolveResultState.CORRECT; // CORRECT면 true
                         judgedAt = solveResult.getCreatedAt().toString(); // 채점 완료 시각
 
-                        SovleResultCoding codingResult = solveResultCodingRepository.findById(solveResult.getId()).orElse(null);
+                        SolveResultCoding codingResult = solveResultCodingRepository.findById(solveResult.getId()).orElse(null);
                         if (codingResult != null) {
                             score = codingResult.getScore();
                             runtime = codingResult.getRuntime();
