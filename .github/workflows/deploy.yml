@@ -10,12 +10,14 @@ jobs:
       # 1. 코드 체크아웃
       - name: Checkout code
         uses: actions/checkout@v3
+
       # 2. Java 21 설치
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           java-version: '21'
           distribution: 'corretto'
+
       # 3. application-secret.yml 생성
       - name: Create secret yml
         run: |
@@ -38,7 +40,11 @@ jobs:
             sqs:
               url: https://sqs.ap-northeast-2.amazonaws.com/290373175858/syslab-grading-queue
               practice-build-url: ${{ secrets.SQS_PRACTICE_BUILD_URL }}
-            vm-ec2-host: http://10.0.1.19:2376
+            vm-ec2-host: 10.0.3.30
+          vm:                                      
+            ec2-host: 10.0.3.30                    
+            ec2-user: ec2-user                   
+            ec2-key-path: /app/syslab-key.pem
           auth:
             jwt:
               header: Authorization
@@ -51,11 +57,13 @@ jobs:
               org.springframework.web.servlet.mvc: DEBUG
               net.diveon.backend: DEBUG
           EOF
+
       # 4. Gradle 빌드
       - name: Build with Gradle
         run: |
           chmod +x gradlew
           ./gradlew build -x test
+
       # 5. AWS 인증
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -63,16 +71,19 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
       # 6. ECR 로그인
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+
       # 7. Docker 이미지 빌드 & ECR 푸시
       - name: Build and push Docker image
         run: |
           IMAGE_URI=${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
           docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
+
       # 8. API EC2에 SSH 접속 후 배포
       - name: Deploy to API EC2
         uses: appleboy/ssh-action@v1.0.0
@@ -91,4 +102,5 @@ jobs:
               --name syslab-backend \
               --restart always \
               -p 8080:8080 \
+              -v /home/ec2-user/syslab-key.pem:/app/syslab-key.pem:ro \    # ← 추가
               ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
