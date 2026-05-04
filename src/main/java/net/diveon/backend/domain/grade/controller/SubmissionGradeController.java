@@ -38,7 +38,7 @@ public class SubmissionGradeController {
     }
 
 
-    @PostMapping("/grade/{probId}")
+    @PostMapping("/grade")
     public ResponseEntity<ApiResponse<SubmissionGradeResponse>> grade(@AuthenticationPrincipal String userId,
         @Valid @RequestBody SubmissionGradeReqeust reqeust
     ){
