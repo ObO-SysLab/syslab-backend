@@ -2,6 +2,7 @@ package net.diveon.backend.domain.grade.dto.response;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SubmissionResultCodingResponse implements SubmissionResultResponse {
@@ -73,6 +74,7 @@ public class SubmissionResultCodingResponse implements SubmissionResultResponse 
     public long getSubmissionId() { return submissionId; }
     public long getProbId() { return probId; }
     public String getLanguage() { return language; }
+    @JsonIgnore
     public boolean isCorrect() { return isCorrect; }
     public short getScore() { return score; }
     public int getRuntime() { return runtime; }

@@ -3,6 +3,7 @@ package net.diveon.backend.domain.grade.dto.response;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SubmissionResultObjectiveResponse implements SubmissionResultResponse {
@@ -48,6 +49,7 @@ public class SubmissionResultObjectiveResponse implements SubmissionResultRespon
     public String getProbType() { return probType; }
     public long getSubmissionId() { return submissionId; }
     public long getProbId() { return probId; }
+    @JsonIgnore
     public boolean isCorrect() { return isCorrect; }
     public List<Integer> getSelectedAnswers() { return selectedAnswers; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
