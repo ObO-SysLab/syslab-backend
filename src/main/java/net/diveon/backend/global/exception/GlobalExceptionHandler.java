@@ -180,4 +180,46 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
+
+        // 제출 없음 → 404
+        @ExceptionHandler(SubmissionNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleSubmissionNotFound(
+                SubmissionNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/submission-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 본인 제출 아님 → 403
+        @ExceptionHandler(SubmissionAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleSubmissionAccessDenied(
+                SubmissionAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/submission-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
+        // 채점 미완료 → 409
+        @ExceptionHandler(SubmissionNotCompletedException.class)
+        public ResponseEntity<ErrorResponse> handleSubmissionNotCompleted(
+                SubmissionNotCompletedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/submission-not-completed",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
 }
