@@ -21,10 +21,10 @@ public class GradeBoardController {
         this.gradeBoardService = gradeBoardService;
     }
 
-    @GetMapping("/{prob_id}/board")
+    @GetMapping("/{probId}/board")
     public ResponseEntity<ApiResponse<GradeBoardResponse>> getBoard(
             @AuthenticationPrincipal String userId,
-            @PathVariable("prob_id") Long probId,
+            @PathVariable("probId") Long probId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "all") String result,

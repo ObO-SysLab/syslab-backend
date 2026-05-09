@@ -10,6 +10,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 public class BackendApplication {
 
+	//지금 배포 버그 수정을 위한 아무 주석추가 0503
+
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 	}

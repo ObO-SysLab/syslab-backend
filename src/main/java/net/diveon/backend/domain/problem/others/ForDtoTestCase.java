@@ -8,7 +8,7 @@ public class ForDtoTestCase {
     private String input;
     private String output;
 
-    @JsonProperty("is_sample")
+    @JsonProperty("isSample")
     private Boolean isSample;
 
     // 기본 생성자

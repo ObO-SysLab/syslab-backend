@@ -43,7 +43,7 @@ public class VmService {
             return VmStatusResponse.imageNotReady();
         }
 
-        Optional<VmSession> session = vmSessionRepository.findByUserIdAndStatus(userId, "RUNNING");
+        Optional<VmSession> session = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING");
         if (session.isPresent()) {
             return VmStatusResponse.running(session.get().getContainerId());
         }
@@ -65,7 +65,7 @@ public class VmService {
         }
 
         // 이미 기존 생성된 VM이 있는지 확인, 있으면 반환 (유저당 VM 생성 1개 제한)
-        Optional<VmSession> existing = vmSessionRepository.findByUserIdAndStatus(userId, "RUNNING");
+        Optional<VmSession> existing = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING");
         if (existing.isPresent()) {
             return VmCreateResponse.from(existing.get(), "기존 VM을 반환합니다.");
         }
@@ -83,7 +83,7 @@ public class VmService {
     // VM 중지
     @Transactional
     public VmStopResponse stopVm(Long userId, VmStopRequest request) {
-        VmSession session = vmSessionRepository.findByUserIdAndStatus(userId, "RUNNING")
+        VmSession session = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING")
                 .orElseThrow(() -> new VmNotFoundException("실행 중인 VM이 없습니다."));
 
         dockerService.stopAndRemoveContainer(session.getContainerId()); // 컨테이너 중단 & 삭제

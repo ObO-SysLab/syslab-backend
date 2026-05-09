@@ -9,12 +9,12 @@ public class VmCreateResponse {
 
     private String status;
 
-    @JsonProperty("container_id")
+    @JsonProperty("containerId")
     private String containerId;
 
     private String message;
 
-    @JsonProperty("expires_at")
+    @JsonProperty("expiresAt")
     private LocalDateTime expiresAt;
 
     public VmCreateResponse(String status, String containerId, String message, LocalDateTime expiresAt) {

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ProblemUpdatePracticeResponse {
 
-    @JsonProperty("prob_id")
+    @JsonProperty("probId")
     private long probId;
 
     @JsonProperty("type")
@@ -13,7 +13,7 @@ public class ProblemUpdatePracticeResponse {
     @JsonProperty("title")
     private String title;
 
-    @JsonProperty("updated_at")
+    @JsonProperty("updatedAt")
     private String updatedAt;
 
     public ProblemUpdatePracticeResponse() {

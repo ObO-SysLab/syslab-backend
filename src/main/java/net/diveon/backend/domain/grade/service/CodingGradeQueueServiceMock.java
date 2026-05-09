@@ -9,13 +9,13 @@ import org.springframework.transaction.annotation.Transactional;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
 import net.diveon.backend.domain.grade.entity.SolveSubmissionCoding;
-import net.diveon.backend.domain.grade.entity.SovleResult;
-import net.diveon.backend.domain.grade.entity.SovleResult.SovleResultState;
-import net.diveon.backend.domain.grade.entity.SovleResultCoding;
+import net.diveon.backend.domain.grade.entity.SolveResult;
+import net.diveon.backend.domain.grade.entity.SolveResult.SolveResultState;
+import net.diveon.backend.domain.grade.entity.SolveResultCoding;
 import net.diveon.backend.domain.grade.repository.SolveResultRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
-import net.diveon.backend.domain.grade.repository.SovleResultCodingRepository;
+import net.diveon.backend.domain.grade.repository.SolveResultCodingRepository;
 
 @Service
 @Profile("local")
@@ -27,18 +27,18 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final SolveResultRepository solveResultRepository;
-    private final SovleResultCodingRepository sovleResultCodingRepository;
+    private final SolveResultCodingRepository solveResultCodingRepository;
 
     public CodingGradeQueueServiceMock(
         SolveSubmissionRepository solveSubmissionRepository,
         SolveSubmissionCodingRepository solveSubmissionCodingRepository,
         SolveResultRepository solveResultRepository,
-        SovleResultCodingRepository sovleResultCodingRepository
+        SolveResultCodingRepository solveResultCodingRepository
     ) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.solveResultRepository = solveResultRepository;
-        this.sovleResultCodingRepository = sovleResultCodingRepository;
+        this.solveResultCodingRepository = solveResultCodingRepository;
     }
 
     @Override
@@ -56,42 +56,34 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
             submissionCoding.getLanguage()
         );
 
-        SovleResultState resultState = getMockResultState(submissionCoding.getLanguage());
-        SovleResult result = new SovleResult(
+        SolveResultState resultState = getMockResultState(submissionCoding.getLanguage());
+        SolveResult result = new SolveResult(
             submission,
-            resultState,
-            getMockMessage(resultState)
+            resultState
         );
         solveResultRepository.save(result);
 
-        SovleResultCoding resultCoding = new SovleResultCoding(
+        SolveResultCoding resultCoding = new SolveResultCoding(
             result,
             getMockScore(resultState),
             0,
             0,
             submissionCoding.getAnswer().length()
         );
-        sovleResultCodingRepository.save(resultCoding);
+        solveResultCodingRepository.save(resultCoding);
 
         submission.setSubmissionState(SubmissionState.COMPLETED);
     }
 
-    private SovleResultState getMockResultState(String language) {
+    private SolveResultState getMockResultState(String language) {
         if ("python".equals(language)) {
-            return SovleResultState.CORRECT;
+            return SolveResultState.CORRECT;
         }
-        return SovleResultState.WRONG_ANSWER;
+        return SolveResultState.WRONG;
     }
 
-    private String getMockMessage(SovleResultState resultState) {
-        if (resultState == SovleResultState.CORRECT) {
-            return "[Mock] 정답입니다.";
-        }
-        return "[Mock] python 외 언어는 오답으로 처리됩니다.";
-    }
-
-    private Short getMockScore(SovleResultState resultState) {
-        if (resultState == SovleResultState.CORRECT) {
+    private Short getMockScore(SolveResultState resultState) {
+        if (resultState == SolveResultState.CORRECT) {
             return 100;
         }
         return 0;

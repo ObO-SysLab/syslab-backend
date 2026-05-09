@@ -11,9 +11,9 @@ import io.micrometer.common.lang.NonNull;
   "status": 202,
   "message": "채점 요청이 접수되었습니다.",
   "data": {
-    "submission_id": "17",
-    "prob_id": 42,
-    "submission_status": "PENDING"
+    "submissionId": "17",
+    "probId": 42,
+    "submissionStatus": "PENDING"
   }
 }
 기본 공통 데이터(상태코드, 메세지)

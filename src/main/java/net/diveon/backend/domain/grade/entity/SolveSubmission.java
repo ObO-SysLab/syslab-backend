@@ -32,13 +32,8 @@ public class SolveSubmission {
     //문자열 줄때는 .name() 으로 줄 것
     public static enum SubmissionState{
         PENDING,
-        RECEIVED,
-        INPROGRESS,
-        COMPLETED,
-        FAILED,
-        TIMEOUT,
-        ERROR,
-        UNKNOWN
+        JUDGING,
+        COMPLETED
     }
     
     @Id

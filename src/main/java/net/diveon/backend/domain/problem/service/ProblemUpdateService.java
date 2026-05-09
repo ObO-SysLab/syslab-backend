@@ -37,19 +37,22 @@ public class ProblemUpdateService {
     private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
     private final UserRepository userRepository;
+    private final S3Service s3Service;
 
     public ProblemUpdateService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
         ProblemCodingRepository problemCodingRepository,
         OboStepRepository oboStepRepository,
-        UserRepository userRepository){
+        UserRepository userRepository,
+        S3Service s3Service){
             this.problemObjectiveRepository = problemObjectiveRepository;
             this.problemPracticeRepository = problemPracticeRepository;
             this.problemCodingRepository = problemCodingRepository;
             this.problemRepository = problemRepository;
             this.oboStepRepository = oboStepRepository;
             this.userRepository = userRepository;
+            this.s3Service = s3Service;
         }
 
     // 객관식형
@@ -123,6 +126,10 @@ public class ProblemUpdateService {
             obo != null ? obo.getEnabled() : null,
             obo != null ? obo.getInitialImageUrl() : null
         );
+
+        if (request.getTestcases() != null) {
+            s3Service.uploadCodingTestcases(probId, request.getTestcases());
+        }
 
         return new ProblemUpdateCodingResponse(
             probId,

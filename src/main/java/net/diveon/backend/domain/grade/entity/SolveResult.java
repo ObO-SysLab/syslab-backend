@@ -19,24 +19,16 @@ import jakarta.persistence.OneToOne;
 | ------------- | --------- | ---------------------------- | --------------- |
 | id            | BIGINT    | PK, AUTO_INCREMENT           | PK용             |
 | submisson_id  | BIGINT    | FK → submission.id, NOT NULL |                 |
-| is_passed     | enum      | NOT NULL                     | 클래스 enum 참고     |
-| message       | String    |                              |                 |
+| result_status | enum      | NOT NULL                     | 클래스 enum 참고     |
 | created_at    | TIMESTAMP | NOT NULL, DEFAULT NOW()      | 채점 완료 후 기록시간    |
  * </pre>
  */
 @Entity
-public class SovleResult {
-    public static enum SovleResultState{
-        NOGRADE,
+public class SolveResult {
+    public static enum SolveResultState{
         CORRECT,
         WRONG,
-        ERROR,
-        ACCEPTED,
-        WRONG_ANSWER,
-        TIME_LIMIT_EXCEEDED,
-        RUNTIME_ERROR,
-        COMPILE_ERROR,
-        SYSTEM_ERROR
+        ERROR
     }
 
     @Id
@@ -48,29 +40,24 @@ public class SovleResult {
     private SolveSubmission submission;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "is_passed", nullable = false)
-    private SovleResultState resultState = SovleResultState.NOGRADE;
-
-    @Column(name = "message")
-    private String message;
+    @Column(name = "result_status", nullable = false)
+    private SolveResultState resultState;
 
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
 
     //jpa용
-    public SovleResult() {}
+    public SolveResult() {}
 
 
-    public SovleResult(SolveSubmission submission, SovleResultState resultState, String message) {
+    public SolveResult(SolveSubmission submission, SolveResultState resultState) {
         this.submission = submission;
         this.resultState = resultState;
-        this.message = message;
         this.createdAt = java.time.LocalDateTime.now();
     }
 
     public Long getId() { return id; }
     public SolveSubmission getSubmission() { return submission; }
-    public SovleResultState getResultState() { return resultState; }
-    public String getMessage() { return message; }
+    public SolveResultState getResultState() { return resultState; }
     public LocalDateTime getCreatedAt() { return createdAt; }
 }

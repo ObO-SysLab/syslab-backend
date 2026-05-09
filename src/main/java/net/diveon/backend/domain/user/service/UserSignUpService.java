@@ -71,7 +71,7 @@ public class UserSignUpService {
         User newUser = new User(
             signup_request.getLoginId(),
             encodedPassword, 
-            signup_request.getNickName(),
+            signup_request.getNickname(),
             signup_request.getEmail(),
             signup_request.getBelong(),
             signup_request.getInterest()

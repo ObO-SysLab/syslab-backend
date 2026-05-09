@@ -9,7 +9,7 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 @Entity
-public class SovleResultCoding {
+public class SolveResultCoding {
 
     @Id
     @Column(name = "result_id")
@@ -18,7 +18,7 @@ public class SovleResultCoding {
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "result_id", nullable = false)
-    private SovleResult result;
+    private SolveResult result;
 
     @Column(name = "score")
     private Short score = 0;
@@ -32,10 +32,10 @@ public class SovleResultCoding {
     @Column(name = "code_size")
     private Integer codeSize = 0;
 
-    public SovleResultCoding() {}
+    public SolveResultCoding() {}
 
-    public SovleResultCoding(
-        SovleResult result,
+    public SolveResultCoding(
+        SolveResult result,
         Short score,
         Integer memoryUsage,
         Integer runtime,
@@ -52,7 +52,7 @@ public class SovleResultCoding {
         return id;
     }
 
-    public SovleResult getResult() {
+    public SolveResult getResult() {
         return result;
     }
 

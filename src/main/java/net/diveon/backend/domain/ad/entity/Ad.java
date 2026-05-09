@@ -28,7 +28,7 @@ public class Ad {
     private String altText;
 
     @Column(name = "placement", length = 50, nullable = false)
-    private String placement; // main, prob_list, prob_detail
+    private String placement; // main, probList, probDetail
 
     @Column(name = "width", nullable = false)
     private int width;

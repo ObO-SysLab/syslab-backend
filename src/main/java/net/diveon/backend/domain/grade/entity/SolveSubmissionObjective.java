@@ -18,7 +18,7 @@ public class SolveSubmissionObjective {
 
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
-    @Column(name = "submission_id")
+    @Column(name = "id")
     private long id;
 
     @OneToOne(fetch = FetchType.LAZY)

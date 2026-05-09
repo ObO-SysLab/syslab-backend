@@ -136,7 +136,7 @@ public class ProblemCreateService {
                 request.getAllowedCommands(),
                 request.getCpuLimit(),
                 request.getMemoryLimit(),
-                hashFlag(request.getFlag()),
+                hashFlag(request.getFlag().trim()),
                 null
         );
         problemPracticeRepository.save(problemPractice);
@@ -186,6 +186,7 @@ public class ProblemCreateService {
                 oboInitialImageUrl
         );
         problemCodingRepository.save(problemCoding);
+        s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
 
         return new ProblemCreateCodingResponse(
                 savedProblem.getId(),
