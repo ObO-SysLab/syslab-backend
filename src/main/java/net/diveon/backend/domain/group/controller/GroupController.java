@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.group.controller;
 
 import jakarta.validation.Valid;
+import net.diveon.backend.domain.group.dto.GroupAddProblemsRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
@@ -44,6 +45,16 @@ public class GroupController {
         Long parsedUserId = (userId != null && !userId.equals("anonymousUser")) ? Long.parseLong(userId) : null;
         GroupDetailResponse response = groupService.getGroupDetail(groupId, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("그룹 상세 정보 조회 성공", response));
+    }
+
+    // 공개 문제 그룹에 추가
+    @PostMapping("/{groupId}/problems")
+    public ResponseEntity<ApiResponse<Void>> addProblems(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId,
+            @RequestBody GroupAddProblemsRequest request) {
+        groupService.addProblems(groupId, Long.parseLong(userId), request);
+        return ResponseEntity.status(201).body(ApiResponse.created("문제가 그룹에 추가되었습니다.", null));
     }
 
     // 그룹 생성
