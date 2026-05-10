@@ -5,6 +5,7 @@ import net.diveon.backend.domain.group.service.GroupMemberService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,5 +28,17 @@ public class GroupMemberController {
             @AuthenticationPrincipal String userId) {
         GroupMemberCommonResponse response = groupMemberService.applyGroupMembership(groupId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("가입 신청이 완료되었습니다.", response));
+    }
+
+    // 그룹 가입 신청 철회
+    @PatchMapping("/pending/me")
+    public ResponseEntity<ApiResponse<GroupMemberCommonResponse>> cancelPendingGroupMembership(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId) {
+        GroupMemberCommonResponse response = groupMemberService.cancelPendingGroupMembership(
+                groupId,
+                Long.parseLong(userId)
+        );
+        return ResponseEntity.ok(ApiResponse.success("성공적으로 철회 되었습니다.", response));
     }
 }

@@ -79,6 +79,14 @@ public class GroupAssignRequest {
         this.decidedReason = decidedReason;
     }
 
+    public void cancel(String decidedReason) {
+        this.status = AssignRequestStatus.CANCELED;
+        this.decidedAt = LocalDateTime.now();
+        // TODO: decidedBy = null 정책은 차후 수정이 필요합니다.
+        this.decidedBy = null;
+        this.decidedReason = decidedReason;
+    }
+
     public Long getId() { return id; }
     public Group getGroup() { return group; }
     public User getUser() { return user; }

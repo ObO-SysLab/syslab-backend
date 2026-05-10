@@ -13,6 +13,7 @@ import net.diveon.backend.domain.group.repository.GroupRepository;
 import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.GroupAssignRequestNotPendingException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -71,6 +72,26 @@ public class GroupMemberService {
         }
 
         return new GroupMemberCommonResponse(userId, "pending");
+    }
+
+    // 그룹 가입 신청 철회
+    @Transactional
+    public GroupMemberCommonResponse cancelPendingGroupMembership(Long groupId, Long userId) {
+        groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupAssignRequest assignRequest = groupAssignRequestRepository
+                .findFirstByGroupIdAndUserIdOrderByAppliedAtDescIdDesc(groupId, userId)
+                .orElseThrow(GroupAssignRequestNotPendingException::new);
+
+        if (assignRequest.getStatus() != AssignRequestStatus.PENDING) {
+            throw new GroupAssignRequestNotPendingException();
+        }
+
+        assignRequest.cancel("canceled by applicant");
+        return new GroupMemberCommonResponse(userId, "CANCELED");
     }
 
     private void validateGroupCapacity(Long groupId, Group group) {

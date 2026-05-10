@@ -223,6 +223,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 가입 신청 철회 불가 → 409
+        @ExceptionHandler(GroupAssignRequestNotPendingException.class)
+        public ResponseEntity<ErrorResponse> handleGroupAssignRequestNotPending(
+                GroupAssignRequestNotPendingException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/group-assign-request-not-pending",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
         // 채점 미완료 → 409
         @ExceptionHandler(SubmissionNotCompletedException.class)
         public ResponseEntity<ErrorResponse> handleSubmissionNotCompleted(
