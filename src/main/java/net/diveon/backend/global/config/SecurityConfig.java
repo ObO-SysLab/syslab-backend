@@ -41,6 +41,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/ad/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/members").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/posts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
                         .anyRequest().authenticated()
                 )
