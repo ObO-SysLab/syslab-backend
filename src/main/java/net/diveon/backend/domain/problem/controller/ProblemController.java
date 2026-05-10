@@ -31,14 +31,16 @@ public class ProblemController {
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(required = false) String title,
         @RequestParam(required = false) String category,
-        @RequestParam(required = false) String difficulty
+        @RequestParam(required = false) String difficulty,
+        @RequestParam(required = false) String visibility
     ) {
         ProblemListResponse responseData = problemListService.listProblems(
             Long.parseLong(userId),
             page,
             title,
             category,
-            difficulty
+            difficulty,
+            visibility
         );
 
         return ResponseEntity.status(200)
