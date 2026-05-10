@@ -30,7 +30,7 @@ public class GroupController {
     public ResponseEntity<ApiResponse<GroupDetailResponse>> getGroupDetail(
             @PathVariable Long groupId,
             @AuthenticationPrincipal String userId) {
-        Long parsedUserId = userId != null ? Long.parseLong(userId) : null; // 로그인 안 해도 그룹 상세는 접근 가능
+        Long parsedUserId = (userId != null && !userId.equals("anonymousUser")) ? Long.parseLong(userId) : null;
         GroupDetailResponse response = groupService.getGroupDetail(groupId, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("그룹 상세 정보 조회 성공", response));
     }
