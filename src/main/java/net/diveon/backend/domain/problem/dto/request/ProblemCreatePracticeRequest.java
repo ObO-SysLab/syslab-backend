@@ -37,6 +37,8 @@ public class ProblemCreatePracticeRequest {
     @NotBlank
     private String visibility;
 
+    private Long groupId;
+
     @NotBlank
     private String osImage;
 
@@ -76,6 +78,9 @@ public class ProblemCreatePracticeRequest {
 
     public String getVisibility() { return visibility; }
     public void setVisibility(String visibility) { this.visibility = visibility; }
+
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
 
     public String getOsImage() { return osImage; }
     public void setOsImage(String osImage) { this.osImage = osImage; }
