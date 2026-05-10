@@ -15,6 +15,7 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GroupAssignRequestNotPendingException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
+import net.diveon.backend.global.exception.GroupUserNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -92,6 +93,21 @@ public class GroupMemberService {
 
         assignRequest.cancel("canceled by applicant");
         return new GroupMemberCommonResponse(userId, "CANCELED");
+    }
+
+    // 그룹 탈퇴
+    @Transactional
+    public GroupMemberCommonResponse leaveGroup(Long groupId, Long userId) {
+        groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupUserNotFoundException::new);
+
+        groupUserRepository.delete(groupUser);
+        return new GroupMemberCommonResponse(userId, "none");
     }
 
     private void validateGroupCapacity(Long groupId, Group group) {

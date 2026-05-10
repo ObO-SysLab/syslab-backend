@@ -223,6 +223,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 그룹 유저 없음 → 404
+        @ExceptionHandler(GroupUserNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleGroupUserNotFound(
+                GroupUserNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/group-user-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
         // 가입 신청 철회 불가 → 409
         @ExceptionHandler(GroupAssignRequestNotPendingException.class)
         public ResponseEntity<ErrorResponse> handleGroupAssignRequestNotPending(

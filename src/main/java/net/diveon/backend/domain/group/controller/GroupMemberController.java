@@ -5,6 +5,7 @@ import net.diveon.backend.domain.group.service.GroupMemberService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,5 +41,14 @@ public class GroupMemberController {
                 Long.parseLong(userId)
         );
         return ResponseEntity.ok(ApiResponse.success("성공적으로 철회 되었습니다.", response));
+    }
+
+    // 그룹 탈퇴
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<GroupMemberCommonResponse>> leaveGroup(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId) {
+        GroupMemberCommonResponse response = groupMemberService.leaveGroup(groupId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("성공적으로 탈퇴(또는 신청 철회) 되었습니다.", response));
     }
 }
