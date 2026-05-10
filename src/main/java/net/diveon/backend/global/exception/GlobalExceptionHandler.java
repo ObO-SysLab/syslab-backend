@@ -209,6 +209,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
 
+        // 그룹 없음 → 404
+        @ExceptionHandler(GroupNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleGroupNotFound(
+                GroupNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/group-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
         // 채점 미완료 → 409
         @ExceptionHandler(SubmissionNotCompletedException.class)
         public ResponseEntity<ErrorResponse> handleSubmissionNotCompleted(
