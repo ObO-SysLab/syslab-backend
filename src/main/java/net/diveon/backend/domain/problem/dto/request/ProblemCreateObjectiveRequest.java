@@ -48,6 +48,7 @@ public class ProblemCreateObjectiveRequest {
     private String category;
     private String difficulty;
     private String visibility;
+    private Long groupId;
     private String summary;
     private List<ForDtoChoice> choices;
     private List<Integer> answer;
@@ -95,6 +96,14 @@ public class ProblemCreateObjectiveRequest {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
+    }
+
+    public Long getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(Long groupId) {
+        this.groupId = groupId;
     }
 
     public String getSummary() {
