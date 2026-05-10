@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
+import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/groups")
 public class GroupController {
@@ -23,6 +26,14 @@ public class GroupController {
 
     public GroupController(GroupService groupService) {
         this.groupService = groupService;
+    }
+
+    // 내가 속한 그룹 목록 조회
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<List<GroupMyListResponse>>> getMyGroups(
+            @AuthenticationPrincipal String userId) {
+        List<GroupMyListResponse> response = groupService.getMyGroups(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("내 그룹 목록 조회 성공", response));
     }
 
     // 그룹 상세 조회

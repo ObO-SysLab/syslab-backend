@@ -3,6 +3,7 @@ package net.diveon.backend.domain.group.service;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
+import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest.AssignRequestStatus;
 import net.diveon.backend.domain.group.entity.GroupTag;
@@ -76,6 +77,17 @@ public class GroupService {
         return new GroupCreateResponse(group.getId());
     }
 
+
+    // 내가 속한 그룹 목록 조회
+    /* findAllByUserId(userId) 로 내 userId로 조회하면 내가 속한 그룹들이 List<GroupUser> 형태로 나오고,
+      각각에서 group.getId(), group.getTitle() 뽑아서 반환 */
+    @Transactional(readOnly = true)
+    public List<GroupMyListResponse> getMyGroups(Long userId) {
+        List<GroupUser> groupUsers = groupUserRepository.findAllByUserId(userId);
+        return groupUsers.stream()
+                .map(GroupMyListResponse::of)
+                .toList(); 
+    }
 
     // 그룹 상세 조회
     @Transactional(readOnly = true)
