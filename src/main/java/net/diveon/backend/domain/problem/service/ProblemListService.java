@@ -34,7 +34,8 @@ public class ProblemListService {
         int page,
         String title,
         String category,
-        String difficulty
+        String difficulty,
+        String visibility
     ) {
         userRepository.findById(userId).orElseThrow();
 
@@ -44,7 +45,7 @@ public class ProblemListService {
             Sort.by(Sort.Direction.DESC, "createdAt")
         );
 
-        Specification<Problem> spec = buildSpecification(title, category, difficulty);
+        Specification<Problem> spec = buildSpecification(title, category, difficulty, visibility);
         Page<Problem> problemPage = problemRepository.findAll(spec, pageable);
 
         List<ProblemListItemResponse> problemList = problemPage.getContent()
@@ -55,7 +56,7 @@ public class ProblemListService {
         return ProblemListResponse.of(problemPage, problemList);
     }
 
-    private Specification<Problem> buildSpecification(String title, String category, String difficulty) {
+    private Specification<Problem> buildSpecification(String title, String category, String difficulty, String visibility) {
         return (root, query, cb) -> {
             var predicates = new java.util.ArrayList<>();
 
@@ -69,6 +70,10 @@ public class ProblemListService {
 
             if (difficulty != null && !difficulty.isEmpty()) {
                 predicates.add(cb.equal(root.get("difficulty"), difficulty));
+            }
+
+            if (visibility != null && !visibility.isEmpty()) {
+                predicates.add(cb.equal(root.get("visibility"), visibility));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
