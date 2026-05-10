@@ -76,7 +76,6 @@ public class GroupService {
         return new GroupCreateResponse(group.getId());
     }
 
-
     // 그룹 상세 조회
     @Transactional(readOnly = true)
     public GroupDetailResponse getGroupDetail(Long groupId, Long userId) {

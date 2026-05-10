@@ -72,6 +72,13 @@ public class GroupAssignRequest {
         this.appliedAt = LocalDateTime.now();
     }
 
+    public void approve(User decidedBy, String decidedReason) {
+        this.status = AssignRequestStatus.APPROVED;
+        this.decidedAt = LocalDateTime.now();
+        this.decidedBy = decidedBy;
+        this.decidedReason = decidedReason;
+    }
+
     public Long getId() { return id; }
     public Group getGroup() { return group; }
     public User getUser() { return user; }
