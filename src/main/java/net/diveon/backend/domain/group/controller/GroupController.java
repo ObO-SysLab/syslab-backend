@@ -6,6 +6,8 @@ import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
+import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
+import org.springframework.web.bind.annotation.RequestParam;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +47,16 @@ public class GroupController {
         Long parsedUserId = (userId != null && !userId.equals("anonymousUser")) ? Long.parseLong(userId) : null;
         GroupDetailResponse response = groupService.getGroupDetail(groupId, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("그룹 상세 정보 조회 성공", response));
+    }
+
+    // 그룹 문제 목록 조회
+    @GetMapping("/{groupId}/problems")
+    public ResponseEntity<ApiResponse<GroupProblemListResponse>> getGroupProblems(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "1") int page) {
+        GroupProblemListResponse response = groupService.getGroupProblems(groupId, Long.parseLong(userId), page);
+        return ResponseEntity.ok(ApiResponse.success("그룹 문제 목록 조회 성공", response));
     }
 
     // 공개 문제 그룹에 추가

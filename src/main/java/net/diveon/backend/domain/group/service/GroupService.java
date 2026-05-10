@@ -5,6 +5,11 @@ import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
+import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest.AssignRequestStatus;
 import net.diveon.backend.domain.group.entity.GroupProblem;
@@ -86,6 +91,27 @@ public class GroupService {
         return new GroupCreateResponse(group.getId());
     }
 
+
+    // 그룹 문제 목록 조회
+    @Transactional(readOnly = true)
+    public GroupProblemListResponse getGroupProblems(Long groupId, Long userId, int page) {
+        groupRepository.findById(groupId).orElseThrow(GroupNotFoundException::new);
+        groupUserRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow(GroupAccessDeniedException::new);
+
+        Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "assignedAt"));
+        Page<GroupProblem> groupProblemPage = groupProblemRepository.findAllByGroupId(groupId, pageable);
+
+        List<GroupProblemListResponse.ProblemItem> problems = groupProblemPage.getContent()
+                .stream()
+                .map(GroupProblemListResponse.ProblemItem::of)
+                .toList();
+
+        return new GroupProblemListResponse(
+                problems,
+                page,
+                groupProblemPage.getTotalPages()
+        );
+    }
 
     // 공개 문제 그룹에 추가
     @Transactional
