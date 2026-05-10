@@ -40,8 +40,8 @@ public class Group {
     @Column(name = "image", columnDefinition = "TEXT")
     private String image;
 
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "title", nullable = false, length = 100)
+    private String title;
 
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
@@ -49,8 +49,8 @@ public class Group {
     @Column(name = "is_private", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isPrivate;
 
-    @Column(name = "auto_assign", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean autoAssign;
+    @Column(name = "is_auto_approve", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean isAutoApprove;
 
     @Column(name = "invitation_code", unique = true, length = 50)
     private String invitationCode;
@@ -58,16 +58,16 @@ public class Group {
     public Group() {
     }
 
-    public Group(User leader, Short limitMemberCount, String image, String name, String description,
-                 Boolean isPrivate, Boolean autoAssign, String invitationCode) {
+    public Group(User leader, Short limitMemberCount, String image, String title, String description,
+                 Boolean isPrivate, Boolean isAutoApprove, String invitationCode) {
         this.leader = leader;
         this.createdAt = LocalDateTime.now();
         this.limitMemberCount = limitMemberCount != null ? limitMemberCount : 50;
         this.image = image;
-        this.name = name;
+        this.title = title;
         this.description = description;
         this.isPrivate = isPrivate != null ? isPrivate : false;
-        this.autoAssign = autoAssign != null ? autoAssign : false;
+        this.isAutoApprove = isAutoApprove != null ? isAutoApprove : false;
         this.invitationCode = invitationCode;
     }
 
@@ -76,9 +76,9 @@ public class Group {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Short getLimitMemberCount() { return limitMemberCount; }
     public String getImage() { return image; }
-    public String getName() { return name; }
+    public String getTitle() { return title; }
     public String getDescription() { return description; }
     public Boolean getIsPrivate() { return isPrivate; }
-    public Boolean getAutoAssign() { return autoAssign; }
+    public Boolean getIsAutoApprove() { return isAutoApprove; }
     public String getInvitationCode() { return invitationCode; }
 }

@@ -12,11 +12,11 @@ DEFAULT CURRENT_TIMESTAMP | 그룹 생성 시점 |
 | limit_member_count | SMALL INT | NOT NULL,
 DEFAULT 50 | 최대 수용 그룹원 수 |
 | image | TEXT |  | 그룹 공식 이미지 경로 |
-| name | VARCHAR(100) | NOT NULL | 그룸의 이름 |
+| title | VARCHAR(100) | NOT NULL | 그룹의 이름 |
 | description | TEXT | NOT NULL | 그룹 설명 |
 | is_private | BOOLEAN | NOT NULL, 
 DEFAULT FALSE | 그룹 공개 여부 |
-| auto_assign | BOOLEAN | NOT NULL, 
+| is_auto_approve | BOOLEAN | NOT NULL, 
 DEFAULT FALSE | 가입신청 자동 승인 여부 |
 | invitation_code | VARCHAR(50) | UNIQUE | 초대코드 |
     
