@@ -14,6 +14,7 @@ import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GroupAssignRequestNotPendingException;
+import net.diveon.backend.global.exception.GroupLeaderCannotLeaveException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupUserNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
@@ -105,6 +106,10 @@ public class GroupMemberService {
 
         GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(GroupUserNotFoundException::new);
+        //양도 만약에 생각하면 이게 더 좋은 검사인듯? 바꿀수는 있습니다 userId랑 그룹장 leaderId 검사하게
+        if (groupUser.getRole() == GroupRole.LEADER) {
+            throw new GroupLeaderCannotLeaveException();
+        }
 
         groupUserRepository.delete(groupUser);
         return new GroupMemberCommonResponse(userId, "none");

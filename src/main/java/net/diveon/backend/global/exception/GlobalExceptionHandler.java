@@ -237,6 +237,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 그룹장 탈퇴 불가 → 403
+        @ExceptionHandler(GroupLeaderCannotLeaveException.class)
+        public ResponseEntity<ErrorResponse> handleGroupLeaderCannotLeave(
+                GroupLeaderCannotLeaveException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/group-leader-cannot-leave",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 가입 신청 철회 불가 → 409
         @ExceptionHandler(GroupAssignRequestNotPendingException.class)
         public ResponseEntity<ErrorResponse> handleGroupAssignRequestNotPending(
