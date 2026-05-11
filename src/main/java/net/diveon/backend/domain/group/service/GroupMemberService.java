@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import net.diveon.backend.domain.group.dto.GroupAssignDecisionRequest;
+import net.diveon.backend.domain.group.dto.GroupMemberListResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
 import net.diveon.backend.domain.group.dto.GroupPendingMemberListResponse;
@@ -149,6 +150,39 @@ public class GroupMemberService {
         return new GroupMemberKickResponse(targetUserId);
     }
 
+    // 그룹 멤버 목록 조회
+    @Transactional(readOnly = true)
+    public GroupMemberListResponse getMembers(Long groupId, int page, int size, String keyword) {
+        groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        int currentPage = Math.max(page, 1);
+        int pageSize = Math.max(size, 1);
+        PageRequest pageRequest = PageRequest.of(currentPage - 1, pageSize);
+        Page<GroupUser> groupUserPage = groupUserRepository.findMembersByGroupIdAndKeyword(
+                groupId,
+                keyword,
+                pageRequest
+        );
+
+        List<GroupMemberListResponse.Member> members = groupUserPage.getContent()
+                .stream()
+                .map(groupUser -> new GroupMemberListResponse.Member(
+                        groupUser.getUser().getId(),
+                        groupUser.getUser().getNickname(),
+                        convertGroupRole(groupUser.getRole()),
+                        groupUser.getJoinedAt()
+                ))
+                .toList();
+
+        return new GroupMemberListResponse(
+                groupUserPage.getTotalElements(),
+                groupUserPage.getTotalPages(),
+                currentPage,
+                members
+        );
+    }
+
     // 그룹 가입 신청 승인
     @Transactional
     public GroupMemberCommonResponse acceptPendingGroupMembership(Long groupId, Long requesterId, Long targetUserId,
@@ -257,6 +291,13 @@ public class GroupMemberService {
         if (memberCount >= group.getLimitMemberCount()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "그룹 최대 인원수를 초과할 수 없습니다.");
         }
+    }
+
+    private String convertGroupRole(GroupRole role) {
+        if (role == GroupRole.LEADER) {
+            return "그룹장";
+        }
+        return "멤버";
     }
 
     private String resolveDecisionReason(GroupAssignDecisionRequest request) {

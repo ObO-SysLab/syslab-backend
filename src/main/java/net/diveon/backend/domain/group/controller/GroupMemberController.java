@@ -2,6 +2,7 @@ package net.diveon.backend.domain.group.controller;
 
 import net.diveon.backend.domain.group.dto.GroupAssignDecisionRequest;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
+import net.diveon.backend.domain.group.dto.GroupMemberListResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupPendingMemberListResponse;
 import net.diveon.backend.domain.group.service.GroupMemberService;
@@ -35,6 +36,17 @@ public class GroupMemberController {
             @AuthenticationPrincipal String userId) {
         GroupMemberCommonResponse response = groupMemberService.applyGroupMembership(groupId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("가입 신청이 완료되었습니다.", response));
+    }
+
+    // 그룹 멤버 목록 조회
+    @GetMapping
+    public ResponseEntity<ApiResponse<GroupMemberListResponse>> getMembers(
+            @PathVariable Long groupId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String keyword) {
+        GroupMemberListResponse response = groupMemberService.getMembers(groupId, page, size, keyword);
+        return ResponseEntity.ok(ApiResponse.success("멤버 목록 조회 성공", response));
     }
 
     // 그룹 가입 대기자 목록 조회
