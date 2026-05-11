@@ -8,6 +8,8 @@ import net.diveon.backend.domain.group.dto.GroupDetailResponse;
 import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
+import net.diveon.backend.domain.group.dto.GroupUpdateRequest;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -94,6 +96,16 @@ public class GroupController {
             @RequestBody GroupAddProblemsRequest request) {
         groupService.addProblems(groupId, Long.parseLong(userId), request);
         return ResponseEntity.status(201).body(ApiResponse.created("문제가 그룹에 추가되었습니다.", null));
+    }
+
+    // 그룹 설정 수정
+    @PatchMapping("/{groupId}")
+    public ResponseEntity<ApiResponse<Void>> updateGroup(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody GroupUpdateRequest request) {
+        groupService.updateGroup(groupId, Long.parseLong(userId), request);
+        return ResponseEntity.ok(ApiResponse.success("그룹 설정이 수정되었습니다.", null));
     }
 
     // 그룹 삭제

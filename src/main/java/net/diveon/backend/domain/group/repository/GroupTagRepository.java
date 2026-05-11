@@ -9,4 +9,5 @@ import net.diveon.backend.domain.group.entity.GroupTag;
 public interface GroupTagRepository extends JpaRepository<GroupTag, Long> {
     List<GroupTag> findAllByGroupId(Long groupId);
     List<GroupTag> findAllByGroupIdIn(List<Long> groupIds);
+    void deleteAllByGroupId(Long groupId);
 }
