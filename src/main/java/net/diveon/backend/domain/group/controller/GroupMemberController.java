@@ -81,6 +81,22 @@ public class GroupMemberController {
         return ResponseEntity.ok(ApiResponse.success("가입 요청이 승인되었습니다.", response));
     }
 
+    // 그룹 가입 신청 거절
+    @PatchMapping("/pending/{userId}/reject")
+    public ResponseEntity<ApiResponse<GroupMemberCommonResponse>> rejectPendingGroupMembership(
+            @PathVariable Long groupId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal String requesterId,
+            @RequestBody(required = false) GroupAssignDecisionRequest request) {
+        GroupMemberCommonResponse response = groupMemberService.rejectPendingGroupMembership(
+                groupId,
+                Long.parseLong(requesterId),
+                userId,
+                request
+        );
+        return ResponseEntity.ok(ApiResponse.success("가입 요청이 거절되었습니다.", response));
+    }
+
     // 그룹 탈퇴
     @DeleteMapping("/me")
     public ResponseEntity<ApiResponse<GroupMemberCommonResponse>> leaveGroup(

@@ -79,6 +79,13 @@ public class GroupAssignRequest {
         this.decidedReason = decidedReason;
     }
 
+    public void reject(User decidedBy, String decidedReason) {
+        this.status = AssignRequestStatus.REJECTED;
+        this.decidedAt = LocalDateTime.now();
+        this.decidedBy = decidedBy;
+        this.decidedReason = decidedReason;
+    }
+
     public void cancel(String decidedReason) {
         this.status = AssignRequestStatus.CANCELED;
         this.decidedAt = LocalDateTime.now();

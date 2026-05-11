@@ -179,6 +179,29 @@ public class GroupMemberService {
         return new GroupMemberCommonResponse(targetUserId, "member");
     }
 
+    // 그룹 가입 신청 거절
+    @Transactional
+    public GroupMemberCommonResponse rejectPendingGroupMembership(Long groupId, Long requesterId, Long targetUserId,
+                                                                  GroupAssignDecisionRequest request) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        User requester = userRepository.findById(requesterId)
+                .orElseThrow(UserNotFoundException::new);
+        userRepository.findById(targetUserId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupUser requesterGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(GroupLeaderPermissionDeniedException::new);
+        validateGroupLeader(group, requesterId, requesterGroupUser);
+
+        GroupAssignRequest assignRequest = groupAssignRequestRepository
+                .findByGroupIdAndUserIdAndStatus(groupId, targetUserId, AssignRequestStatus.PENDING)
+                .orElseThrow(GroupAssignRequestNotPendingException::new);
+
+        assignRequest.reject(requester, resolveDecisionReason(request));
+        return new GroupMemberCommonResponse(targetUserId, "rejected");
+    }
+
     // 그룹 가입 대기자 목록 조회
     @Transactional(readOnly = true)
     public GroupPendingMemberListResponse getPendingMembers(Long groupId, Long requesterId, int page, int size) {
