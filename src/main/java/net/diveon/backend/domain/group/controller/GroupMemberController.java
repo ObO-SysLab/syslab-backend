@@ -2,14 +2,17 @@ package net.diveon.backend.domain.group.controller;
 
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
+import net.diveon.backend.domain.group.dto.GroupPendingMemberListResponse;
 import net.diveon.backend.domain.group.service.GroupMemberService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +33,22 @@ public class GroupMemberController {
             @AuthenticationPrincipal String userId) {
         GroupMemberCommonResponse response = groupMemberService.applyGroupMembership(groupId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("가입 신청이 완료되었습니다.", response));
+    }
+
+    // 그룹 가입 대기자 목록 조회
+    @GetMapping("/pending")
+    public ResponseEntity<ApiResponse<GroupPendingMemberListResponse>> getPendingMembers(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        GroupPendingMemberListResponse response = groupMemberService.getPendingMembers(
+                groupId,
+                Long.parseLong(userId),
+                page,
+                size
+        );
+        return ResponseEntity.ok(ApiResponse.success("가입 대기자 목록 조회 성공", response));
     }
 
     // 그룹 가입 신청 철회

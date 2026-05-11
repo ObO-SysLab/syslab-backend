@@ -2,6 +2,8 @@ package net.diveon.backend.domain.group.repository;
 
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import net.diveon.backend.domain.group.entity.GroupAssignRequest;
@@ -13,4 +15,10 @@ public interface GroupAssignRequestRepository extends JpaRepository<GroupAssignR
     // 과거 CANCELED/REJECTED 이력이 있을 수 있으므로 appliedAt desc, id desc 기준으로 가장 최근 기록을 선택한다.
     // TODO: 동일 유저/그룹의 재신청 정책과 최신 신청 판별 기준에 대한 DB 관리 정책 변경이 필요하다.
     Optional<GroupAssignRequest> findFirstByGroupIdAndUserIdOrderByAppliedAtDescIdDesc(Long groupId, Long userId);
+
+    Page<GroupAssignRequest> findByGroupIdAndStatus(
+            Long groupId,
+            GroupAssignRequest.AssignRequestStatus status,
+            Pageable pageable
+    );
 }

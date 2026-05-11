@@ -1,9 +1,11 @@
 package net.diveon.backend.domain.group.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
+import net.diveon.backend.domain.group.dto.GroupPendingMemberListResponse;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest.AssignRequestStatus;
@@ -20,6 +22,9 @@ import net.diveon.backend.global.exception.GroupLeaderPermissionDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupUserNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -141,6 +146,48 @@ public class GroupMemberService {
 
         groupUserRepository.delete(targetGroupUser);
         return new GroupMemberKickResponse(targetUserId);
+    }
+
+    // 그룹 가입 대기자 목록 조회
+    @Transactional(readOnly = true)
+    public GroupPendingMemberListResponse getPendingMembers(Long groupId, Long requesterId, int page, int size) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        userRepository.findById(requesterId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupUser requesterGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(GroupLeaderPermissionDeniedException::new);
+        validateGroupLeader(group, requesterId, requesterGroupUser);
+
+        int currentPage = Math.max(page, 1);
+        int pageSize = Math.max(size, 1);
+        PageRequest pageRequest = PageRequest.of(
+                currentPage - 1,
+                pageSize,
+                Sort.by(Sort.Order.asc("appliedAt"), Sort.Order.asc("id"))
+        );
+        Page<GroupAssignRequest> pendingRequestPage = groupAssignRequestRepository.findByGroupIdAndStatus(
+                groupId,
+                AssignRequestStatus.PENDING,
+                pageRequest
+        );
+
+        List<GroupPendingMemberListResponse.PendingMember> pendingMembers = pendingRequestPage.getContent()
+                .stream()
+                .map(assignRequest -> new GroupPendingMemberListResponse.PendingMember(
+                        assignRequest.getUser().getId(),
+                        assignRequest.getUser().getNickname(),
+                        assignRequest.getAppliedAt()
+                ))
+                .toList();
+
+        return new GroupPendingMemberListResponse(
+                pendingRequestPage.getTotalElements(),
+                pendingRequestPage.getTotalPages(),
+                currentPage,
+                pendingMembers
+        );
     }
 
     private void validateGroupLeader(Group group, Long requesterId, GroupUser requesterGroupUser) {
