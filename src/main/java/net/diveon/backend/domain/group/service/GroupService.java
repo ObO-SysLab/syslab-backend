@@ -142,7 +142,7 @@ public class GroupService {
 
         group.update(request.getTitle(), request.getDescription(), request.getIsPrivate(), request.getIsAutoApprove());
 
-        // 태그 전체 교체: 기존 태그 삭제 후 새로 저장
+        // 태그 전체 교체 (기존 태그 삭제 후 새로 저장)
         groupTagRepository.deleteAllByGroupId(groupId);
         List<String> tags = request.getTags();
         if (tags != null) {
