@@ -67,20 +67,28 @@ public class GroupService {
     @Transactional(readOnly = true)
     public GroupListResponse getGroupList(Long userId, int page, int size, String tag, Boolean isJoined) {
         // 비 로그인자가 '내 그룹만 보기' 버튼 누르면 401 오류 던짐
-        if (Boolean.TRUE.equals(isJoined) && userId == null) { 
+        if (Boolean.TRUE.equals(isJoined) && userId == null) {
             throw new UserNotFoundException();
-        } 
-
+        }
         // isJoined=true면 내 그룹만, 아니면 전체 조회
         Long filterUserId = Boolean.TRUE.equals(isJoined) ? userId : null;
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-
-        // 태그/isJoined 필터 적용해서 그룹 목록 가져오고, 그룹 ID 목록만 뽑기
         Page<Group> groupPage = groupRepository.findAllWithFilters(tag, filterUserId, pageable);
+        return buildGroupListResponse(groupPage, userId, page);
+    }
+
+    // 그룹 검색
+    @Transactional(readOnly = true)
+    public GroupListResponse searchGroups(Long userId, String keyword, int page, int size) {
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Group> groupPage = groupRepository.findByTitleContainingIgnoreCase(keyword, pageable);
+        return buildGroupListResponse(groupPage, userId, page);
+    }
+
+    // N+1 방지: groupIds로 태그/멤버/joined 여부 일괄 조회 후 응답 조립
+    private GroupListResponse buildGroupListResponse(Page<Group> groupPage, Long userId, int page) {
         List<Long> groupIds = groupPage.getContent().stream().map(Group::getId).toList();
 
-        // // N+1 방지: groupIds로 태그/멤버/joined 여부 일괄 조회 (쿼리수 줄이기 위해)
         // 1. 태그 목록
         Map<Long, List<String>> tagMap = groupTagRepository.findAllByGroupIdIn(groupIds).stream()
                 .collect(java.util.stream.Collectors.groupingBy(
@@ -97,7 +105,7 @@ public class GroupService {
                         java.util.stream.Collectors.counting()
                 ));
 
-        // 3. 내가 속한 그룹 ID 목록        
+        // 3. 내가 속한 그룹 ID 목록
         java.util.Set<Long> joinedGroupIds = userId == null ? java.util.Set.of() :
                 allGroupUsers.stream()
                         .filter(gu -> gu.getUser().getId().equals(userId))
