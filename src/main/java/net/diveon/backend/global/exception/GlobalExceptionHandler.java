@@ -251,6 +251,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
 
+        // 그룹장 권한 없음 → 403
+        @ExceptionHandler(GroupLeaderPermissionDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleGroupLeaderPermissionDenied(
+                GroupLeaderPermissionDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/group-leader-permission-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 가입 신청 철회 불가 → 409
         @ExceptionHandler(GroupAssignRequestNotPendingException.class)
         public ResponseEntity<ErrorResponse> handleGroupAssignRequestNotPending(

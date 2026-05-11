@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.group.controller;
 
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
+import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.service.GroupMemberService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -50,5 +51,19 @@ public class GroupMemberController {
             @AuthenticationPrincipal String userId) {
         GroupMemberCommonResponse response = groupMemberService.leaveGroup(groupId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("성공적으로 탈퇴(또는 신청 철회) 되었습니다.", response));
+    }
+
+    // 그룹 멤버 강제 퇴장
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<GroupMemberKickResponse>> kickGroupMember(
+            @PathVariable Long groupId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal String requesterId) {
+        GroupMemberKickResponse response = groupMemberService.kickGroupMember(
+                groupId,
+                Long.parseLong(requesterId),
+                userId
+        );
+        return ResponseEntity.ok(ApiResponse.success("해당 멤버를 성공적으로 강퇴했습니다.", response));
     }
 }

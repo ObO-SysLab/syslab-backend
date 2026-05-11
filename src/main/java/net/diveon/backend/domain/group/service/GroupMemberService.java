@@ -2,6 +2,7 @@ package net.diveon.backend.domain.group.service;
 
 import java.util.Optional;
 
+import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest;
@@ -15,6 +16,7 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GroupAssignRequestNotPendingException;
 import net.diveon.backend.global.exception.GroupLeaderCannotLeaveException;
+import net.diveon.backend.global.exception.GroupLeaderPermissionDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupUserNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
@@ -114,6 +116,39 @@ public class GroupMemberService {
 
         groupUserRepository.delete(groupUser);
         return new GroupMemberCommonResponse(userId, "none");
+    }
+
+    // 그룹 멤버 강제 퇴장
+    @Transactional
+    public GroupMemberKickResponse kickGroupMember(Long groupId, Long requesterId, Long targetUserId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        userRepository.findById(requesterId)
+                .orElseThrow(UserNotFoundException::new);
+        userRepository.findById(targetUserId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupUser requesterGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(GroupLeaderPermissionDeniedException::new);
+        validateGroupLeader(group, requesterId, requesterGroupUser);
+
+        GroupUser targetGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, targetUserId)
+                .orElseThrow(GroupUserNotFoundException::new);
+
+        if (targetGroupUser.getRole() == GroupRole.LEADER) {
+            throw new GroupLeaderCannotLeaveException();
+        }
+
+        groupUserRepository.delete(targetGroupUser);
+        return new GroupMemberKickResponse(targetUserId);
+    }
+
+    private void validateGroupLeader(Group group, Long requesterId, GroupUser requesterGroupUser) {
+        boolean isGroupLeaderId = group.getLeader().getId().equals(requesterId);
+        boolean isLeaderRole = requesterGroupUser.getRole() == GroupRole.LEADER;
+        if (!isGroupLeaderId || !isLeaderRole) {
+            throw new GroupLeaderPermissionDeniedException();
+        }
     }
 
     private void validateGroupCapacity(Long groupId, Group group) {
