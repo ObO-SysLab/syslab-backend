@@ -16,6 +16,12 @@ public interface GroupAssignRequestRepository extends JpaRepository<GroupAssignR
     // TODO: 동일 유저/그룹의 재신청 정책과 최신 신청 판별 기준에 대한 DB 관리 정책 변경이 필요하다.
     Optional<GroupAssignRequest> findFirstByGroupIdAndUserIdOrderByAppliedAtDescIdDesc(Long groupId, Long userId);
 
+    Optional<GroupAssignRequest> findByGroupIdAndUserIdAndStatus(
+            Long groupId,
+            Long userId,
+            GroupAssignRequest.AssignRequestStatus status
+    );
+
     Page<GroupAssignRequest> findByGroupIdAndStatus(
             Long groupId,
             GroupAssignRequest.AssignRequestStatus status,

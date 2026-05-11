@@ -3,6 +3,7 @@ package net.diveon.backend.domain.group.service;
 import java.util.List;
 import java.util.Optional;
 
+import net.diveon.backend.domain.group.dto.GroupAssignDecisionRequest;
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
 import net.diveon.backend.domain.group.dto.GroupPendingMemberListResponse;
@@ -148,6 +149,36 @@ public class GroupMemberService {
         return new GroupMemberKickResponse(targetUserId);
     }
 
+    // 그룹 가입 신청 승인
+    @Transactional
+    public GroupMemberCommonResponse acceptPendingGroupMembership(Long groupId, Long requesterId, Long targetUserId,
+                                                                  GroupAssignDecisionRequest request) {
+        Group group = groupRepository.findByIdForUpdate(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        User requester = userRepository.findById(requesterId)
+                .orElseThrow(UserNotFoundException::new);
+        User targetUser = userRepository.findById(targetUserId)
+                .orElseThrow(UserNotFoundException::new);
+
+        GroupUser requesterGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, requesterId)
+                .orElseThrow(GroupLeaderPermissionDeniedException::new);
+        validateGroupLeader(group, requesterId, requesterGroupUser);
+
+        GroupAssignRequest assignRequest = groupAssignRequestRepository
+                .findByGroupIdAndUserIdAndStatus(groupId, targetUserId, AssignRequestStatus.PENDING)
+                .orElseThrow(GroupAssignRequestNotPendingException::new);
+
+        Optional<GroupUser> existingMember = groupUserRepository.findByGroupIdAndUserId(groupId, targetUserId);
+        if (existingMember.isPresent()) {
+            return new GroupMemberCommonResponse(targetUserId, "member");
+        }
+
+        validateGroupCapacity(groupId, group);
+        assignRequest.approve(requester, resolveDecisionReason(request));
+        groupUserRepository.save(new GroupUser(group, targetUser, GroupRole.MEMBER));
+        return new GroupMemberCommonResponse(targetUserId, "member");
+    }
+
     // 그룹 가입 대기자 목록 조회
     @Transactional(readOnly = true)
     public GroupPendingMemberListResponse getPendingMembers(Long groupId, Long requesterId, int page, int size) {
@@ -203,5 +234,12 @@ public class GroupMemberService {
         if (memberCount >= group.getLimitMemberCount()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "그룹 최대 인원수를 초과할 수 없습니다.");
         }
+    }
+
+    private String resolveDecisionReason(GroupAssignDecisionRequest request) {
+        if (request == null || request.getDecidedReason() == null || request.getDecidedReason().isBlank()) {
+            return "No Reason";
+        }
+        return request.getDecidedReason();
     }
 }
