@@ -223,6 +223,34 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 이미 그룹에 추가된 문제 → 409
+        @ExceptionHandler(GroupProblemAlreadyExistsException.class)
+        public ResponseEntity<ErrorResponse> handleGroupProblemAlreadyExists(
+                GroupProblemAlreadyExistsException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/group-problem-already-exists",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 그룹 멤버 아님 → 403
+        @ExceptionHandler(GroupAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleGroupAccessDenied(
+                GroupAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/group-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 채점 미완료 → 409
         @ExceptionHandler(SubmissionNotCompletedException.class)
         public ResponseEntity<ErrorResponse> handleSubmissionNotCompleted(

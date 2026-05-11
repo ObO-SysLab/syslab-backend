@@ -1,11 +1,18 @@
 package net.diveon.backend.domain.group.service;
 
+import net.diveon.backend.domain.group.dto.GroupAddProblemsRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
+import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupAssignRequest.AssignRequestStatus;
+import net.diveon.backend.domain.group.entity.GroupProblem;
 import net.diveon.backend.domain.group.entity.GroupTag;
 import net.diveon.backend.domain.group.entity.GroupUser;
 import net.diveon.backend.domain.group.entity.GroupUser.GroupRole;
@@ -14,9 +21,13 @@ import net.diveon.backend.domain.group.repository.GroupProblemRepository;
 import net.diveon.backend.domain.group.repository.GroupRepository;
 import net.diveon.backend.domain.group.repository.GroupTagRepository;
 import net.diveon.backend.domain.group.repository.GroupUserRepository;
+import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.GroupAccessDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
+import net.diveon.backend.global.exception.GroupProblemAlreadyExistsException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,18 +44,21 @@ public class GroupService {
     private final GroupAssignRequestRepository groupAssignRequestRepository;
     private final GroupProblemRepository groupProblemRepository;
     private final UserRepository userRepository;
+    private final ProblemRepository problemRepository;
 
     public GroupService(GroupRepository groupRepository, GroupTagRepository groupTagRepository,
                         GroupUserRepository groupUserRepository,
                         GroupAssignRequestRepository groupAssignRequestRepository,
                         GroupProblemRepository groupProblemRepository,
-                        UserRepository userRepository) {
+                        UserRepository userRepository,
+                        ProblemRepository problemRepository) {
         this.groupRepository = groupRepository;
         this.groupTagRepository = groupTagRepository;
         this.groupUserRepository = groupUserRepository;
         this.groupAssignRequestRepository = groupAssignRequestRepository;
         this.groupProblemRepository = groupProblemRepository;
         this.userRepository = userRepository;
+        this.problemRepository = problemRepository;
     }
 
     // 그룹 생성
@@ -77,6 +91,51 @@ public class GroupService {
         return new GroupCreateResponse(group.getId());
     }
 
+
+    // 그룹 문제 목록 조회
+    @Transactional(readOnly = true)
+    public GroupProblemListResponse getGroupProblems(Long groupId, Long userId, int page) {
+        groupRepository.findById(groupId).orElseThrow(GroupNotFoundException::new);
+        groupUserRepository.findByGroupIdAndUserId(groupId, userId).orElseThrow(GroupAccessDeniedException::new);
+
+        Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "assignedAt"));
+        Page<GroupProblem> groupProblemPage = groupProblemRepository.findAllByGroupId(groupId, pageable);
+
+        List<GroupProblemListResponse.ProblemItem> problems = groupProblemPage.getContent()
+                .stream()
+                .map(GroupProblemListResponse.ProblemItem::of)
+                .toList();
+
+        return new GroupProblemListResponse(
+                problems,
+                page,
+                groupProblemPage.getTotalPages()
+        );
+    }
+
+    // 공개 문제 그룹에 추가
+    @Transactional
+    public void addProblems(Long groupId, Long userId, GroupAddProblemsRequest request) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        Long problemId = request.getProblemId();
+        Problem problem = problemRepository.findById(problemId)
+                .orElseThrow(() -> new RuntimeException("문제를 찾을 수 없습니다."));
+
+        if (!"public".equals(problem.getVisibility())) {
+            throw new GroupAccessDeniedException();
+        }
+
+        if (groupProblemRepository.existsByGroupIdAndProblemId(groupId, problemId)) {
+            throw new GroupProblemAlreadyExistsException();
+        }
+
+        groupProblemRepository.save(new GroupProblem(problem, group));
+    }
 
     // 내가 속한 그룹 목록 조회
     /* findAllByUserId(userId) 로 내 userId로 조회하면 내가 속한 그룹들이 List<GroupUser> 형태로 나오고,
