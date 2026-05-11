@@ -5,6 +5,7 @@ import net.diveon.backend.domain.group.dto.GroupAddProblemsRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
+import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +30,19 @@ public class GroupController {
 
     public GroupController(GroupService groupService) {
         this.groupService = groupService;
+    }
+
+    // 그룹 목록 조회
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<GroupListResponse>> getGroupList(
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) Boolean isJoined) {
+        Long parsedUserId = (userId != null && !userId.equals("anonymousUser")) ? Long.parseLong(userId) : null;
+        GroupListResponse response = groupService.getGroupList(parsedUserId, page, size, tag, isJoined);
+        return ResponseEntity.ok(ApiResponse.success("그룹 목록 조회에 성공하였습니다.", response));
     }
 
     // 내가 속한 그룹 목록 조회
