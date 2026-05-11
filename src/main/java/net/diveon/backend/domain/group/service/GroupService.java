@@ -126,6 +126,22 @@ public class GroupService {
         return new GroupListResponse(groupPage.getTotalElements(), groupPage.getTotalPages(), page, groups);
     }
 
+    // 그룹 삭제
+    @Transactional
+    public void deleteGroup(Long groupId, Long userId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        if (groupUser.getRole() != GroupUser.GroupRole.LEADER) {
+            throw new GroupAccessDeniedException();
+        }
+
+        groupRepository.delete(group);
+    }
+
     // 그룹 생성
     @Transactional
     public GroupCreateResponse createGroup(Long userId, GroupCreateRequest request) {
