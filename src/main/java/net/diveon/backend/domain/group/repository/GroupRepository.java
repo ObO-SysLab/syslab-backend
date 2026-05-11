@@ -14,4 +14,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
            "(:tag IS NULL OR EXISTS (SELECT gt FROM GroupTag gt WHERE gt.group = g AND gt.tag = :tag)) AND " +
            "(:userId IS NULL OR EXISTS (SELECT gu FROM GroupUser gu WHERE gu.group = g AND gu.user.id = :userId))")
     Page<Group> findAllWithFilters(@Param("tag") String tag, @Param("userId") Long userId, Pageable pageable);
+
+    Page<Group> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
 }

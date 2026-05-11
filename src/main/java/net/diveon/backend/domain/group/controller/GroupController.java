@@ -32,6 +32,18 @@ public class GroupController {
         this.groupService = groupService;
     }
 
+    // 그룹 검색
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<GroupListResponse>> searchGroups(
+            @AuthenticationPrincipal String userId,
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        Long parsedUserId = (userId != null && !userId.equals("anonymousUser")) ? Long.parseLong(userId) : null;
+        GroupListResponse response = groupService.searchGroups(parsedUserId, keyword, page, size);
+        return ResponseEntity.ok(ApiResponse.success("그룹 검색에 성공하였습니다.", response));
+    }
+
     // 그룹 목록 조회
     @GetMapping("")
     public ResponseEntity<ApiResponse<GroupListResponse>> getGroupList(
