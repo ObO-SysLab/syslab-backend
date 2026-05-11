@@ -4,6 +4,7 @@ import net.diveon.backend.domain.group.dto.GroupAddProblemsRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
+import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -59,6 +61,61 @@ public class GroupService {
         this.groupProblemRepository = groupProblemRepository;
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
+    }
+
+    // 그룹 목록 조회
+    @Transactional(readOnly = true)
+    public GroupListResponse getGroupList(Long userId, int page, int size, String tag, Boolean isJoined) {
+        // 비 로그인자가 '내 그룹만 보기' 버튼 누르면 401 오류 던짐
+        if (Boolean.TRUE.equals(isJoined) && userId == null) { 
+            throw new UserNotFoundException();
+        } 
+
+        // isJoined=true면 내 그룹만, 아니면 전체 조회
+        Long filterUserId = Boolean.TRUE.equals(isJoined) ? userId : null;
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+
+        // 태그/isJoined 필터 적용해서 그룹 목록 가져오고, 그룹 ID 목록만 뽑기
+        Page<Group> groupPage = groupRepository.findAllWithFilters(tag, filterUserId, pageable);
+        List<Long> groupIds = groupPage.getContent().stream().map(Group::getId).toList();
+
+        // // N+1 방지: groupIds로 태그/멤버/joined 여부 일괄 조회 (쿼리수 줄이기 위해)
+        // 1. 태그 목록
+        Map<Long, List<String>> tagMap = groupTagRepository.findAllByGroupIdIn(groupIds).stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        gt -> gt.getGroup().getId(),
+                        java.util.stream.Collectors.mapping(GroupTag::getTag, java.util.stream.Collectors.toList())
+                ));
+
+        List<GroupUser> allGroupUsers = groupUserRepository.findAllByGroupIdIn(groupIds);
+
+        // 2. 멤버수
+        Map<Long, Long> memberCountMap = allGroupUsers.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        gu -> gu.getGroup().getId(),
+                        java.util.stream.Collectors.counting()
+                ));
+
+        // 3. 내가 속한 그룹 ID 목록        
+        java.util.Set<Long> joinedGroupIds = userId == null ? java.util.Set.of() :
+                allGroupUsers.stream()
+                        .filter(gu -> gu.getUser().getId().equals(userId))
+                        .map(gu -> gu.getGroup().getId())
+                        .collect(java.util.stream.Collectors.toSet());
+
+        List<GroupListResponse.GroupItem> groups = groupPage.getContent().stream()
+                .map(group -> new GroupListResponse.GroupItem(
+                        group.getId(),
+                        group.getTitle(),
+                        group.getLeader().getNickname(),
+                        memberCountMap.getOrDefault(group.getId(), 0L).intValue(),
+                        group.getLimitMemberCount(),
+                        tagMap.getOrDefault(group.getId(), List.of()),
+                        joinedGroupIds.contains(group.getId())
+                )).toList();
+
+        return new GroupListResponse(groupPage.getTotalElements(), groupPage.getTotalPages(), page, groups);
     }
 
     // 그룹 생성
