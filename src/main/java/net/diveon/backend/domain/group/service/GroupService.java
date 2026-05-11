@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.group.service;
 
 import net.diveon.backend.domain.group.dto.GroupAddProblemsRequest;
+import net.diveon.backend.domain.group.dto.GroupUpdateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
@@ -124,6 +125,31 @@ public class GroupService {
                 )).toList();
 
         return new GroupListResponse(groupPage.getTotalElements(), groupPage.getTotalPages(), page, groups);
+    }
+
+    // 그룹 설정 수정
+    @Transactional
+    public void updateGroup(Long groupId, Long userId, GroupUpdateRequest request) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        if (groupUser.getRole() != GroupUser.GroupRole.LEADER) {
+            throw new GroupAccessDeniedException();
+        }
+
+        group.update(request.getTitle(), request.getDescription(), request.getIsPrivate(), request.getIsAutoApprove());
+
+        // 태그 전체 교체 (기존 태그 삭제 후 새로 저장)
+        groupTagRepository.deleteAllByGroupId(groupId);
+        List<String> tags = request.getTags();
+        if (tags != null) {
+            for (String tag : tags) {
+                groupTagRepository.save(new GroupTag(group, tag));
+            }
+        }
     }
 
     // 그룹 삭제

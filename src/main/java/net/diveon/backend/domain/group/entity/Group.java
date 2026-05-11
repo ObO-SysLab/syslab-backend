@@ -81,4 +81,11 @@ public class Group {
     public Boolean getIsPrivate() { return isPrivate; }
     public Boolean getIsAutoApprove() { return isAutoApprove; }
     public String getInvitationCode() { return invitationCode; }
+
+    public void update(String title, String description, Boolean isPrivate, Boolean isAutoApprove) {
+        this.title = title;
+        this.description = description;
+        this.isPrivate = isPrivate;
+        this.isAutoApprove = isAutoApprove;
+    }
 }
