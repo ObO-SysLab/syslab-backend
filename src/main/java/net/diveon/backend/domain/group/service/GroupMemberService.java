@@ -78,7 +78,7 @@ public class GroupMemberService {
             validateGroupCapacity(groupId, group);
             assignRequest.approve(group.getLeader(), "auto approved");
             groupUserRepository.save(new GroupUser(group, user, GroupRole.MEMBER));
-            return new GroupMemberCommonResponse(userId, "pending");
+            return new GroupMemberCommonResponse(userId, "member");
         }
 
         return new GroupMemberCommonResponse(userId, "pending");
