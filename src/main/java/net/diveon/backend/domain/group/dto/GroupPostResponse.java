@@ -32,15 +32,47 @@ public class GroupPostResponse {
         public int getCurrentPage() { return currentPage; }
         public List<PostListItem> getPosts() { return posts; }
 
-        public static PostList of(Page<GroupPost> page, Long userId, Map<Long, List<GroupPostComment>> commentsMap) {
+        public static PostList of(Page<GroupPost> page) {
             List<PostListItem> posts = page.getContent().stream()
-                    .map(p -> PostListItem.of(p, userId, commentsMap.getOrDefault(p.getId(), List.of())))
+                    .map(PostListItem::of)
                     .collect(Collectors.toList());
             return new PostList(page.getTotalElements(), page.getTotalPages(), page.getNumber() + 1, posts);
         }
     }
 
     public static class PostListItem {
+        private final Long postId;
+        private final String type;
+        private final String title;
+        private final String author;
+        private final Integer viewCount;
+        private final String createdAt;
+
+        public PostListItem(Long postId, String type, String title, String author, Integer viewCount, String createdAt) {
+            this.postId = postId;
+            this.type = type;
+            this.title = title;
+            this.author = author;
+            this.viewCount = viewCount;
+            this.createdAt = createdAt;
+        }
+
+        public Long getPostId() { return postId; }
+        public String getType() { return type; }
+        public String getTitle() { return title; }
+        public String getAuthor() { return author; }
+        public Integer getViewCount() { return viewCount; }
+        public String getCreatedAt() { return createdAt; }
+
+        public static PostListItem of(GroupPost post) {
+            String type = post.getIsNotice() ? "notice" : "general";
+            String createdAtStr = post.getCreatedAt().format(DATE_FORMATTER);
+            return new PostListItem(post.getId(), type, post.getTitle(),
+                    post.getAuthor().getNickname(), post.getViewCount(), createdAtStr);
+        }
+    }
+
+    public static class PostDetailItem {
         private final Long postId;
         private final String type;
         private final String title;
@@ -51,8 +83,8 @@ public class GroupPostResponse {
         private final boolean isAuthor;
         private final List<CommentItem> comments;
 
-        public PostListItem(Long postId, String type, String title, String content, String author,
-                           String createdAt, boolean isAuthor, List<CommentItem> comments) {
+        public PostDetailItem(Long postId, String type, String title, String content, String author,
+                             String createdAt, boolean isAuthor, List<CommentItem> comments) {
             this.postId = postId;
             this.type = type;
             this.title = title;
@@ -72,14 +104,14 @@ public class GroupPostResponse {
         public boolean getIsAuthor() { return isAuthor; }
         public List<CommentItem> getComments() { return comments; }
 
-        public static PostListItem of(GroupPost post, Long userId, List<GroupPostComment> comments) {
+        public static PostDetailItem of(GroupPost post, Long userId, List<GroupPostComment> comments) {
             String type = post.getIsNotice() ? "notice" : "general";
             boolean isAuthor = post.getAuthor().getId().equals(userId);
             String createdAtStr = post.getCreatedAt().format(DATE_FORMATTER);
             List<CommentItem> commentItems = comments.stream()
                     .map(c -> CommentItem.of(c, userId))
                     .collect(Collectors.toList());
-            return new PostListItem(post.getId(), type, post.getTitle(), post.getContent(),
+            return new PostDetailItem(post.getId(), type, post.getTitle(), post.getContent(),
                     post.getAuthor().getNickname(), createdAtStr, isAuthor, commentItems);
         }
     }

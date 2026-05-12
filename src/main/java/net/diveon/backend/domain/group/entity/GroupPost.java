@@ -84,4 +84,8 @@ public class GroupPost {
         if (isNotice != null) this.isNotice = isNotice;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
 }

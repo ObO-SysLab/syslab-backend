@@ -45,11 +45,11 @@ public class GroupPostController {
 
     // 게시글 상세 조회
     @GetMapping("/{groupId}/posts/{postId}")
-    public ResponseEntity<ApiResponse<GroupPostResponse.PostListItem>> getPostDetail(
+    public ResponseEntity<ApiResponse<GroupPostResponse.PostDetailItem>> getPostDetail(
             @PathVariable Long groupId,
             @PathVariable Long postId,
             @AuthenticationPrincipal String userId) {
-        GroupPostResponse.PostListItem response = groupPostService.getPostDetail(groupId, postId, Long.parseLong(userId));
+        GroupPostResponse.PostDetailItem response = groupPostService.getPostDetail(groupId, postId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("게시글 상세 조회 성공", response));
     }
 

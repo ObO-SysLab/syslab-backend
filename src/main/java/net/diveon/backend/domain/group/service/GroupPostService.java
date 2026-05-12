@@ -24,9 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class GroupPostService {
@@ -56,25 +54,21 @@ public class GroupPostService {
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").descending());
         Page<GroupPost> posts = groupPostRepository.findByGroup_Id(groupId, pageable);
 
-        Map<Long, List<GroupPostComment>> commentsMap = new HashMap<>();
-        for (GroupPost post : posts) {
-            List<GroupPostComment> comments = groupPostCommentRepository.findAllByPost_Id(post.getId());
-            commentsMap.put(post.getId(), comments);
-        }
-
-        return GroupPostResponse.PostList.of(posts, userId, commentsMap);
+        return GroupPostResponse.PostList.of(posts);
     }
 
-    @Transactional(readOnly = true)
-    public GroupPostResponse.PostListItem getPostDetail(Long groupId, Long postId, Long userId) {
+    @Transactional
+    public GroupPostResponse.PostDetailItem getPostDetail(Long groupId, Long postId, Long userId) {
         groupUserRepository.findByGroupIdAndUserId(groupId, userId)
                 .orElseThrow(GroupAccessDeniedException::new);
 
         GroupPost post = groupPostRepository.findById(postId)
                 .orElseThrow(GroupPostNotFoundException::new);
 
+        post.incrementViewCount();
+
         List<GroupPostComment> comments = groupPostCommentRepository.findAllByPost_Id(postId);
-        return GroupPostResponse.PostListItem.of(post, userId, comments);
+        return GroupPostResponse.PostDetailItem.of(post, userId, comments);
     }
 
     @Transactional
