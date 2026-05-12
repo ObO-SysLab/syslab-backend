@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 import net.diveon.backend.domain.group.entity.GroupUser;
 
+import java.util.List;
+
 public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
     long countByGroupId(Long groupId);
     Optional<GroupUser> findByGroupIdAndUserId(Long groupId, Long userId);
@@ -30,4 +32,6 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
             @Param("keyword") String keyword,
             Pageable pageable
     );
+    List<GroupUser> findAllByUserId(Long userId);
+    List<GroupUser> findAllByGroupIdIn(List<Long> groupIds);
 }

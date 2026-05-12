@@ -77,4 +77,15 @@ public class GroupPost {
     public Integer getViewCount() { return viewCount; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
+
+    public void update(String title, String content, Boolean isNotice) {
+        if (title != null) this.title = title;
+        if (content != null) this.content = content;
+        if (isNotice != null) this.isNotice = isNotice;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
+    }
 }
