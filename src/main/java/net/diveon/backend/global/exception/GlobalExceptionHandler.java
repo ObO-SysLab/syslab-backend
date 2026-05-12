@@ -279,6 +279,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 그룹 최대 인원 초과 → 409
+        @ExceptionHandler(GroupCapacityExceededException.class)
+        public ResponseEntity<ErrorResponse> handleGroupCapacityExceeded(
+                GroupCapacityExceededException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/group-capacity-exceeded",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
         // 이미 그룹에 추가된 문제 → 409
         @ExceptionHandler(GroupProblemAlreadyExistsException.class)
         public ResponseEntity<ErrorResponse> handleGroupProblemAlreadyExists(

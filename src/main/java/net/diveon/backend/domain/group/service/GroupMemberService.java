@@ -19,6 +19,7 @@ import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GroupAssignRequestNotPendingException;
+import net.diveon.backend.global.exception.GroupCapacityExceededException;
 import net.diveon.backend.global.exception.GroupLeaderCannotLeaveException;
 import net.diveon.backend.global.exception.GroupLeaderPermissionDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
@@ -27,10 +28,8 @@ import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class GroupMemberService {
@@ -303,7 +302,7 @@ public class GroupMemberService {
     private void validateGroupCapacity(Long groupId, Group group) {
         long memberCount = groupUserRepository.countByGroupId(groupId);
         if (memberCount >= group.getLimitMemberCount()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "그룹 최대 인원수를 초과할 수 없습니다.");
+            throw new GroupCapacityExceededException();
         }
     }
 
