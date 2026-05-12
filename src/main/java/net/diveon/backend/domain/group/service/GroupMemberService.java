@@ -79,7 +79,7 @@ public class GroupMemberService {
             validateGroupCapacity(groupId, group);
             assignRequest.approve(group.getLeader(), "auto approved");
             groupUserRepository.save(new GroupUser(group, user, GroupRole.MEMBER));
-            return new GroupMemberCommonResponse(userId, "APPROVED");
+            return new GroupMemberCommonResponse(userId, "pending");
         }
 
         return new GroupMemberCommonResponse(userId, "pending");
@@ -88,10 +88,20 @@ public class GroupMemberService {
     // 그룹 가입 신청 철회
     @Transactional
     public GroupMemberCommonResponse cancelPendingGroupMembership(Long groupId, Long userId) {
-        groupRepository.findById(groupId)
+        Group group = groupRepository.findById(groupId)
                 .orElseThrow(GroupNotFoundException::new);
         userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+
+        // 검토후 불필요하면 제거
+        if (group.getLeader().getId().equals(userId)) {
+            throw new GroupLeaderCannotLeaveException();
+        }
+
+        Optional<GroupUser> existingMember = groupUserRepository.findByGroupIdAndUserId(groupId, userId);
+        if (existingMember.isPresent() && existingMember.get().getRole() == GroupRole.LEADER) {
+            throw new GroupLeaderCannotLeaveException();
+        }
 
         GroupAssignRequest assignRequest = groupAssignRequestRepository
                 .findFirstByGroupIdAndUserIdOrderByAppliedAtDescIdDesc(groupId, userId)
@@ -223,6 +233,10 @@ public class GroupMemberService {
                 .orElseThrow(UserNotFoundException::new);
         userRepository.findById(targetUserId)
                 .orElseThrow(UserNotFoundException::new);
+
+
+        //현재 거절에서는 이미 맴버인지는 점검하지 않는다. 이거 추가로 조정이 필요할 듯.
+        //만일 auto aprrove로 바꾸고싶으면 1. 전부 거절 2. 빈거 확인하고 private변경 3. auto apporve 변경 4. 공개로 전환
 
         GroupUser requesterGroupUser = groupUserRepository.findByGroupIdAndUserId(groupId, requesterId)
                 .orElseThrow(GroupLeaderPermissionDeniedException::new);
