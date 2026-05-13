@@ -102,7 +102,6 @@ public class ProblemUpdateService {
                     .toList();
                 oboStepRepository.saveAll(oboSteps);
             }
-
             return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
     }
 
