@@ -95,7 +95,7 @@ public class ProblemCreateService {
         // 아 그리고 지금 구조가 request.getObo().getSteps() 이런식이라 
         // 이건 request를 수정하든 다른 방식을추가해야할듯. 
         // 뻑나기 쉬워보임null.getSteps() 될거같음
-        if (request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
+        if (Boolean.TRUE.equals(oboEnabled) && request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
             List<OboStep> oboSteps = request.getObo().getSteps().stream()
                 .map(step -> toOboStep(savedProblem, step))
                 .toList();
