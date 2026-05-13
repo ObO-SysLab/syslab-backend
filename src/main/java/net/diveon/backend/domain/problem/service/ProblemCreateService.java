@@ -1,5 +1,10 @@
 package net.diveon.backend.domain.problem.service;
 
+import net.diveon.backend.domain.group.entity.Group;
+import net.diveon.backend.domain.group.entity.GroupProblem;
+import net.diveon.backend.domain.group.repository.GroupProblemRepository;
+import net.diveon.backend.domain.group.repository.GroupRepository;
+import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateCodingRequest;
@@ -36,6 +41,8 @@ public class ProblemCreateService {
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final GroupRepository groupRepository;
+    private final GroupProblemRepository groupProblemRepository;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
@@ -43,7 +50,9 @@ public class ProblemCreateService {
         ProblemRepository problemRepository,
         UserRepository userRepository,
         OboStepRepository oboStepRepository,
-        S3Service s3Service){
+        S3Service s3Service,
+        GroupRepository groupRepository,
+        GroupProblemRepository groupProblemRepository){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
@@ -51,6 +60,8 @@ public class ProblemCreateService {
         this.userRepository = userRepository;
         this.oboStepRepository = oboStepRepository;
         this.s3Service = s3Service;
+        this.groupRepository = groupRepository;
+        this.groupProblemRepository = groupProblemRepository;
     }
 
 
@@ -84,7 +95,7 @@ public class ProblemCreateService {
         // 아 그리고 지금 구조가 request.getObo().getSteps() 이런식이라 
         // 이건 request를 수정하든 다른 방식을추가해야할듯. 
         // 뻑나기 쉬워보임null.getSteps() 될거같음
-        if (request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
+        if (Boolean.TRUE.equals(oboEnabled) && request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
             List<OboStep> oboSteps = request.getObo().getSteps().stream()
                 .map(step -> toOboStep(savedProblem, step))
                 .toList();
@@ -103,6 +114,8 @@ public class ProblemCreateService {
          * .toList()
          * 변환된 결과들을 다시 List로 모읍니다.
          */
+
+        saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
 
         return new ProblemCreateObjectiveResponse(
                 savedProblem.getId(),
@@ -143,6 +156,8 @@ public class ProblemCreateService {
 
         // DB 저장 후 S3에 Dockerfile zip 업로드 → EventBridge가 감지해서 CodeBuild 자동 트리거
         s3Service.uploadDockerfileZip(savedProblem.getId(), request.getDockerfile());
+
+        saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),
@@ -188,6 +203,8 @@ public class ProblemCreateService {
         problemCodingRepository.save(problemCoding);
         s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
 
+        saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
+
         return new ProblemCreateCodingResponse(
                 savedProblem.getId(),
                 savedProblem.getType(),
@@ -204,6 +221,14 @@ public class ProblemCreateService {
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
+        }
+    }
+
+    private void saveGroupProblemIfNeeded(Problem problem, Long groupId, String visibility) {
+        if ("group".equals(visibility) && groupId != null) {
+            Group group = groupRepository.findById(groupId)
+                    .orElseThrow(GroupNotFoundException::new);
+            groupProblemRepository.save(new GroupProblem(problem, group));
         }
     }
 

@@ -4,6 +4,7 @@ import net.diveon.backend.global.security.JwtFilter;
 import net.diveon.backend.global.security.JwtProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -39,6 +40,12 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/ad/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/members").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/*/posts/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);

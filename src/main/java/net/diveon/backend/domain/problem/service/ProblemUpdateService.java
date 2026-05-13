@@ -88,16 +88,20 @@ public class ProblemUpdateService {
              * 1. 현재 삭제 방식을 다듬어서, 값이 주어지지 않는다면, 삭제가 되지 않도록 하기
              * 2. 개별 삭제 기능을 구현할 것.
              */
-            oboStepRepository.deleteByProblem_Id(prodId);
+            boolean oboProvided = request.getObo() != null;
+            boolean oboDisabled = Boolean.FALSE.equals(request.getOboEnabled());
+
+            if (oboProvided || oboDisabled) {
+                oboStepRepository.deleteByProblem_Id(prodId);
+            }
 
             // 개별 업데이트 개선 필요
-            if (request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
+            if (Boolean.TRUE.equals(problemObjective.getOboEnabled()) && oboProvided && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
                 List<OboStep> oboSteps = request.getObo().getSteps().stream()
                     .map(step -> toOboStep(problem, step))
                     .toList();
                 oboStepRepository.saveAll(oboSteps);
             }
-
             return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
     }
 

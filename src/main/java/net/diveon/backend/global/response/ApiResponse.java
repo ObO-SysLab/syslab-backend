@@ -16,6 +16,10 @@ public class ApiResponse<T> {
         return new ApiResponse<>(200, message, data);
     }
 
+    public static <T> ApiResponse<T> created(String message, T data) {
+        return new ApiResponse<>(201, message, data);
+    }
+
     public int getStatus() { return status; }
     public String getMessage() { return message; }
     public T getData() { return data; }
