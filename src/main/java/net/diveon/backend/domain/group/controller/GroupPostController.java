@@ -84,6 +84,18 @@ public class GroupPostController {
         return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다.", null));
     }
 
+    // 댓글 조회
+    @GetMapping("/{groupId}/posts/{postId}/comments")
+    public ResponseEntity<ApiResponse<GroupCommentResponse.CommentList>> getComments(
+            @PathVariable Long groupId,
+            @PathVariable Long postId,
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        GroupCommentResponse.CommentList response = groupPostCommentService.getComments(groupId, postId, Long.parseLong(userId), page, size);
+        return ResponseEntity.ok(ApiResponse.success("댓글 조회 성공", response));
+    }
+
     // 댓글 생성
     @PostMapping("/{groupId}/posts/{postId}/comments")
     public ResponseEntity<ApiResponse<GroupCommentResponse.CommentCreate>> createComment(
