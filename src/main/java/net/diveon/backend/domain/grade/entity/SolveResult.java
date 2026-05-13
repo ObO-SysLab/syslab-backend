@@ -13,6 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 /**
  * <pre>
  * | 컬럼            | 타입        | 제약                           | 설명              |
@@ -37,6 +39,7 @@ public class SolveResult {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "submission_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)   // 현재는 DB레벨에서 처리하지만 다음과같이 JPA에서 처리하도록 수정이 가능함. 차후 비교를 통해 변경할 것이라면 논의가 필요하다.
     private SolveSubmission submission;
 
     @Enumerated(EnumType.STRING)
