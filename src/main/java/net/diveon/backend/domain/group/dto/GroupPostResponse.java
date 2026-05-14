@@ -5,10 +5,8 @@ import net.diveon.backend.domain.group.entity.GroupPost;
 import net.diveon.backend.domain.group.entity.GroupPostComment;
 import org.springframework.data.domain.Page;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GroupPostResponse {
@@ -81,10 +79,9 @@ public class GroupPostResponse {
         private final String createdAt;
         @JsonProperty("isAuthor")
         private final boolean isAuthor;
-        private final List<CommentItem> comments;
 
         public PostDetailItem(Long postId, String type, String title, String content, String author,
-                             String createdAt, boolean isAuthor, List<CommentItem> comments) {
+                             String createdAt, boolean isAuthor) {
             this.postId = postId;
             this.type = type;
             this.title = title;
@@ -92,7 +89,6 @@ public class GroupPostResponse {
             this.author = author;
             this.createdAt = createdAt;
             this.isAuthor = isAuthor;
-            this.comments = comments;
         }
 
         public Long getPostId() { return postId; }
@@ -102,17 +98,13 @@ public class GroupPostResponse {
         public String getAuthor() { return author; }
         public String getCreatedAt() { return createdAt; }
         public boolean getIsAuthor() { return isAuthor; }
-        public List<CommentItem> getComments() { return comments; }
 
-        public static PostDetailItem of(GroupPost post, Long userId, List<GroupPostComment> comments) {
+        public static PostDetailItem of(GroupPost post, Long userId) {
             String type = post.getIsNotice() ? "notice" : "general";
             boolean isAuthor = post.getAuthor().getId().equals(userId);
             String createdAtStr = post.getCreatedAt().format(DATE_FORMATTER);
-            List<CommentItem> commentItems = comments.stream()
-                    .map(c -> CommentItem.of(c, userId))
-                    .collect(Collectors.toList());
             return new PostDetailItem(post.getId(), type, post.getTitle(), post.getContent(),
-                    post.getAuthor().getNickname(), createdAtStr, isAuthor, commentItems);
+                    post.getAuthor().getNickname(), createdAtStr, isAuthor);
         }
     }
 

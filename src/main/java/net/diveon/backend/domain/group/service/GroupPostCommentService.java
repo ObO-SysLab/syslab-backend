@@ -15,6 +15,9 @@ import net.diveon.backend.global.exception.CommentNotFoundException;
 import net.diveon.backend.global.exception.GroupAccessDeniedException;
 import net.diveon.backend.global.exception.GroupPostNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,24 @@ public class GroupPostCommentService {
         this.groupPostCommentRepository = groupPostCommentRepository;
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
+    }
+
+    @Transactional(readOnly = true)
+    public GroupCommentResponse.CommentList getComments(Long groupId, Long postId, Long userId, int page, int size) {
+        groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        GroupPost post = groupPostRepository.findById(postId)
+                .orElseThrow(GroupPostNotFoundException::new);
+
+        if (!post.getGroup().getId().equals(groupId)) {
+            throw new GroupAccessDeniedException();
+        }
+
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<GroupPostComment> commentsPage = groupPostCommentRepository.findAllByPost_IdOrderByCreatedAtDesc(postId, pageable);
+
+        return GroupCommentResponse.CommentList.of(commentsPage, userId);
     }
 
     @Transactional

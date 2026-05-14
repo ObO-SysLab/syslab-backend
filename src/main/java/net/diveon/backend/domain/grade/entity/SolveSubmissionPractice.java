@@ -14,6 +14,8 @@ public class SolveSubmissionPractice {
     @Column(name = "id")
     private long id;
 
+    //현재 실습형은 vm과 관련된 내용이 협의 되지 않아 아직삭제를 한번에 삭제 구현 안했습니다.
+    //다만 submission 자체에는 user 삭제되면 cascade 걸어놔서 오류 메세지 출력될겁니다.
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "submission_id", nullable = false)

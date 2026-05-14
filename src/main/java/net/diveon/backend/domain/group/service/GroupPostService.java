@@ -67,8 +67,7 @@ public class GroupPostService {
 
         post.incrementViewCount();
 
-        List<GroupPostComment> comments = groupPostCommentRepository.findAllByPost_Id(postId);
-        return GroupPostResponse.PostDetailItem.of(post, userId, comments);
+        return GroupPostResponse.PostDetailItem.of(post, userId);
     }
 
     @Transactional
