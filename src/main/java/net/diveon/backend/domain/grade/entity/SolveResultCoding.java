@@ -17,10 +17,10 @@ public class SolveResultCoding {
     @Column(name = "result_id")
     private Long id;
 
+    // 현재는 DB레벨에서 처리하지만 다음과같이 JPA에서 처리하도록 수정이 가능함. 차후 비교를 통해 변경할 것이라면 논의가 필요하다.
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "result_id", nullable = false)
-    // 현재는 DB레벨에서 처리하지만 다음과같이 JPA에서 처리하도록 수정이 가능함. 차후 비교를 통해 변경할 것이라면 논의가 필요하다.
     @OnDelete(action = OnDeleteAction.CASCADE)
     private SolveResult result;
 
