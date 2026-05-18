@@ -33,6 +33,7 @@ public class ContestCreateRequest {
     @NotBlank
     private String rules;
 
+    private String prizeDescription;
     private List<String> tags;
 
     public String getTitle() { return title; }
@@ -43,5 +44,6 @@ public class ContestCreateRequest {
     public LocalDateTime getStartTime() { return startTime; }
     public LocalDateTime getEndTime() { return endTime; }
     public String getRules() { return rules; }
+    public String getPrizeDescription() { return prizeDescription; }
     public List<String> getTags() { return tags; }
 }

@@ -9,11 +9,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.service.ContestService;
 import net.diveon.backend.global.response.ApiResponse;
 
@@ -25,6 +27,20 @@ public class ContestController {
 
     public ContestController(ContestService contestService) {
         this.contestService = contestService;
+    }
+
+    // 대회 목록 조회
+    @GetMapping
+    public ResponseEntity<ApiResponse<ContestListResponse>> getContestList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean onlyJoined,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal String userId) {
+        Long parsedUserId = userId != null ? Long.parseLong(userId) : null;
+        ContestListResponse response = contestService.getContestList(keyword, status, onlyJoined, page, size, parsedUserId);
+        return ResponseEntity.ok(ApiResponse.success("대회 목록 조회 성공", response));
     }
 
     // 대회 상세 조회
