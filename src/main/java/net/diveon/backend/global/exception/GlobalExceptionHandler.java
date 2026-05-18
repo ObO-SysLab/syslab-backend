@@ -418,4 +418,18 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
+
+        // Q&A 없음 → 404
+        @ExceptionHandler(ContestQnaNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestQnaNotFound(
+                ContestQnaNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-qna-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
 }
