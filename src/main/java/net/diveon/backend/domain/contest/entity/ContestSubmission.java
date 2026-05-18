@@ -49,9 +49,6 @@ public class ContestSubmission {
     @Column(name = "is_correct")
     private Boolean isCorrect;
 
-    @Column(name = "points_earned", nullable = false, columnDefinition = "INT DEFAULT 0")
-    private Integer pointsEarned = 0;
-
     @Column(name = "submitted_at", nullable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime submittedAt;
 
@@ -63,7 +60,6 @@ public class ContestSubmission {
         this.user = user;
         this.solveSubmission = solveSubmission;
         this.isCorrect = null;
-        this.pointsEarned = 0;
         this.submittedAt = LocalDateTime.now();
     }
 
@@ -73,11 +69,9 @@ public class ContestSubmission {
     public User getUser() { return user; }
     public SolveSubmission getSolveSubmission() { return solveSubmission; }
     public Boolean getIsCorrect() { return isCorrect; }
-    public Integer getPointsEarned() { return pointsEarned; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
 
-    public void updateResult(Boolean isCorrect, Integer pointsEarned) {
+    public void updateResult(Boolean isCorrect) {
         this.isCorrect = isCorrect;
-        this.pointsEarned = pointsEarned;
     }
 }
