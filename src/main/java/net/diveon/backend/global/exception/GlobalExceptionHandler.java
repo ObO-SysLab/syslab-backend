@@ -334,4 +334,88 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
+
+        // 대회 없음 → 404
+        @ExceptionHandler(ContestNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestNotFound(
+                ContestNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 대회 권한 없음 → 403
+        @ExceptionHandler(ContestAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAccessDenied(
+                ContestAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
+        // 대회 문제 없음 → 404
+        @ExceptionHandler(ContestProblemNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestProblemNotFound(
+                ContestProblemNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-problem-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 대회 참가자 없음 → 404
+        @ExceptionHandler(ContestParticipantNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestParticipantNotFound(
+                ContestParticipantNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-participant-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 이미 참가한 대회 → 409
+        @ExceptionHandler(ContestAlreadyParticipatedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAlreadyParticipated(
+                ContestAlreadyParticipatedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-already-participated",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 진행 중인 대회 아님 → 409
+        @ExceptionHandler(ContestNotOngoingException.class)
+        public ResponseEntity<ErrorResponse> handleContestNotOngoing(
+                ContestNotOngoingException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-not-ongoing",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
 }
