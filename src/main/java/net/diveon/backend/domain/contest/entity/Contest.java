@@ -87,7 +87,7 @@ public class Contest {
     @Column(name = "is_hot", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean isHot = false;
 
-    @Column(name = "poster_url", length = 500)
+    @Column(name = "poster_url", length = 500) // 추후확장
     private String posterUrl;
 
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
