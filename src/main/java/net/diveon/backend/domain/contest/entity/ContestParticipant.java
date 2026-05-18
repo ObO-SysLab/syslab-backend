@@ -7,6 +7,8 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +28,10 @@ import net.diveon.backend.domain.user.entity.User;
 )
 public class ContestParticipant {
 
+    public enum ContestRole {
+        ADMIN, PARTICIPANT
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -41,6 +47,10 @@ public class ContestParticipant {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private ContestRole role;
+
     @Column(name = "joined_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime joinedAt;
 
@@ -55,9 +65,10 @@ public class ContestParticipant {
 
     public ContestParticipant() {}
 
-    public ContestParticipant(Contest contest, User user) {
+    public ContestParticipant(Contest contest, User user, ContestRole role) {
         this.contest = contest;
         this.user = user;
+        this.role = role;
         this.joinedAt = LocalDateTime.now();
         this.isBanned = false;
         this.score = 0;
@@ -66,6 +77,7 @@ public class ContestParticipant {
     public Long getId() { return id; }
     public Contest getContest() { return contest; }
     public User getUser() { return user; }
+    public ContestRole getRole() { return role; }
     public LocalDateTime getJoinedAt() { return joinedAt; }
     public Boolean getIsBanned() { return isBanned; }
     public Integer getScore() { return score; }
