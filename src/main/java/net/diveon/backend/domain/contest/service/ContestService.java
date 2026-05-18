@@ -5,8 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestTag;
@@ -15,6 +19,7 @@ import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestTagRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -35,6 +40,53 @@ public class ContestService {
         this.userRepository = userRepository;
     }
 
+    // 대회 상세 조회
+    @Transactional(readOnly = true)
+    public ContestDetailResponse getContestDetail(Long contestId, Long userId) {
+        Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+
+        String status = switch (contest.getStatus()) {
+            case UPCOMING -> "접수 중";
+            case ONGOING -> "진행 중";
+            case ENDED -> "종료";
+        };
+
+        int progress = 0; // UPCOMING
+        if (contest.getStatus() == Contest.ContestStatus.ONGOING) { // ONGOING
+            long total = ChronoUnit.SECONDS.between(contest.getStartTime(), contest.getEndTime()); // 대회 전체 시간 (초)
+            long elapsed = ChronoUnit.SECONDS.between(contest.getStartTime(), LocalDateTime.now()); // 대회 경과 시간 (초)
+            progress = (int) Math.min(100, elapsed * 100 / total); // 진행률 계산식 (혹시 100 넘어가도 최대 100으로 제한)
+        } else if (contest.getStatus() == Contest.ContestStatus.ENDED) {
+            progress = 100; // ENDED
+        }
+
+        long totalUser = contestParticipantRepository.countByContestId(contestId);
+
+        ContestDetailResponse.UserContext userContext = null; // 비로그인자면 그대로 null
+        if (userId != null) {
+            var participantOpt = contestParticipantRepository.findByContestIdAndUserId(contestId, userId);
+            if (participantOpt.isPresent()) { // 참가자인경우
+                var participant = participantOpt.get();
+                long myRank = contestParticipantRepository.countByContestIdAndScoreGreaterThan(contestId, participant.getScore()) + 1; // 나보다 점수 높은 사람 수 + 1 = 내 순위
+                userContext = new ContestDetailResponse.UserContext(
+                        true,
+                        participant.getRole() == ContestParticipant.ContestRole.ADMIN, // 관리자인지 그냥 참가자인지
+                        participant.getScore(),
+                        myRank
+                );
+            } else { // 참가자 아닌 경우
+                userContext = new ContestDetailResponse.UserContext(false, false, 0, 0L);
+            }
+        }
+
+        return new ContestDetailResponse(
+                contest.getId(), contest.getTitle(), contest.getDescription(),
+                contest.getStartTime(), contest.getEndTime(),
+                status, progress, totalUser, userContext
+        );
+    }
+
+    // 대회 생성
     @Transactional
     public ContestCreateResponse createContest(Long userId, ContestCreateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
