@@ -44,6 +44,9 @@ public class ContestNotice {
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", nullable = false, columnDefinition = "TIMESTAMP")
+    private LocalDateTime updatedAt;
+
     public ContestNotice() {}
 
     public ContestNotice(Contest contest, User createdBy, String title, String content) {
@@ -52,6 +55,7 @@ public class ContestNotice {
         this.title = title;
         this.content = content;
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = this.createdAt;
     }
 
     public Long getId() { return id; }
@@ -60,9 +64,11 @@ public class ContestNotice {
     public String getTitle() { return title; }
     public String getContent() { return content; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
 
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+        this.updatedAt = LocalDateTime.now();
     }
 }
