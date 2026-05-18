@@ -432,4 +432,18 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
+
+        // 공지사항 없음 → 404
+        @ExceptionHandler(ContestNoticeNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestNoticeNotFound(
+                ContestNoticeNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-notice-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
 }
