@@ -1,7 +1,10 @@
 package net.diveon.backend.domain.contest.service;
 
 import java.util.List;
+import java.util.Set;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestTag;
@@ -38,6 +42,38 @@ public class ContestService {
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestTagRepository = contestTagRepository;
         this.userRepository = userRepository;
+    }
+
+    // 대회 목록 조회
+    @Transactional(readOnly = true)
+    public ContestListResponse getContestList(String keyword, String status, Boolean onlyJoined, int page, int size, Long userId) {
+        String statusFilter = (status == null) ? "ALL" : status.toUpperCase();
+        Long joinedUserId = (onlyJoined != null && onlyJoined && userId != null) ? userId : null; // 참여한 대회만
+
+        Page<Contest> contestPage = contestRepository.findContestsByFilter(
+                keyword, statusFilter, LocalDateTime.now(), joinedUserId, PageRequest.of(page - 1, size));
+
+        Set<Long> joinedIds = (userId != null)
+                ? Set.copyOf(contestRepository.findJoinedContestIdsByUserId(userId))
+                : Set.of();
+
+        List<ContestListResponse.ContestItem> items = contestPage.getContent().stream().map(c -> {
+            String contestStatus = switch (c.getStatus()) {
+                case UPCOMING -> "접수 중";
+                case ONGOING -> "진행 중";
+                case ENDED -> "종료";
+            };
+            String type = c.getParticipationType() == Contest.ParticipationType.INDIVIDUAL ? "개인전" : "팀전";
+            long participants = contestParticipantRepository.countByContestId(c.getId());
+            return new ContestListResponse.ContestItem(
+                    c.getId(), c.getTitle(), participants,
+                    c.getStartTime(), c.getEndTime(),
+                    type, c.getPrizeDescription(), contestStatus,
+                    c.getIsHot(), joinedIds.contains(c.getId())
+            );
+        }).toList();
+
+        return new ContestListResponse(contestPage.getTotalElements(), page, contestPage.getTotalPages(), items);
     }
 
     // 대회 상세 조회
@@ -96,7 +132,7 @@ public class ContestService {
                 request.getTitle(), request.getDescription(),
                 request.getContestType(), request.getParticipationType(), request.getVisibility(),
                 request.getStartTime(), request.getEndTime(),
-                request.getRules(), null, null
+                request.getRules(), request.getPrizeDescription(), null
         );
         contestRepository.save(contest);
 
