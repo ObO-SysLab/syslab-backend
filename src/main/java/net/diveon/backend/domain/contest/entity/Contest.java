@@ -147,20 +147,15 @@ public class Contest {
         this.isHot = isHot;
     }
 
-    public void update(String title, String description, ContestType contestType,
-                       ParticipationType participationType, Visibility visibility,
-                       LocalDateTime startTime, LocalDateTime endTime,
-                       String rules, String prizeDescription, String posterUrl) {
+    public void updateTitleAndDescription(String title, String description) {
         this.title = title;
         this.description = description;
-        this.contestType = contestType;
-        this.participationType = participationType;
-        this.visibility = visibility;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void updateTime(LocalDateTime startTime, LocalDateTime endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
-        this.rules = rules;
-        this.prizeDescription = prizeDescription;
-        this.posterUrl = posterUrl;
         this.updatedAt = LocalDateTime.now();
     }
 }
