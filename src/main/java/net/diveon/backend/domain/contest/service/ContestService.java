@@ -159,17 +159,17 @@ public class ContestService {
         Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
-        // 시작 전인 대회만
+        // 시작 전인 대회만 참가 가능
         if (contest.getStatus() != Contest.ContestStatus.UPCOMING) {
             throw new ContestAlreadyStartedException();
         }
 
-        // 이미 참가 기록이 있는지
+        // 이미 참가 중인지 확인
         if (contestParticipantRepository.findByContestIdAndUserId(contestId, userId).isPresent()) {
             throw new ContestAlreadyParticipatedException();
         }
 
-        // 참가 기록 없으면
+        // 참가
         contestParticipantRepository.save(new ContestParticipant(contest, user, ContestParticipant.ContestRole.PARTICIPANT));
 
         // 50명 넘는 대회는 Hot으로 표기 (임시)
