@@ -143,6 +143,10 @@ public class Contest {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
 
+    public void updateIsHot(Boolean isHot) {
+        this.isHot = isHot;
+    }
+
     public void update(String title, String description, ContestType contestType,
                        ParticipationType participationType, Visibility visibility,
                        LocalDateTime startTime, LocalDateTime endTime,

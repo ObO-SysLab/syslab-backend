@@ -14,6 +14,7 @@ import java.time.temporal.ChronoUnit;
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
@@ -23,7 +24,11 @@ import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestTagRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.ContestAccessDeniedException;
+import net.diveon.backend.global.exception.ContestAlreadyParticipatedException;
+import net.diveon.backend.global.exception.ContestAlreadyStartedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
+import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -146,5 +151,54 @@ public class ContestService {
         }
 
         return new ContestCreateResponse(contest.getId(), contest.getTitle());
+    }
+
+    // 대회 참가
+    @Transactional
+    public ContestJoinResponse joinContest(Long contestId, Long userId) {
+        Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+
+        // 시작 전인 대회만
+        if (contest.getStatus() != Contest.ContestStatus.UPCOMING) {
+            throw new ContestAlreadyStartedException();
+        }
+
+        // 이미 참가 기록이 있는지
+        if (contestParticipantRepository.findByContestIdAndUserId(contestId, userId).isPresent()) {
+            throw new ContestAlreadyParticipatedException();
+        }
+
+        // 참가 기록 없으면
+        contestParticipantRepository.save(new ContestParticipant(contest, user, ContestParticipant.ContestRole.PARTICIPANT));
+
+        // 50명 넘는 대회는 Hot으로 표기 (임시)
+        long participantCount = contestParticipantRepository.countByContestId(contestId);
+        if (participantCount >= 50) {
+            contest.updateIsHot(true);
+        }
+
+        return new ContestJoinResponse(true);
+    }
+
+    // 대회 참가 취소
+    @Transactional
+    public ContestJoinResponse leaveContest(Long contestId, Long userId) {
+        Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+
+        if (contest.getStatus() != Contest.ContestStatus.UPCOMING) {
+            throw new ContestAlreadyStartedException();
+        }
+
+        ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .orElseThrow(ContestParticipantNotFoundException::new);
+
+        if (participant.getRole() == ContestParticipant.ContestRole.ADMIN) {
+            throw new ContestAccessDeniedException();
+        }
+
+        contestParticipantRepository.delete(participant);
+
+        return new ContestJoinResponse(false);
     }
 }
