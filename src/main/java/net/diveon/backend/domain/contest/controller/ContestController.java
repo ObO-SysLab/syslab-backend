@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
+import net.diveon.backend.domain.contest.dto.request.ContestUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
@@ -71,6 +73,25 @@ public class ContestController {
             @AuthenticationPrincipal String userId) {
         ContestJoinResponse response = contestService.leaveContest(contestId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("대회 참가 취소가 완료되었습니다.", response));
+    }
+
+    // 대회 설정 수정
+    @PatchMapping("/{contestId}")
+    public ResponseEntity<ApiResponse<Void>> updateContest(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody ContestUpdateRequest request) {
+        contestService.updateContest(contestId, Long.parseLong(userId), request);
+        return ResponseEntity.ok(ApiResponse.success("대회 설정이 저장되었습니다.", null));
+    }
+
+    // 대회 삭제
+    @DeleteMapping("/{contestId}")
+    public ResponseEntity<ApiResponse<Void>> deleteContest(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId) {
+        contestService.deleteContest(contestId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("대회가 성공적으로 삭제되었습니다.", null));
     }
 
     // 대회 생성

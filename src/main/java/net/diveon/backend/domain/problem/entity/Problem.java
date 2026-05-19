@@ -53,7 +53,7 @@ public class Problem {
 
     //변수명 오타, 수정해야함.
     @Column(name = "visibility", length = 10, nullable = false)
-    private String visibility; // public / private / group 
+    private String visibility; // public / private / group / contest
 
     @Column(name = "solved_count", nullable = false)
     private Integer solvedCount = 0; // 객체 생성시에 바로 0으로 되도록, 가능하면 생성자 통해서 하세용

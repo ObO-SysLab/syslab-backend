@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
+import net.diveon.backend.domain.contest.dto.request.ContestUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
@@ -20,8 +21,10 @@ import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestTag;
 import net.diveon.backend.domain.contest.repository.ContestParticipantRepository;
+import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestTagRepository;
+import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
@@ -37,15 +40,21 @@ public class ContestService {
     private final ContestRepository contestRepository;
     private final ContestParticipantRepository contestParticipantRepository;
     private final ContestTagRepository contestTagRepository;
+    private final ContestProblemRepository contestProblemRepository;
+    private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
 
     public ContestService(ContestRepository contestRepository,
                           ContestParticipantRepository contestParticipantRepository,
                           ContestTagRepository contestTagRepository,
+                          ContestProblemRepository contestProblemRepository,
+                          ProblemRepository problemRepository,
                           UserRepository userRepository) {
         this.contestRepository = contestRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestTagRepository = contestTagRepository;
+        this.contestProblemRepository = contestProblemRepository;
+        this.problemRepository = problemRepository;
         this.userRepository = userRepository;
     }
 
@@ -179,6 +188,40 @@ public class ContestService {
         }
 
         return new ContestJoinResponse(true);
+    }
+
+    // 대회 설정 수정
+    @Transactional
+    public void updateContest(Long contestId, Long userId, ContestUpdateRequest request) {
+        Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+
+        contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .filter(p -> p.getRole() == ContestParticipant.ContestRole.ADMIN)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        contest.updateTitleAndDescription(request.getTitle(), request.getDescription());
+
+        if (contest.getStatus() == Contest.ContestStatus.UPCOMING) {
+            contest.updateTime(request.getStartTime(), request.getEndTime());
+        }
+    }
+
+    // 대회 삭제
+    @Transactional
+    public void deleteContest(Long contestId, Long userId) {
+        Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+
+        contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .filter(p -> p.getRole() == ContestParticipant.ContestRole.ADMIN)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        contestProblemRepository.findAllByContestId(contestId).forEach(cp -> {
+            if ("contest".equals(cp.getProblem().getVisibility())) {
+                problemRepository.delete(cp.getProblem());
+            }
+        });
+
+        contestRepository.delete(contest);
     }
 
     // 대회 참가 취소
