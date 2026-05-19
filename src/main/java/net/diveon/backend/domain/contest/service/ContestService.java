@@ -61,11 +61,12 @@ public class ContestService {
     // 대회 목록 조회
     @Transactional(readOnly = true)
     public ContestListResponse getContestList(String keyword, String status, Boolean onlyJoined, int page, int size, Long userId) {
+        String keywordFilter = (keyword == null) ? "" : keyword;
         String statusFilter = (status == null) ? "ALL" : status.toUpperCase();
         Long joinedUserId = (onlyJoined != null && onlyJoined && userId != null) ? userId : null; // 참여한 대회만
 
         Page<Contest> contestPage = contestRepository.findContestsByFilter(
-                keyword, statusFilter, LocalDateTime.now(), joinedUserId, PageRequest.of(page - 1, size));
+                keywordFilter, statusFilter, LocalDateTime.now(), joinedUserId, PageRequest.of(page - 1, size));
 
         Set<Long> joinedIds = (userId != null)
                 ? Set.copyOf(contestRepository.findJoinedContestIdsByUserId(userId))

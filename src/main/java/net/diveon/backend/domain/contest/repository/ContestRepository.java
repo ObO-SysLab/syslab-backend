@@ -15,7 +15,7 @@ import net.diveon.backend.domain.contest.entity.ContestParticipant;
 public interface ContestRepository extends JpaRepository<Contest, Long> {
 
     @Query("SELECT c FROM Contest c WHERE " +
-           "(:keyword IS NULL OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:keyword = '' OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:statusFilter = 'ALL' OR " +
            "  (:statusFilter = 'UPCOMING' AND c.startTime > :now) OR " +
            "  (:statusFilter = 'ONGOING' AND c.startTime <= :now AND c.endTime >= :now) OR " +
