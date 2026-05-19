@@ -10,6 +10,7 @@ import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
+import net.diveon.backend.global.exception.ProblemDeletePermisionDeny;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 
@@ -59,7 +60,9 @@ public class ProblemDeleteService {
         Problem problem = problemRepository.findById(probId)
             .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
 
-        // TODO: author 권한 체크 추가 예정 (추후에 problem.getAuthor()로 접근 가능하도록 Problem 객체로 받음)
+        if (!problem.getAuthor().getId().equals(userId)) {
+            throw new ProblemDeletePermisionDeny();
+        }
 
         if (problem.getType().equals("practice")) {
             return deleteProblemPractice(userId, probId);
