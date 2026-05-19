@@ -97,6 +97,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 문제 삭제 권한 없음 → 403
+        @ExceptionHandler(ProblemDeletePermisionDeny.class)
+        public ResponseEntity<ErrorResponse> handleProblemDeletePermisionDeny(
+                ProblemDeletePermisionDeny ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/problem-delete-permision-deny",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 유효하지 않은 문제 유형 → 400
         @ExceptionHandler(InvalidProblemTypeException.class)
         public ResponseEntity<ErrorResponse> handleInvalidProblemType(
