@@ -446,4 +446,18 @@ public class GlobalExceptionHandler {
                 );
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
+
+        // 이미 시작된 대회 참가/취소 불가 → 409
+        @ExceptionHandler(ContestAlreadyStartedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAlreadyStarted(
+                ContestAlreadyStartedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-already-started",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
 }

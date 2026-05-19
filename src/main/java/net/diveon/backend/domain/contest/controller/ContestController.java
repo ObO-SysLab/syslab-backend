@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.service.ContestService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -51,6 +53,24 @@ public class ContestController {
         Long parsedUserId = userId != null ? Long.parseLong(userId) : null;
         ContestDetailResponse response = contestService.getContestDetail(contestId, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("대회 상세 정보 조회 성공", response));
+    }
+
+    // 대회 참가
+    @PostMapping("/{contestId}/join")
+    public ResponseEntity<ApiResponse<ContestJoinResponse>> joinContest(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId) {
+        ContestJoinResponse response = contestService.joinContest(contestId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("대회 참가가 완료되었습니다.", response));
+    }
+
+    // 대회 참가 취소
+    @DeleteMapping("/{contestId}/leave")
+    public ResponseEntity<ApiResponse<ContestJoinResponse>> leaveContest(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId) {
+        ContestJoinResponse response = contestService.leaveContest(contestId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("대회 참가 취소가 완료되었습니다.", response));
     }
 
     // 대회 생성
