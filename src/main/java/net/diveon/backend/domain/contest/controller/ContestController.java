@@ -15,12 +15,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import net.diveon.backend.domain.contest.dto.request.ContestCreateRequest;
+import net.diveon.backend.domain.contest.dto.request.ContestSubmitRequest;
 import net.diveon.backend.domain.contest.dto.request.ContestUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.service.ContestService;
+import net.diveon.backend.domain.contest.service.ContestSubmitService;
 import net.diveon.backend.global.response.ApiResponse;
 
 @RestController
@@ -28,9 +30,11 @@ import net.diveon.backend.global.response.ApiResponse;
 public class ContestController {
 
     private final ContestService contestService;
+    private final ContestSubmitService contestSubmitService;
 
-    public ContestController(ContestService contestService) {
+    public ContestController(ContestService contestService, ContestSubmitService contestSubmitService) {
         this.contestService = contestService;
+        this.contestSubmitService = contestSubmitService;
     }
 
     // 대회 목록 조회
@@ -101,5 +105,15 @@ public class ContestController {
             @Valid @RequestBody ContestCreateRequest request) {
         ContestCreateResponse response = contestService.createContest(Long.parseLong(userId), request);
         return ResponseEntity.status(201).body(ApiResponse.created("대회가 성공적으로 생성되었습니다.", response));
+    }
+
+    // 대회 문제 제출
+    @PostMapping("/{contestId}/problems/{contestProblemId}/submit")
+    public ResponseEntity<ApiResponse<?>> submitContestProblem(
+            @PathVariable Long contestId,
+            @PathVariable Long contestProblemId,
+            @AuthenticationPrincipal String userId,
+            @Valid @RequestBody ContestSubmitRequest request) {
+        return contestSubmitService.submitContestProblem(contestId, contestProblemId, Long.parseLong(userId), request);
     }
 }
