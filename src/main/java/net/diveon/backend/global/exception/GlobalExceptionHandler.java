@@ -391,6 +391,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 대회 문제 배점 유효하지 않음 → 400
+        @ExceptionHandler(InvalidContestProblemPointsException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidContestProblemPoints(
+                InvalidContestProblemPointsException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-contest-problem-points",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
         // 대회 참가자 없음 → 404
         @ExceptionHandler(ContestParticipantNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleContestParticipantNotFound(

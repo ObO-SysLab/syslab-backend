@@ -4,10 +4,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import net.diveon.backend.domain.contest.dto.request.ContestProblemPointsUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestProblemListResponse;
 import net.diveon.backend.domain.contest.service.ContestProblemNormalService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -38,5 +41,16 @@ public class ContestProblemNormalController {
             @AuthenticationPrincipal String userId) {
         contestProblemNormalService.deleteContestProblem(contestId, problemId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("문제가 대회에서 제거되었습니다.", null));
+    }
+    
+    @PatchMapping("/{contestId}/problems/{problemId}/points")
+    public ResponseEntity<ApiResponse<Void>> updateContestProblemPoints(
+            @PathVariable Long contestId,
+            @PathVariable Long problemId,
+            @AuthenticationPrincipal String userId,
+            @RequestBody ContestProblemPointsUpdateRequest request) {
+        contestProblemNormalService.updateContestProblemPoints(
+                contestId, problemId, Long.parseLong(userId), request);
+        return ResponseEntity.ok(ApiResponse.success("문제 배점이 수정되었습니다.", null));
     }
 }
