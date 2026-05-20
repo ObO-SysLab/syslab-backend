@@ -6,6 +6,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.diveon.backend.domain.contest.dto.request.ContestProblemPointsUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestProblemListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
@@ -22,6 +23,7 @@ import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
 import net.diveon.backend.global.exception.ContestProblemNotFoundException;
+import net.diveon.backend.global.exception.InvalidContestProblemPointsException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
@@ -77,18 +79,17 @@ public class ContestProblemNormalService {
     }
 
     @Transactional
-    public void deleteContestProblem(Long contestId, Long problemId, Long userId) {
-        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
-
+    public void updateContestProblemPoints(Long contestId, Long problemId, Long userId,
+                                           ContestProblemPointsUpdateRequest request) {
         if (!problemRepository.existsById(problemId)) {
             throw new ProblemNotFoundException();
         }
 
-        Contest contest = contestRepository.findById(contestId)
-                .orElseThrow(ContestNotFoundException::new);
-
         ContestProblem contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
                 .orElseThrow(ContestProblemNotFoundException::new);
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(ContestNotFoundException::new);
 
         ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
                 .orElseThrow(ContestAccessDeniedException::new);
@@ -99,8 +100,12 @@ public class ContestProblemNormalService {
             throw new ContestAccessDeniedException();
         }
 
-        // 현재는 대회 문제만 제거하고, 문제 자체는 삭제하지 않는것으로 구현함
-        contestProblemRepository.delete(contestProblem);
+        Integer points = request.getPoints();
+        if (points == null || points < 0) {
+            throw new InvalidContestProblemPointsException();
+        }
+
+        contestProblem.updatePoints(points);
     }
 
     private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds, int sequence) {
