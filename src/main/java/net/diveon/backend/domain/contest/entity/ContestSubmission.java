@@ -42,9 +42,12 @@ public class ContestSubmission {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "submission_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @JoinColumn(name = "submission_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private SolveSubmission solveSubmission;
+
+    @Column(name = "submission_status", nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'COMPLETED'")
+    private String submissionStatus;
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
@@ -54,11 +57,22 @@ public class ContestSubmission {
 
     public ContestSubmission() {}
 
-    public ContestSubmission(Contest contest, ContestProblem contestProblem, User user, SolveSubmission solveSubmission) {
+    public ContestSubmission(Contest contest, ContestProblem contestProblem, User user) {
         this.contest = contest;
         this.contestProblem = contestProblem;
         this.user = user;
-        this.solveSubmission = solveSubmission;
+        this.solveSubmission = null;
+        this.submissionStatus = "COMPLETED";
+        this.isCorrect = null;
+        this.submittedAt = LocalDateTime.now();
+    }
+
+    public ContestSubmission(Contest contest, ContestProblem contestProblem, User user, String submissionStatus) {
+        this.contest = contest;
+        this.contestProblem = contestProblem;
+        this.user = user;
+        this.solveSubmission = null;
+        this.submissionStatus = submissionStatus;
         this.isCorrect = null;
         this.submittedAt = LocalDateTime.now();
     }
@@ -68,10 +82,20 @@ public class ContestSubmission {
     public ContestProblem getContestProblem() { return contestProblem; }
     public User getUser() { return user; }
     public SolveSubmission getSolveSubmission() { return solveSubmission; }
+    public String getSubmissionStatus() { return submissionStatus; }
     public Boolean getIsCorrect() { return isCorrect; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
 
     public void updateResult(Boolean isCorrect) {
         this.isCorrect = isCorrect;
+    }
+
+    public void updateStatus(String submissionStatus) {
+        this.submissionStatus = submissionStatus;
+    }
+
+    public void updateResultAndStatus(Boolean isCorrect, String submissionStatus) {
+        this.isCorrect = isCorrect;
+        this.submissionStatus = submissionStatus;
     }
 }

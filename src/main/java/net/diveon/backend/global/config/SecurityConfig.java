@@ -39,15 +39,14 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/ad/**").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/ad/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/posts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/contests").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/contests/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
