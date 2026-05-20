@@ -2,10 +2,13 @@ package net.diveon.backend.domain.contest.service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
@@ -25,9 +28,17 @@ import net.diveon.backend.domain.contest.repository.ContestParticipantRepository
 import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestSubmissionRepository;
+import net.diveon.backend.domain.grade.dto.message.CodingGradeMessage;
+import net.diveon.backend.domain.grade.entity.SolveSubmission;
+import net.diveon.backend.domain.grade.entity.SolveSubmissionCoding;
+import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepository;
+import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
+import net.diveon.backend.domain.grade.service.CodingGradeQueueService;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.ContestAccessDeniedException;
+import net.diveon.backend.global.exception.ContestCooldownException;
 import net.diveon.backend.global.exception.ContestNotOngoingException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
@@ -45,6 +56,10 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private final UserRepository userRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
+    private final StringRedisTemplate redisTemplate;
+    private final SolveSubmissionRepository solveSubmissionRepository;
+    private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
+    private final CodingGradeQueueService codingGradeQueueService;
 
     public ContestSubmitServiceImpl(
             ContestRepository contestRepository,
@@ -53,7 +68,11 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             ContestSubmissionRepository contestSubmissionRepository,
             UserRepository userRepository,
             JdbcTemplate jdbcTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            StringRedisTemplate redisTemplate,
+            SolveSubmissionRepository solveSubmissionRepository,
+            SolveSubmissionCodingRepository solveSubmissionCodingRepository,
+            CodingGradeQueueService codingGradeQueueService) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
@@ -61,6 +80,10 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         this.userRepository = userRepository;
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
+        this.redisTemplate = redisTemplate;
+        this.solveSubmissionRepository = solveSubmissionRepository;
+        this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
+        this.codingGradeQueueService = codingGradeQueueService;
     }
 
     @Override
@@ -77,10 +100,10 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         ContestParticipant participant = contestParticipantRepository
                 .findByContestIdAndUserId(contestId, userId)
-                .orElseThrow(ContestParticipantNotFoundException::new);
+                .orElseThrow(ContestAccessDeniedException::new);
 
         if (participant.getIsBanned()) {
-            throw new IllegalArgumentException("밴된 사용자는 제출할 수 없습니다.");
+            throw new ContestAccessDeniedException();
         }
 
         ContestProblem contestProblem = contestProblemRepository.findById(contestProblemId)
@@ -91,7 +114,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         Problem problem = contestProblem.getProblem();
 
-        // TODO: 쿨다운 체크 (Redis)
+        checkCooldown(contestId, userId, contestProblemId);
 
         switch (request.getSubmissionType()) {
             case OBJECTIVE:
@@ -153,7 +176,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                 contestParticipantRepository.save(participant);
 
                 jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                // TODO: Redis 스코어보드 업데이트
+                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
             }
         }
 
@@ -162,7 +185,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
-        // TODO: Redis 쿨다운 설정 (TTL 30s)
+        setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
         ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(isCorrect, scoreToAdd);
         return ResponseEntity.ok(ApiResponse.success("제출이 완료되었습니다.", response));
@@ -204,7 +227,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                 contestParticipantRepository.save(participant);
 
                 jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                // TODO: Redis 스코어보드 업데이트
+                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
             }
         }
 
@@ -213,7 +236,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
-        // TODO: Redis 쿨다운 설정 (TTL 30s)
+        setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
         ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(isCorrect, scoreToAdd);
         return ResponseEntity.ok(ApiResponse.success("제출이 완료되었습니다.", response));
@@ -223,18 +246,50 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private ResponseEntity<ApiResponse<?>> handleCodingSubmission(
             Contest contest, ContestProblem contestProblem, Problem problem, User user, ContestSubmitRequest request) {
 
-        ContestSubmission submission = new ContestSubmission(contest, contestProblem, user, "PENDING");
-        ContestSubmission savedSubmission = contestSubmissionRepository.save(submission);
+        // solve_submission + solve_submission_coding 생성 (그레이더가 이 ID로 채점)
+        SolveSubmission solveSubmission = new SolveSubmission(problem, user);
+        SolveSubmission savedSolveSubmission = solveSubmissionRepository.save(solveSubmission);
+
+        SolveSubmissionCoding coding = new SolveSubmissionCoding(savedSolveSubmission, request.getCode(), request.getLanguage());
+        solveSubmissionCodingRepository.save(coding);
+
+        // contest_submission 생성 (solve_submission 연결)
+        ContestSubmission contestSubmission = new ContestSubmission(
+                contest, contestProblem, user, savedSolveSubmission, "PENDING");
+        ContestSubmission savedContestSubmission = contestSubmissionRepository.save(contestSubmission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
-        // TODO: S3 코드 업로드
-        // TODO: SQS 전송 (contestContext 포함)
-        // TODO: Redis 쿨다운 설정 (TTL 30s)
+
+        // S3 업로드 + SQS 전송 (contestContext 포함)
+        CodingGradeMessage.ContestContext contestContext = new CodingGradeMessage.ContestContext(
+                contest.getId(), contestProblem.getId(), contestProblem.getPoints());
+        codingGradeQueueService.sendContestGradeRequest(
+                problem.getId(), user.getId(), savedSolveSubmission.getId(), contestContext);
+
+        setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
         ContestSubmitAsyncResponse response = new ContestSubmitAsyncResponse(
-                savedSubmission.getId(), "PENDING");
+                savedContestSubmission.getId(), "PENDING");
         return ResponseEntity.status(202).body(
                 ApiResponse.success("채점 요청이 접수되었습니다.", response));
+    }
+
+    private void checkCooldown(Long contestId, Long userId, Long contestProblemId) {
+        String key = "contest:" + contestId + ":cooldown:" + userId + ":" + contestProblemId;
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
+            throw new ContestCooldownException();
+        }
+    }
+
+    private void setCooldown(Long contestId, Long userId, Long contestProblemId) {
+        String key = "contest:" + contestId + ":cooldown:" + userId + ":" + contestProblemId;
+        redisTemplate.opsForValue().set(key, "1", 30, TimeUnit.SECONDS);
+    }
+
+    private void updateScoreboard(Long contestId, Long userId, int newTotalScore, LocalDateTime solvedAt) {
+        long epochSecond = solvedAt.toEpochSecond(ZoneOffset.UTC);
+        double compositeScore = (double) newTotalScore * 1_000_000L - epochSecond;
+        redisTemplate.opsForZSet().add("scoreboard:" + contestId, String.valueOf(userId), compositeScore);
     }
 
     private String hashFlag(String flag) {

@@ -419,18 +419,18 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
-        // 진행 중인 대회 아님 → 409
+        // 진행 중인 대회 아님 → 403
         @ExceptionHandler(ContestNotOngoingException.class)
         public ResponseEntity<ErrorResponse> handleContestNotOngoing(
                 ContestNotOngoingException ex, HttpServletRequest request) {
                 ErrorResponse body = new ErrorResponse(
-                        "https://diveon.net/problems/conflict/contest-not-ongoing",
-                        "Conflict",
-                        409,
+                        "https://diveon.net/problems/contest-not-ongoing",
+                        "Forbidden",
+                        403,
                         ex.getMessage(),
                         request.getRequestURI()
                 );
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
 
         // Q&A 없음 → 404
@@ -467,6 +467,20 @@ public class GlobalExceptionHandler {
                 ContestAlreadyStartedException ex, HttpServletRequest request) {
                 ErrorResponse body = new ErrorResponse(
                         "https://diveon.net/problems/conflict/contest-already-started",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 쿨다운 중 → 409
+        @ExceptionHandler(ContestCooldownException.class)
+        public ResponseEntity<ErrorResponse> handleContestCooldown(
+                ContestCooldownException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-cooldown",
                         "Conflict",
                         409,
                         ex.getMessage(),

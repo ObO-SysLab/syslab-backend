@@ -77,6 +77,17 @@ public class ContestSubmission {
         this.submittedAt = LocalDateTime.now();
     }
 
+    public ContestSubmission(Contest contest, ContestProblem contestProblem, User user,
+                             SolveSubmission solveSubmission, String submissionStatus) {
+        this.contest = contest;
+        this.contestProblem = contestProblem;
+        this.user = user;
+        this.solveSubmission = solveSubmission;
+        this.submissionStatus = submissionStatus;
+        this.isCorrect = null;
+        this.submittedAt = LocalDateTime.now();
+    }
+
     public Long getId() { return id; }
     public Contest getContest() { return contest; }
     public ContestProblem getContestProblem() { return contestProblem; }

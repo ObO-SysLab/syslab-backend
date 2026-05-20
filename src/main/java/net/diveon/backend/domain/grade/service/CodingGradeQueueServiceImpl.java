@@ -56,6 +56,26 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
     }
 
     @Override
+    public void sendContestGradeRequest(long probId, long submitterId, long submissionId,
+                                        CodingGradeMessage.ContestContext contestContext) {
+        SolveSubmission submission = solveSubmissionRepository.findById(submissionId)
+            .orElseThrow(() -> new RuntimeException("제출 정보가 없습니다."));
+        SolveSubmissionCoding submissionCoding = solveSubmissionCodingRepository.findById(submissionId)
+            .orElseThrow(() -> new RuntimeException("코딩형 제출 정보가 없습니다."));
+        ProblemCoding problemCoding = problemCodingRepository.findById(probId)
+            .orElseThrow(() -> new RuntimeException("코딩형 문제가 없습니다."));
+
+        String language = submissionCoding.getLanguage();
+        String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
+
+        uploadCode(s3Key, submissionCoding.getAnswer());
+
+        CodingGradeMessage message = createMessage(submissionId, s3Key, language, probId, problemCoding);
+        message.setContestContext(contestContext);
+        sendMessage(message);
+    }
+
+    @Override
     public void sendGradeRequest(long probId, long submitterId, long submissionId) {
         SolveSubmission submission = solveSubmissionRepository.findById(submissionId)
             .orElseThrow(() -> new RuntimeException("제출 정보가 없습니다."));
