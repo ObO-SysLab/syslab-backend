@@ -21,6 +21,8 @@ import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestRankingResponse;
+import net.diveon.backend.domain.contest.service.ContestRankingService;
 import net.diveon.backend.domain.contest.service.ContestService;
 import net.diveon.backend.domain.contest.service.ContestSubmitService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -31,10 +33,13 @@ public class ContestController {
 
     private final ContestService contestService;
     private final ContestSubmitService contestSubmitService;
+    private final ContestRankingService contestRankingService;
 
-    public ContestController(ContestService contestService, ContestSubmitService contestSubmitService) {
+    public ContestController(ContestService contestService, ContestSubmitService contestSubmitService,
+                             ContestRankingService contestRankingService) {
         this.contestService = contestService;
         this.contestSubmitService = contestSubmitService;
+        this.contestRankingService = contestRankingService;
     }
 
     // 대회 목록 조회
@@ -105,6 +110,15 @@ public class ContestController {
             @Valid @RequestBody ContestCreateRequest request) {
         ContestCreateResponse response = contestService.createContest(Long.parseLong(userId), request);
         return ResponseEntity.status(201).body(ApiResponse.created("대회가 성공적으로 생성되었습니다.", response));
+    }
+
+    // 스코어보드 조회
+    @GetMapping("/{contestId}/rankings")
+    public ResponseEntity<ApiResponse<ContestRankingResponse>> getRankings(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId) {
+        ContestRankingResponse response = contestRankingService.getRankings(contestId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("스코어보드 조회 성공", response));
     }
 
     // 대회 문제 제출

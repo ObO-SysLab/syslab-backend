@@ -8,6 +8,7 @@ public class CodingGradeMessage {
     private Integer timeLimit;
     private Integer memoryLimit;
     private Integer testcaseCount;
+    private ContestContext contestContext;
 
     public CodingGradeMessage() {}
 
@@ -29,31 +30,31 @@ public class CodingGradeMessage {
         this.testcaseCount = testcaseCount;
     }
 
-    public String getSubmissionId() {
-        return submissionId;
-    }
+    public String getSubmissionId() { return submissionId; }
+    public String getS3Key() { return s3Key; }
+    public String getLanguage() { return language; }
+    public String getProblemId() { return problemId; }
+    public Integer getTimeLimit() { return timeLimit; }
+    public Integer getMemoryLimit() { return memoryLimit; }
+    public Integer getTestcaseCount() { return testcaseCount; }
+    public ContestContext getContestContext() { return contestContext; }
+    public void setContestContext(ContestContext contestContext) { this.contestContext = contestContext; }
 
-    public String getS3Key() {
-        return s3Key;
-    }
+    public static class ContestContext {
+        private Long contestId;
+        private Long contestProblemId;
+        private Integer points;
 
-    public String getLanguage() {
-        return language;
-    }
+        public ContestContext() {}
 
-    public String getProblemId() {
-        return problemId;
-    }
+        public ContestContext(Long contestId, Long contestProblemId, Integer points) {
+            this.contestId = contestId;
+            this.contestProblemId = contestProblemId;
+            this.points = points;
+        }
 
-    public Integer getTimeLimit() {
-        return timeLimit;
-    }
-
-    public Integer getMemoryLimit() {
-        return memoryLimit;
-    }
-
-    public Integer getTestcaseCount() {
-        return testcaseCount;
+        public Long getContestId() { return contestId; }
+        public Long getContestProblemId() { return contestProblemId; }
+        public Integer getPoints() { return points; }
     }
 }
