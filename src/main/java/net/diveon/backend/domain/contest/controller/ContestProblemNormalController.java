@@ -41,6 +41,8 @@ public class ContestProblemNormalController {
             @AuthenticationPrincipal String userId) {
         contestProblemNormalService.deleteContestProblem(contestId, problemId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("문제가 대회에서 제거되었습니다.", null));
+    }
+    
     @PatchMapping("/{contestId}/problems/{problemId}/points")
     public ResponseEntity<ApiResponse<Void>> updateContestProblemPoints(
             @PathVariable Long contestId,

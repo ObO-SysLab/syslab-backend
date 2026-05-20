@@ -79,11 +79,39 @@ public class ContestProblemNormalService {
     }
 
     @Transactional
+    public void deleteContestProblem(Long contestId, Long problemId, Long userId) {
+        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+
+        if (!problemRepository.existsById(problemId)) {
+            throw new ProblemNotFoundException();
+        }
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(ContestNotFoundException::new);
+
+        ContestProblem contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+                .orElseThrow(ContestProblemNotFoundException::new);
+
+        ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        boolean isContestCreator = contest.getCreatedBy().getId().equals(userId);
+        boolean isContestAdmin = participant.getRole() == ContestParticipant.ContestRole.ADMIN;
+        if (!isContestCreator || !isContestAdmin) {
+            throw new ContestAccessDeniedException();
+        }
+
+        // 현재는 대회 문제만 제거하고, 문제 자체는 삭제하지 않는것으로 구현함
+        contestProblemRepository.delete(contestProblem);
+    }
+
+    @Transactional
     public void updateContestProblemPoints(Long contestId, Long problemId, Long userId,
                                            ContestProblemPointsUpdateRequest request) {
         if (!problemRepository.existsById(problemId)) {
             throw new ProblemNotFoundException();
         }
+
 
         ContestProblem contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
                 .orElseThrow(ContestProblemNotFoundException::new);
