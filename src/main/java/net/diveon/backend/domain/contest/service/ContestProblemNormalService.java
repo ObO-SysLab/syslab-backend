@@ -6,7 +6,9 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.diveon.backend.domain.contest.dto.request.ContestProblemPointsUpdateRequest;
 import net.diveon.backend.domain.contest.dto.response.ContestProblemListResponse;
+import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestProblem;
 import net.diveon.backend.domain.contest.others.ForDtoContestProblem;
@@ -15,10 +17,14 @@ import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestSubmissionRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
+import net.diveon.backend.global.exception.ContestProblemNotFoundException;
+import net.diveon.backend.global.exception.InvalidContestProblemPointsException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -29,17 +35,20 @@ public class ContestProblemNormalService {
     private final ContestParticipantRepository contestParticipantRepository;
     private final ContestProblemRepository contestProblemRepository;
     private final ContestSubmissionRepository contestSubmissionRepository;
+    private final ProblemRepository problemRepository;
 
     public ContestProblemNormalService(ContestRepository contestRepository,
                                        UserRepository userRepository,
                                        ContestParticipantRepository contestParticipantRepository,
                                        ContestProblemRepository contestProblemRepository,
-                                       ContestSubmissionRepository contestSubmissionRepository) {
+                                       ContestSubmissionRepository contestSubmissionRepository,
+                                       ProblemRepository problemRepository) {
         this.contestRepository = contestRepository;
         this.userRepository = userRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestSubmissionRepository = contestSubmissionRepository;
+        this.problemRepository = problemRepository;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +76,36 @@ public class ContestProblemNormalService {
         }
 
         return new ContestProblemListResponse(problems);
+    }
+
+    @Transactional
+    public void updateContestProblemPoints(Long contestId, Long problemId, Long userId,
+                                           ContestProblemPointsUpdateRequest request) {
+        if (!problemRepository.existsById(problemId)) {
+            throw new ProblemNotFoundException();
+        }
+
+        ContestProblem contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+                .orElseThrow(ContestProblemNotFoundException::new);
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(ContestNotFoundException::new);
+
+        ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        boolean isContestCreator = contest.getCreatedBy().getId().equals(userId);
+        boolean isContestAdmin = participant.getRole() == ContestParticipant.ContestRole.ADMIN;
+        if (!isContestCreator || !isContestAdmin) {
+            throw new ContestAccessDeniedException();
+        }
+
+        Integer points = request.getPoints();
+        if (points == null || points < 0) {
+            throw new InvalidContestProblemPointsException();
+        }
+
+        contestProblem.updatePoints(points);
     }
 
     private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds, int sequence) {
