@@ -2,6 +2,7 @@ package net.diveon.backend.domain.contest.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,5 +29,14 @@ public class ContestProblemNormalController {
         ContestProblemListResponse response = contestProblemNormalService.getContestProblems(
                 contestId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("문제 목록 조회 성공", response));
+    }
+
+    @DeleteMapping("/{contestId}/problems/{problemId}")
+    public ResponseEntity<ApiResponse<Void>> deleteContestProblem(
+            @PathVariable Long contestId,
+            @PathVariable Long problemId,
+            @AuthenticationPrincipal String userId) {
+        contestProblemNormalService.deleteContestProblem(contestId, problemId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("문제가 대회에서 제거되었습니다.", null));
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.contest.dto.response.ContestProblemListResponse;
+import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestProblem;
 import net.diveon.backend.domain.contest.others.ForDtoContestProblem;
@@ -15,10 +16,13 @@ import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestSubmissionRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
+import net.diveon.backend.global.exception.ContestProblemNotFoundException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -29,17 +33,20 @@ public class ContestProblemNormalService {
     private final ContestParticipantRepository contestParticipantRepository;
     private final ContestProblemRepository contestProblemRepository;
     private final ContestSubmissionRepository contestSubmissionRepository;
+    private final ProblemRepository problemRepository;
 
     public ContestProblemNormalService(ContestRepository contestRepository,
                                        UserRepository userRepository,
                                        ContestParticipantRepository contestParticipantRepository,
                                        ContestProblemRepository contestProblemRepository,
-                                       ContestSubmissionRepository contestSubmissionRepository) {
+                                       ContestSubmissionRepository contestSubmissionRepository,
+                                       ProblemRepository problemRepository) {
         this.contestRepository = contestRepository;
         this.userRepository = userRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestSubmissionRepository = contestSubmissionRepository;
+        this.problemRepository = problemRepository;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +74,33 @@ public class ContestProblemNormalService {
         }
 
         return new ContestProblemListResponse(problems);
+    }
+
+    @Transactional
+    public void deleteContestProblem(Long contestId, Long problemId, Long userId) {
+        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+
+        if (!problemRepository.existsById(problemId)) {
+            throw new ProblemNotFoundException();
+        }
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(ContestNotFoundException::new);
+
+        ContestProblem contestProblem = contestProblemRepository.findByContestIdAndProblemId(contestId, problemId)
+                .orElseThrow(ContestProblemNotFoundException::new);
+
+        ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        boolean isContestCreator = contest.getCreatedBy().getId().equals(userId);
+        boolean isContestAdmin = participant.getRole() == ContestParticipant.ContestRole.ADMIN;
+        if (!isContestCreator || !isContestAdmin) {
+            throw new ContestAccessDeniedException();
+        }
+
+        // 현재는 대회 문제만 제거하고, 문제 자체는 삭제하지 않는것으로 구현함
+        contestProblemRepository.delete(contestProblem);
     }
 
     private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds, int sequence) {
