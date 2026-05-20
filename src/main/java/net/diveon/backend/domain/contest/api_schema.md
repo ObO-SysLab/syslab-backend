@@ -143,3 +143,38 @@ API 세부 명세서를 보관
   "message": "해당 참가자의 상태가 변경되었습니다."
 }
 ```
+
+
+
+### 4-b. 차단된 참가자 목록 조회
+
+- **Method / Endpoint**: `GET /api/contests/{contestId}/participants/Banned`
+- **Authorization**: Bearer Token (관리자 권한)
+- **Query Params**: `?page=1&size=20` (필요 시 검색어 `keyword` 추가 가능)
+- **Response (200 OK)**:
+
+```json
+{
+  "status": 200,
+  "data": {
+    "totalElements": 128,
+    "totalPages": 7,
+    "participants": [
+      {
+        "userId": 1001,
+        "nickname": "Dankook_Hacker",
+        "joinedAt": "2026.05.10T10:00:00",
+        "score": 2850,
+        "isBanned": true
+      },
+      {
+        "userId": 1002,
+        "nickname": "Bad_User_01",
+        "joinedAt": "2026.05.12T11:20:00",
+        "score": 100,
+        "isBanned": true
+      }
+    ]
+  }
+}
+```
