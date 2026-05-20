@@ -7,6 +7,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.diveon.backend.domain.contest.dto.request.ContestParticipantBanRequest;
+import net.diveon.backend.domain.contest.dto.response.ContestParticipantBanResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestParticipantListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
@@ -16,6 +18,7 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
+import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -99,6 +102,36 @@ public class ContestParticipantService {
                 participantPage.getTotalPages(),
                 participants
         );
+    }
+
+    @Transactional
+    public ContestParticipantBanResponse updateContestParticipantBanStatus(
+            Long contestId, Long participantUserId, Long requestUserId, ContestParticipantBanRequest request) {
+        userRepository.findById(requestUserId).orElseThrow(UserNotFoundException::new);
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(ContestNotFoundException::new);
+
+        ContestParticipant requester = contestParticipantRepository.findByContestIdAndUserId(contestId, requestUserId)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        boolean isContestCreator = contest.getCreatedBy().getId().equals(requestUserId);
+        boolean isContestAdmin = requester.getRole() == ContestParticipant.ContestRole.ADMIN;
+        if (!isContestCreator || !isContestAdmin) {
+            throw new ContestAccessDeniedException();
+        }
+
+        ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, participantUserId)
+                .orElseThrow(ContestParticipantNotFoundException::new);
+
+        Boolean isBanned = request.getIsBanned();
+        if (Boolean.TRUE.equals(isBanned)) {
+            participant.ban();
+        } else if (Boolean.FALSE.equals(isBanned)) {
+            participant.unban();
+        }
+
+        return new ContestParticipantBanResponse(participant.getIsBanned());
     }
 
     private ContestParticipantListResponse.ParticipantItem toResponse(ContestParticipant participant) {
