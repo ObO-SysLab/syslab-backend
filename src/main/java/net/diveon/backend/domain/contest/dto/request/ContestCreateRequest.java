@@ -35,6 +35,7 @@ public class ContestCreateRequest {
 
     private String prizeDescription;
     private List<String> tags;
+    private Long groupId;
 
     public String getTitle() { return title; }
     public String getDescription() { return description; }
@@ -46,4 +47,5 @@ public class ContestCreateRequest {
     public String getRules() { return rules; }
     public String getPrizeDescription() { return prizeDescription; }
     public List<String> getTags() { return tags; }
+    public Long getGroupId() { return groupId; }
 }

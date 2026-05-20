@@ -17,6 +17,7 @@ import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
+import net.diveon.backend.domain.contest.dto.response.GroupContestListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestTag;
@@ -24,10 +25,14 @@ import net.diveon.backend.domain.contest.repository.ContestParticipantRepository
 import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestTagRepository;
+import net.diveon.backend.domain.group.entity.Group;
+import net.diveon.backend.domain.group.repository.GroupRepository;
+import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
+import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.ContestAlreadyParticipatedException;
 import net.diveon.backend.global.exception.ContestAlreadyStartedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
@@ -43,19 +48,25 @@ public class ContestService {
     private final ContestProblemRepository contestProblemRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
+    private final GroupUserRepository groupUserRepository;
+    private final GroupRepository groupRepository;
 
     public ContestService(ContestRepository contestRepository,
                           ContestParticipantRepository contestParticipantRepository,
                           ContestTagRepository contestTagRepository,
                           ContestProblemRepository contestProblemRepository,
                           ProblemRepository problemRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          GroupUserRepository groupUserRepository,
+                          GroupRepository groupRepository) {
         this.contestRepository = contestRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestTagRepository = contestTagRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.problemRepository = problemRepository;
         this.userRepository = userRepository;
+        this.groupUserRepository = groupUserRepository;
+        this.groupRepository = groupRepository;
     }
 
     // 대회 목록 조회
@@ -95,6 +106,13 @@ public class ContestService {
     @Transactional(readOnly = true)
     public ContestDetailResponse getContestDetail(Long contestId, Long userId) {
         Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
+
+        if (contest.getVisibility() == Contest.Visibility.GROUP) {
+            if (userId == null || contest.getGroup() == null ||
+                groupUserRepository.findByGroupIdAndUserId(contest.getGroup().getId(), userId).isEmpty()) {
+                throw new ContestAccessDeniedException();
+            }
+        }
 
         String status = switch (contest.getStatus()) {
             case UPCOMING -> "접수 중";
@@ -142,8 +160,15 @@ public class ContestService {
     public ContestCreateResponse createContest(Long userId, ContestCreateRequest request) {
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
+        Group group = null;
+        if (request.getGroupId() != null) {
+            group = groupRepository.findById(request.getGroupId()).orElseThrow(GroupNotFoundException::new);
+            groupUserRepository.findByGroupIdAndUserId(request.getGroupId(), userId)
+                    .orElseThrow(ContestAccessDeniedException::new);
+        }
+
         Contest contest = new Contest(
-                user, null,
+                user, group,
                 request.getTitle(), request.getDescription(),
                 request.getContestType(), request.getParticipationType(), request.getVisibility(),
                 request.getStartTime(), request.getEndTime(),
@@ -172,6 +197,14 @@ public class ContestService {
         // 시작 전인 대회만 참가 가능
         if (contest.getStatus() != Contest.ContestStatus.UPCOMING) {
             throw new ContestAlreadyStartedException();
+        }
+
+        // 그룹 전용 대회면 그룹원인지 확인
+        if (contest.getVisibility() == Contest.Visibility.GROUP) {
+            if (contest.getGroup() == null ||
+                groupUserRepository.findByGroupIdAndUserId(contest.getGroup().getId(), userId).isEmpty()) {
+                throw new ContestAccessDeniedException();
+            }
         }
 
         // 이미 참가 중인지 확인
@@ -244,5 +277,31 @@ public class ContestService {
         contestParticipantRepository.delete(participant);
 
         return new ContestJoinResponse(false);
+    }
+
+    // 그룹 전용 대회 목록 조회
+    @Transactional(readOnly = true)
+    public GroupContestListResponse getGroupContestList(Long groupId, Long userId, int page, int size) {
+        groupRepository.findById(groupId).orElseThrow(GroupNotFoundException::new);
+
+        groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(ContestAccessDeniedException::new);
+
+        Page<Contest> contestPage = contestRepository.findGroupContestsByGroupId(groupId, PageRequest.of(page - 1, size));
+
+        List<GroupContestListResponse.ContestItem> items = contestPage.getContent().stream().map(c -> {
+            String status = switch (c.getStatus()) {
+                case UPCOMING -> "접수 중";
+                case ONGOING -> "진행 중";
+                case ENDED -> "종료";
+            };
+            long participantCount = contestParticipantRepository.countByContestId(c.getId());
+            return new GroupContestListResponse.ContestItem(
+                    c.getId(), c.getTitle(), c.getCreatedBy().getNickname(),
+                    c.getStartTime(), c.getEndTime(), status, participantCount
+            );
+        }).toList();
+
+        return new GroupContestListResponse(page, contestPage.getTotalPages(), items);
     }
 }

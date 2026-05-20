@@ -15,6 +15,7 @@ import net.diveon.backend.domain.contest.entity.ContestParticipant;
 public interface ContestRepository extends JpaRepository<Contest, Long> {
 
     @Query("SELECT c FROM Contest c WHERE " +
+           "c.visibility = net.diveon.backend.domain.contest.entity.Contest$Visibility.PUBLIC AND " +
            "(:keyword = '' OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
            "(:statusFilter = 'ALL' OR " +
            "  (:statusFilter = 'UPCOMING' AND c.startTime > :now) OR " +
@@ -30,4 +31,7 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
 
     @Query("SELECT p.contest.id FROM ContestParticipant p WHERE p.user.id = :userId")
     List<Long> findJoinedContestIdsByUserId(@Param("userId") Long userId);
+
+    @Query("SELECT c FROM Contest c WHERE c.group.id = :groupId AND c.visibility = net.diveon.backend.domain.contest.entity.Contest$Visibility.GROUP")
+    Page<Contest> findGroupContestsByGroupId(@Param("groupId") Long groupId, Pageable pageable);
 }

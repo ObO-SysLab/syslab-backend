@@ -11,6 +11,8 @@ import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
 import net.diveon.backend.domain.group.dto.GroupUpdateRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import net.diveon.backend.domain.contest.dto.response.GroupContestListResponse;
+import net.diveon.backend.domain.contest.service.ContestService;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +32,11 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final ContestService contestService;
 
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, ContestService contestService) {
         this.groupService = groupService;
+        this.contestService = contestService;
     }
 
     // 그룹 검색
@@ -115,6 +119,17 @@ public class GroupController {
             @AuthenticationPrincipal String userId) {
         groupService.deleteGroup(groupId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("그룹이 성공적으로 삭제(폐쇄)되었습니다.", null));
+    }
+
+    // 그룹 전용 대회 목록 조회
+    @GetMapping("/{groupId}/contests")
+    public ResponseEntity<ApiResponse<GroupContestListResponse>> getGroupContests(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        GroupContestListResponse response = contestService.getGroupContestList(groupId, Long.parseLong(userId), page, size);
+        return ResponseEntity.ok(ApiResponse.success("그룹 전용 대회 목록 조회 성공", response));
     }
 
     // 그룹 생성
