@@ -136,6 +136,55 @@ public class ContestProblemNormalService {
         contestProblem.updatePoints(points);
     }
 
+    @Transactional
+    public void addProblemToContestServiceLogic(Long contestId, Long ProblemId, Long requesterId, Integer point){
+
+        // 보호로직
+        /**
+         * 해당 문제 자체가 없는 경우
+         * 해당 유저 자체가 없는 경우
+         * 해당 대회 자체가 없는 경우
+         * 
+         * 해당 유저가 대회 참여자 + 어드민이 아닌경우
+         * 해당 문제가 요청자의 문제가 아닌경우
+         * 
+         */
+
+        //문제 자체가 없는경우
+        Problem problem = problemRepository.findById(ProblemId)
+        .orElseThrow(ProblemNotFoundException::new);
+
+        //유저 자체가 없는 경우
+        if (!userRepository.existsById(requesterId)) {
+            throw new UserNotFoundException();
+        }
+
+        //대회 자체가 없는 경우
+        if (!contestRepository.existsById(contestId)){
+            throw new ContestNotFoundException();
+        }
+
+        Contest contest = contestRepository.findById(contestId)
+        .orElseThrow(ContestNotFoundException::new);
+
+        ContestParticipant contestParticipant_admin = contestParticipantRepository.findById(requesterId)
+        .orElseThrow(ContestParticipantNotFoundException::new);
+
+        // 대회 어드민이 아닌 경우
+        boolean isContestCreator = contest.getCreatedBy().getId().equals(requesterId);
+        boolean isContestAdmin = contestParticipant_admin.getRole() == ContestParticipant.ContestRole.ADMIN;
+        if (!isContestCreator || !isContestAdmin) {
+            throw new ContestAccessDeniedException();
+        }
+
+        if(problem.getAuthor().getId() != requesterId){
+            throw new ProblemNotFoundException("해당 문제의 소유자가 아닙니다.");
+        }
+
+        ContestProblem contestProblem = new ContestProblem(contest, problem, point);
+        contestProblemRepository.save(contestProblem);
+    }
+
     private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds, int sequence) {
         Problem problem = contestProblem.getProblem();
 

@@ -11,7 +11,9 @@ import net.diveon.backend.domain.contest.dto.response.QnaListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 import net.diveon.backend.domain.contest.entity.ContestQna;
+import net.diveon.backend.domain.contest.entity.ContestQnaAnswer;
 import net.diveon.backend.domain.contest.repository.ContestParticipantRepository;
+import net.diveon.backend.domain.contest.repository.ContestQnaAnswerRepository;
 import net.diveon.backend.domain.contest.repository.ContestQnaRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.user.entity.User;
@@ -19,23 +21,27 @@ import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
-import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.exception.ContestQnaAnswerNotFoundException;
 import net.diveon.backend.global.exception.ContestQnaNotFoundException;
+import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
 public class ContestQnaService {
 
     private final ContestRepository contestRepository;
     private final ContestQnaRepository contestQnaRepository;
+    private final ContestQnaAnswerRepository contestQnaAnswerRepository;
     private final ContestParticipantRepository contestParticipantRepository;
     private final UserRepository userRepository;
 
     public ContestQnaService(ContestRepository contestRepository,
                              ContestQnaRepository contestQnaRepository,
+                             ContestQnaAnswerRepository contestQnaAnswerRepository,
                              ContestParticipantRepository contestParticipantRepository,
                              UserRepository userRepository) {
         this.contestRepository = contestRepository;
         this.contestQnaRepository = contestQnaRepository;
+        this.contestQnaAnswerRepository = contestQnaAnswerRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.userRepository = userRepository;
     }
@@ -96,14 +102,14 @@ public class ContestQnaService {
             throw new ContestAccessDeniedException();
         }
 
-        qna.answer(user, request.getAnswer());
+        contestQnaAnswerRepository.save(new ContestQnaAnswer(qna, user, request.getAnswer()));
     }
 
     // 답변 삭제 (관리자)
     @Transactional
-    public void deleteAnswer(Long contestId, Long qnaId, Long userId) {
+    public void deleteAnswer(Long contestId, Long qnaId, Long answerId, Long userId) {
         contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
-        ContestQna qna = contestQnaRepository.findByIdAndContestId(qnaId, contestId)
+        contestQnaRepository.findByIdAndContestId(qnaId, contestId)
                 .orElseThrow(ContestQnaNotFoundException::new);
         ContestParticipant participant = contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
                 .orElseThrow(ContestParticipantNotFoundException::new);
@@ -112,6 +118,8 @@ public class ContestQnaService {
             throw new ContestAccessDeniedException();
         }
 
-        qna.answer(null, null);
+        ContestQnaAnswer answer = contestQnaAnswerRepository.findByIdAndQnaId(answerId, qnaId)
+                .orElseThrow(ContestQnaAnswerNotFoundException::new);
+        contestQnaAnswerRepository.delete(answer);
     }
 }
