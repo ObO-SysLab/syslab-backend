@@ -139,7 +139,7 @@ public class GroupPostResponse {
     }
 
     public static class PostCreate {
-        @JsonProperty("post_id")
+        @JsonProperty("postId")
         private final Long postId;
 
         public PostCreate(Long postId) {

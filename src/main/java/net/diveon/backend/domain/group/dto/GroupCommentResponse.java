@@ -13,7 +13,7 @@ public class GroupCommentResponse {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy.MM.dd");
 
     public static class CommentList {
-        @JsonProperty("total_elements")
+        @JsonProperty("totalElements")
         private final long totalElements;
         private final List<CommentListItem> comments;
 
@@ -34,7 +34,7 @@ public class GroupCommentResponse {
     }
 
     public static class CommentListItem {
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private final Long commentId;
         private final String author;
         private final String content;
@@ -65,7 +65,7 @@ public class GroupCommentResponse {
     }
 
     public static class CommentCreate {
-        @JsonProperty("comment_id")
+        @JsonProperty("commentId")
         private final Long commentId;
 
         public CommentCreate(Long commentId) {
