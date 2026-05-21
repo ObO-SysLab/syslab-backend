@@ -1,5 +1,7 @@
 package net.diveon.backend.domain.contest.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,7 @@ import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestOwnedListResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestRankingResponse;
 import net.diveon.backend.domain.contest.service.ContestRankingService;
 import net.diveon.backend.domain.contest.service.ContestService;
@@ -54,6 +57,14 @@ public class ContestController {
         Long parsedUserId = userId != null ? Long.parseLong(userId) : null;
         ContestListResponse response = contestService.getContestList(keyword, status, onlyJoined, page, size, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("대회 목록 조회 성공", response));
+    }
+
+    // 내가 소유한 대회 목록 조회
+    @GetMapping("/me/owned")
+    public ResponseEntity<ApiResponse<List<ContestOwnedListResponse>>> getOwnedContests(
+            @AuthenticationPrincipal String userId) {
+        List<ContestOwnedListResponse> response = contestService.getOwnedContests(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("내가 소유한 대회 목록 조회 성공", response));
     }
 
     // 대회 상세 조회
