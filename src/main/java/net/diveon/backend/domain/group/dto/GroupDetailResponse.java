@@ -34,14 +34,17 @@ public class GroupDetailResponse {
     public static class Stats {
         private final int memberCount;
         private final int problemCount;
+        private final int contestCount;
 
-        public Stats(int memberCount, int problemCount) {
+        public Stats(int memberCount, int problemCount, int contestCount) {
             this.memberCount = memberCount;
             this.problemCount = problemCount;
+            this.contestCount = contestCount;
         }
 
         public int getMemberCount() { return memberCount; }
         public int getProblemCount() { return problemCount; }
+        public int getContestCount() { return contestCount; }
     }
 
     public static class Settings {

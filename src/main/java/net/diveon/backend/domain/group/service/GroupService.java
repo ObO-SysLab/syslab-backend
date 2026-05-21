@@ -23,6 +23,7 @@ import net.diveon.backend.domain.group.repository.GroupProblemRepository;
 import net.diveon.backend.domain.group.repository.GroupRepository;
 import net.diveon.backend.domain.group.repository.GroupTagRepository;
 import net.diveon.backend.domain.group.repository.GroupUserRepository;
+import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
@@ -48,13 +49,15 @@ public class GroupService {
     private final GroupProblemRepository groupProblemRepository;
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
+    private final ContestRepository contestRepository;
 
     public GroupService(GroupRepository groupRepository, GroupTagRepository groupTagRepository,
                         GroupUserRepository groupUserRepository,
                         GroupAssignRequestRepository groupAssignRequestRepository,
                         GroupProblemRepository groupProblemRepository,
                         UserRepository userRepository,
-                        ProblemRepository problemRepository) {
+                        ProblemRepository problemRepository,
+                        ContestRepository contestRepository) {
         this.groupRepository = groupRepository;
         this.groupTagRepository = groupTagRepository;
         this.groupUserRepository = groupUserRepository;
@@ -62,6 +65,7 @@ public class GroupService {
         this.groupProblemRepository = groupProblemRepository;
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
+        this.contestRepository = contestRepository;
     }
 
     // 그룹 목록 조회
@@ -271,7 +275,8 @@ public class GroupService {
                 .stream().map(GroupTag::getTag).toList();
 
         int memberCount = (int) groupUserRepository.countByGroupId(groupId);
-        int problemCount = (int) groupProblemRepository.countByGroupId(groupId); 
+        int problemCount = (int) groupProblemRepository.countByGroupId(groupId);
+        int contestCount = (int) contestRepository.countByGroupId(groupId);
         
         // 로그인 안 했을 경우
         String myStatus = "none";
@@ -293,7 +298,7 @@ public class GroupService {
                 group.getTitle(),
                 group.getDescription(),
                 tags,
-                new GroupDetailResponse.Stats(memberCount, problemCount),
+                new GroupDetailResponse.Stats(memberCount, problemCount, contestCount),
                 new GroupDetailResponse.Settings(group.getIsPrivate(), group.getIsAutoApprove()),
                 new GroupDetailResponse.UserContext(myStatus, isLeader)
         );

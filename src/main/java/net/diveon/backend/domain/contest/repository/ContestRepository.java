@@ -35,6 +35,9 @@ public interface ContestRepository extends JpaRepository<Contest, Long> {
     @Query("SELECT c FROM Contest c WHERE c.group.id = :groupId AND c.visibility = net.diveon.backend.domain.contest.entity.Contest$Visibility.GROUP")
     Page<Contest> findGroupContestsByGroupId(@Param("groupId") Long groupId, Pageable pageable);
 
+    @Query("SELECT COUNT(c) FROM Contest c WHERE c.group.id = :groupId AND c.visibility = net.diveon.backend.domain.contest.entity.Contest$Visibility.GROUP")
+    long countByGroupId(@Param("groupId") Long groupId);
+
     @Query("SELECT new net.diveon.backend.domain.contest.dto.response.ContestOwnedListResponse(c.id, c.title) " +
            "FROM Contest c WHERE c.createdBy.id = :userId")
     List<ContestOwnedListResponse> findOwnedContestsByUserId(@Param("userId") Long userId);
