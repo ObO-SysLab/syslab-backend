@@ -137,21 +137,21 @@ public class ContestProblemNormalService {
     }
 
     @Transactional
-    public void addProblemToContestServiceLogic(Long contestId, Long ProblemId, Long requesterId, Integer point){
+    public void addProblemToContestServiceLogic(Long contestId, Long problemId, Long requesterId, Integer point){
 
         // 보호로직
         /**
          * 해당 문제 자체가 없는 경우
          * 해당 유저 자체가 없는 경우
          * 해당 대회 자체가 없는 경우
-         * 
+         *
          * 해당 유저가 대회 참여자 + 어드민이 아닌경우
          * 해당 문제가 요청자의 문제가 아닌경우
-         * 
+         *
          */
 
         //문제 자체가 없는경우
-        Problem problem = problemRepository.findById(ProblemId)
+        Problem problem = problemRepository.findById(problemId)
         .orElseThrow(ProblemNotFoundException::new);
 
         //유저 자체가 없는 경우
@@ -160,24 +160,20 @@ public class ContestProblemNormalService {
         }
 
         //대회 자체가 없는 경우
-        if (!contestRepository.existsById(contestId)){
-            throw new ContestNotFoundException();
-        }
-
         Contest contest = contestRepository.findById(contestId)
         .orElseThrow(ContestNotFoundException::new);
 
-        ContestParticipant contestParticipant_admin = contestParticipantRepository.findById(requesterId)
+        ContestParticipant contestParticipantAdmin = contestParticipantRepository.findByContestIdAndUserId(contestId, requesterId)
         .orElseThrow(ContestParticipantNotFoundException::new);
 
         // 대회 어드민이 아닌 경우
         boolean isContestCreator = contest.getCreatedBy().getId().equals(requesterId);
-        boolean isContestAdmin = contestParticipant_admin.getRole() == ContestParticipant.ContestRole.ADMIN;
+        boolean isContestAdmin = contestParticipantAdmin.getRole() == ContestParticipant.ContestRole.ADMIN;
         if (!isContestCreator || !isContestAdmin) {
             throw new ContestAccessDeniedException();
         }
 
-        if(problem.getAuthor().getId() != requesterId){
+        if (!problem.getAuthor().getId().equals(requesterId)) {
             throw new ProblemNotFoundException("해당 문제의 소유자가 아닙니다.");
         }
 
