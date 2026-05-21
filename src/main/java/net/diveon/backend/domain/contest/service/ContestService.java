@@ -17,6 +17,7 @@ import net.diveon.backend.domain.contest.dto.response.ContestCreateResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestDetailResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestOwnedListResponse;
 import net.diveon.backend.domain.contest.dto.response.GroupContestListResponse;
 import net.diveon.backend.domain.contest.entity.Contest;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
@@ -100,6 +101,13 @@ public class ContestService {
         }).toList();
 
         return new ContestListResponse(contestPage.getTotalElements(), page, contestPage.getTotalPages(), items);
+    }
+
+    // 내가 소유한 대회 목록 조회
+    @Transactional(readOnly = true)
+    public List<ContestOwnedListResponse> getOwnedContests(Long userId) {
+        userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        return contestRepository.findOwnedContestsByUserId(userId);
     }
 
     // 대회 상세 조회
