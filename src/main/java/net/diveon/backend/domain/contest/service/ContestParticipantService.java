@@ -107,6 +107,11 @@ public class ContestParticipantService {
     @Transactional
     public ContestParticipantBanResponse updateContestParticipantBanStatus(
             Long contestId, Long participantUserId, Long requestUserId, ContestParticipantBanRequest request) {
+        
+        if(participantUserId == requestUserId){
+                throw new ContestAccessDeniedException("그룹장은 스스로를 차단할 수 없습니다.");
+        }
+        
         userRepository.findById(requestUserId).orElseThrow(UserNotFoundException::new);
 
         Contest contest = contestRepository.findById(contestId)
