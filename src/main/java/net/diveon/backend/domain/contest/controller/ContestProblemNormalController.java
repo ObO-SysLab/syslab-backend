@@ -14,6 +14,8 @@ import net.diveon.backend.domain.contest.dto.request.ContestProblemPointsUpdateR
 import net.diveon.backend.domain.contest.dto.response.ContestProblemListResponse;
 import net.diveon.backend.domain.contest.service.ContestProblemNormalService;
 import net.diveon.backend.global.response.ApiResponse;
+import org.springframework.web.bind.annotation.PostMapping;
+
 
 @RestController
 @RequestMapping("/api/contests")
@@ -53,4 +55,20 @@ public class ContestProblemNormalController {
                 contestId, problemId, Long.parseLong(userId), request);
         return ResponseEntity.ok(ApiResponse.success("문제 배점이 수정되었습니다.", null));
     }
+
+    @PostMapping("/{contestId}/problems/{problemId}/add/{point}")
+    public ResponseEntity<ApiResponse<Void>> addProblemToContest(
+        @PathVariable Long contestId,
+        @PathVariable Long problemId,
+        @PathVariable Integer point,
+        @AuthenticationPrincipal String userId
+    ){
+        contestProblemNormalService.addProblemToContestServiceLogic(
+            contestId, 
+            problemId, 
+            Long.parseLong(userId), 
+            point);
+        return ResponseEntity.ok(ApiResponse.success("해당 문제가 대회에 추가되었습니다.", null));
+    }
+    
 }
