@@ -59,7 +59,7 @@ public class ContestQnaController {
     }
 
     // 8-4. 답변 생성
-    @PatchMapping("/{qnaId}/answer")
+    @PatchMapping("/{qnaId}/answers")
     public ResponseEntity<ApiResponse<Void>> createAnswer(
             @PathVariable Long contestId,
             @PathVariable Long qnaId,
@@ -70,12 +70,13 @@ public class ContestQnaController {
     }
 
     // 8-5. 답변 삭제
-    @DeleteMapping("/{qnaId}/answer")
+    @DeleteMapping("/{qnaId}/answers/{answerId}")
     public ResponseEntity<ApiResponse<Void>> deleteAnswer(
             @PathVariable Long contestId,
             @PathVariable Long qnaId,
+            @PathVariable Long answerId,
             @AuthenticationPrincipal String userId) {
-        contestQnaService.deleteAnswer(contestId, qnaId, Long.parseLong(userId));
+        contestQnaService.deleteAnswer(contestId, qnaId, answerId, Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("답변이 삭제되었습니다.", null));
     }
 }
