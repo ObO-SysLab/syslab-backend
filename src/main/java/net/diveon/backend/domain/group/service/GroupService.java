@@ -165,6 +165,12 @@ public class GroupService {
             throw new GroupAccessDeniedException();
         }
 
+        groupProblemRepository.findAllByGroupId(groupId).forEach(gp -> {
+            if ("group".equals(gp.getProblem().getVisibility())) {
+                problemRepository.delete(gp.getProblem());
+            }
+        });
+
         groupRepository.delete(group);
     }
 

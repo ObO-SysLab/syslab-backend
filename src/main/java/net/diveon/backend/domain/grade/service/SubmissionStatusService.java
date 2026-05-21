@@ -1,51 +1,74 @@
 package net.diveon.backend.domain.grade.service;
 
+import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import net.diveon.backend.domain.contest.entity.ContestSubmission;
+import net.diveon.backend.domain.contest.repository.ContestSubmissionRepository;
 import net.diveon.backend.domain.grade.dto.response.SubmissionStatusResponse;
 import net.diveon.backend.domain.grade.entity.SolveSubmission;
 import net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState;
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
+import net.diveon.backend.global.exception.SubmissionAccessDeniedException;
+import net.diveon.backend.global.exception.SubmissionNotFoundException;
 
 @Service
 public class SubmissionStatusService {
 
     private final SolveSubmissionRepository solveSubmissionRepository;
+    private final ContestSubmissionRepository contestSubmissionRepository;
 
-    public SubmissionStatusService(SolveSubmissionRepository solveSubmissionRepository) {
+    public SubmissionStatusService(SolveSubmissionRepository solveSubmissionRepository,
+                                   ContestSubmissionRepository contestSubmissionRepository) {
         this.solveSubmissionRepository = solveSubmissionRepository;
+        this.contestSubmissionRepository = contestSubmissionRepository;
     }
 
     @Transactional(readOnly = true)
     public SubmissionStatusResponse getStatus(Long userId, Long submissionId) {
-        SolveSubmission submission = solveSubmissionRepository.findById(submissionId)
-            // TODO: 서비스 고도화 시 SubmissionNotFoundException 같은 전용 예외로 분리할 것.
-            .orElseThrow(() -> new RuntimeException("제출 상태 조회 실패: 제출 정보가 존재하지 않습니다."));
-
-        if (!submission.getUser().getId().equals(userId)) {
-            // TODO: 서비스 고도화 시 SubmissionAccessDeniedException 같은 전용 예외로 분리할 것.
-            throw new RuntimeException("제출 상태 조회 실패: 해당 제출 정보에 접근할 권한이 없습니다.");
+        // 일반 제출 먼저 조회
+        Optional<SolveSubmission> solveSubmission = solveSubmissionRepository.findById(submissionId);
+        if (solveSubmission.isPresent()) {
+            SolveSubmission submission = solveSubmission.get();
+            if (!submission.getUser().getId().equals(userId)) {
+                throw new SubmissionAccessDeniedException();
+            }
+            SubmissionState state = submission.getSubmissionState();
+            return new SubmissionStatusResponse(
+                String.valueOf(submission.getId()),
+                submission.getProblem().getId(),
+                submission.getProblem().getType(),
+                state.name(),
+                calculateProgress(state.name())
+            );
         }
 
-        SubmissionState submissionState = submission.getSubmissionState();
-        String status = submissionState.name();
-        int progress = calculateProgress(submissionState);
+        // 대회 제출 fallback (contest_submission.id로 polling하는 경우)
+        ContestSubmission contestSubmission = contestSubmissionRepository.findById(submissionId)
+            .orElseThrow(SubmissionNotFoundException::new);
 
+        if (!contestSubmission.getUser().getId().equals(userId)) {
+            throw new SubmissionAccessDeniedException();
+        }
+
+        String status = contestSubmission.getSubmissionStatus();
         return new SubmissionStatusResponse(
-            String.valueOf(submission.getId()),
-            submission.getProblem().getId(),
-            submission.getProblem().getType(),
+            String.valueOf(contestSubmission.getId()),
+            contestSubmission.getContestProblem().getProblem().getId(),
+            contestSubmission.getContestProblem().getProblem().getType(),
             status,
-            progress
+            calculateProgress(status)
         );
     }
 
-    private int calculateProgress(SubmissionState submissionState) {
-        return switch (submissionState) {
-            case PENDING -> 0;
-            case JUDGING -> 60;
-            case COMPLETED -> 100;
+    private int calculateProgress(String status) {
+        return switch (status) {
+            case "PENDING" -> 0;
+            case "JUDGING" -> 60;
+            case "COMPLETED" -> 100;
+            default -> 0;
         };
     }
 }

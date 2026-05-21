@@ -1,5 +1,7 @@
 package net.diveon.backend.domain.group.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,4 +12,5 @@ public interface GroupProblemRepository extends JpaRepository<GroupProblem, Long
     long countByGroupId(Long groupId);
     boolean existsByGroupIdAndProblemId(Long groupId, Long problemId);
     Page<GroupProblem> findAllByGroupId(Long groupId, Pageable pageable);
+    List<GroupProblem> findAllByGroupId(Long groupId);
 }

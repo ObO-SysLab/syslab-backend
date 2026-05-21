@@ -97,6 +97,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 문제 삭제 권한 없음 → 403
+        @ExceptionHandler(ProblemDeletePermisionDeny.class)
+        public ResponseEntity<ErrorResponse> handleProblemDeletePermisionDeny(
+                ProblemDeletePermisionDeny ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/problem-delete-permision-deny",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 유효하지 않은 문제 유형 → 400
         @ExceptionHandler(InvalidProblemTypeException.class)
         public ResponseEntity<ErrorResponse> handleInvalidProblemType(
@@ -327,6 +341,160 @@ public class GlobalExceptionHandler {
                 SubmissionNotCompletedException ex, HttpServletRequest request) {
                 ErrorResponse body = new ErrorResponse(
                         "https://diveon.net/problems/submission-not-completed",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 대회 없음 → 404
+        @ExceptionHandler(ContestNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestNotFound(
+                ContestNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 대회 권한 없음 → 403
+        @ExceptionHandler(ContestAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAccessDenied(
+                ContestAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
+        // 대회 문제 없음 → 404
+        @ExceptionHandler(ContestProblemNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestProblemNotFound(
+                ContestProblemNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-problem-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 대회 문제 배점 유효하지 않음 → 400
+        @ExceptionHandler(InvalidContestProblemPointsException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidContestProblemPoints(
+                InvalidContestProblemPointsException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-contest-problem-points",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
+        // 대회 참가자 없음 → 404
+        @ExceptionHandler(ContestParticipantNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestParticipantNotFound(
+                ContestParticipantNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-participant-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 이미 참가한 대회 → 409
+        @ExceptionHandler(ContestAlreadyParticipatedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAlreadyParticipated(
+                ContestAlreadyParticipatedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-already-participated",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 진행 중인 대회 아님 → 403
+        @ExceptionHandler(ContestNotOngoingException.class)
+        public ResponseEntity<ErrorResponse> handleContestNotOngoing(
+                ContestNotOngoingException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-not-ongoing",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
+        // Q&A 없음 → 404
+        @ExceptionHandler(ContestQnaNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestQnaNotFound(
+                ContestQnaNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-qna-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 공지사항 없음 → 404
+        @ExceptionHandler(ContestNoticeNotFoundException.class)
+        public ResponseEntity<ErrorResponse> handleContestNoticeNotFound(
+                ContestNoticeNotFoundException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/contest-notice-not-found",
+                        "Not Found",
+                        404,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+        }
+
+        // 이미 시작된 대회 참가/취소 불가 → 409
+        @ExceptionHandler(ContestAlreadyStartedException.class)
+        public ResponseEntity<ErrorResponse> handleContestAlreadyStarted(
+                ContestAlreadyStartedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-already-started",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 쿨다운 중 → 409
+        @ExceptionHandler(ContestCooldownException.class)
+        public ResponseEntity<ErrorResponse> handleContestCooldown(
+                ContestCooldownException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-cooldown",
                         "Conflict",
                         409,
                         ex.getMessage(),
