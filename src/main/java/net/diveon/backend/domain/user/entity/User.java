@@ -9,6 +9,7 @@ import jakarta.persistence.Table;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "domain_user")
@@ -66,16 +67,29 @@ public class User {
 
     public User() {}
 
-    public User(String loginId, String password, String nickname, String email, String belong, String interest) {
+    public User(String loginId, String password, String nickname, String email, String belong, List<String> interest) {
         this.loginId = loginId;
         this.password = password;
         this.nickname = nickname;
         this.email = email;
         this.belong = belong;
-        this.interest = interest;
+        this.interest = interest == null ? null : String.join(",", interest);
         this.createdAt = LocalDateTime.now();
         this.tier = 0;
         this.score = 0;
+    }
+
+    public void updateProfile(String nickname, String comment, String email, String phoneNumber, String belong, List<String> interest) {
+        if (nickname != null) this.nickname = nickname;
+        if (comment != null) this.comment = comment;
+        if (email != null) this.email = email;
+        if (phoneNumber != null) this.phoneNumber = phoneNumber;
+        if (belong != null) this.belong = belong;
+        if (interest != null) this.interest = String.join(",", interest);
+    }
+
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
     }
 
     public Long getId() { return id; }
