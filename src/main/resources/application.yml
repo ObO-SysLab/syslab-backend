@@ -1,21 +1,21 @@
 spring:
-  # 1. 프로파일 관리: 기본 실행은 local, 민감 정보는 항상 secret 포함
   profiles:
     active: local
     include: secret
-
   application:
     name: diveon
-
+  data:
+    redis:
+      host: 172.17.0.1
+      port: 6379
   jpa:
     hibernate:
-      ddl-auto: update # 엔티티 수정 시 DB에 자동 반영
-    show-sql: true     # 실행되는 SQL을 콘솔에 출력
+      ddl-auto: update
+    show-sql: true
     properties:
       hibernate:
-        format_sql: true # SQL을 보기 좋게 정렬
+        format_sql: true
 
-# 5. 서버 및 웹소켓 공통 설정
 server:
   port: 8080
   servlet:
@@ -23,4 +23,4 @@ server:
       charset: UTF-8
       force: true
   error:
-    include-message: always # Validation 실패 메시지 노출을 위해 추가
+    include-message: always
