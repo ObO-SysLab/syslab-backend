@@ -25,8 +25,12 @@ import net.diveon.backend.domain.contest.dto.response.ContestJoinResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestListResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestOwnedListResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestRankingResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestSubmissionResultResponse;
+import net.diveon.backend.domain.contest.dto.response.ContestSubmissionStatusResponse;
 import net.diveon.backend.domain.contest.service.ContestRankingService;
 import net.diveon.backend.domain.contest.service.ContestService;
+import net.diveon.backend.domain.contest.service.ContestSubmissionResultService;
+import net.diveon.backend.domain.contest.service.ContestSubmissionStatusService;
 import net.diveon.backend.domain.contest.service.ContestSubmitService;
 import net.diveon.backend.global.response.ApiResponse;
 
@@ -37,12 +41,18 @@ public class ContestController {
     private final ContestService contestService;
     private final ContestSubmitService contestSubmitService;
     private final ContestRankingService contestRankingService;
+    private final ContestSubmissionStatusService contestSubmissionStatusService;
+    private final ContestSubmissionResultService contestSubmissionResultService;
 
     public ContestController(ContestService contestService, ContestSubmitService contestSubmitService,
-                             ContestRankingService contestRankingService) {
+                             ContestRankingService contestRankingService,
+                             ContestSubmissionStatusService contestSubmissionStatusService,
+                             ContestSubmissionResultService contestSubmissionResultService) {
         this.contestService = contestService;
         this.contestSubmitService = contestSubmitService;
         this.contestRankingService = contestRankingService;
+        this.contestSubmissionStatusService = contestSubmissionStatusService;
+        this.contestSubmissionResultService = contestSubmissionResultService;
     }
 
     // 대회 목록 조회
@@ -140,5 +150,27 @@ public class ContestController {
             @AuthenticationPrincipal String userId,
             @Valid @RequestBody ContestSubmitRequest request) {
         return contestSubmitService.submitContestProblem(contestId, contestProblemId, Long.parseLong(userId), request);
+    }
+
+    // 채점 상태 조회 (CODING 전용 polling)
+    @GetMapping("/{contestId}/submissions/{submissionId}/status")
+    public ResponseEntity<ApiResponse<ContestSubmissionStatusResponse>> getSubmissionStatus(
+            @PathVariable Long contestId,
+            @PathVariable Long submissionId,
+            @AuthenticationPrincipal String userId) {
+        ContestSubmissionStatusResponse response = contestSubmissionStatusService
+                .getStatus(contestId, submissionId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("채점 상태 조회에 성공하였습니다.", response));
+    }
+
+    // 제출 코드 조회 (CODING 전용)
+    @GetMapping("/{contestId}/submissions/{submissionId}/result")
+    public ResponseEntity<ApiResponse<ContestSubmissionResultResponse>> getSubmissionResult(
+            @PathVariable Long contestId,
+            @PathVariable Long submissionId,
+            @AuthenticationPrincipal String userId) {
+        ContestSubmissionResultResponse response = contestSubmissionResultService
+                .getResult(contestId, submissionId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("제출 코드 조회에 성공하였습니다.", response));
     }
 }

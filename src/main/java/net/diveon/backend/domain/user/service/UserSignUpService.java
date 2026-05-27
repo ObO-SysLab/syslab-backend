@@ -70,7 +70,7 @@ public class UserSignUpService {
         //수정사항 04.08 dto가 변경되면서 수정
         User newUser = new User(
             signup_request.getLoginId(),
-            encodedPassword, 
+            encodedPassword,
             signup_request.getNickname(),
             signup_request.getEmail(),
             signup_request.getBelong(),

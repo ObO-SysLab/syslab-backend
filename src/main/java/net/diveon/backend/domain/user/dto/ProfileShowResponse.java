@@ -4,6 +4,8 @@ import net.diveon.backend.domain.user.entity.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 
 // GET /api/profile/show 응답 DTO
 // User 엔티티에서 필요한 정보만 골라서 클라이언트에 반환함
@@ -27,7 +29,7 @@ public class ProfileShowResponse {
         private final String email;
         private final String phoneNumber;
         private final String belong;
-        private final String interest;
+        private final List<String> interest;
 
         // User 엔티티를 응답 DTO로 변환
         public UserInfo(User user) {
@@ -40,7 +42,7 @@ public class ProfileShowResponse {
             this.email = user.getEmail();
             this.phoneNumber = user.getPhoneNumber();
             this.belong = user.getBelong();
-            this.interest = user.getInterest();
+            this.interest = user.getInterest() == null ? List.of() : Arrays.asList(user.getInterest().split(","));
         }
 
         public String getNickname() { return nickname; }
@@ -52,6 +54,6 @@ public class ProfileShowResponse {
         public String getEmail() { return email; }
         public String getPhoneNumber() { return phoneNumber; }
         public String getBelong() { return belong; }
-        public String getInterest() { return interest; }
+        public List<String> getInterest() { return interest; }
     }
 }

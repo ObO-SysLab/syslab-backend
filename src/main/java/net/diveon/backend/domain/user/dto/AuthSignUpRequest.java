@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.NotBlank;
 
+import java.util.List;
+
 
 
 /**
@@ -40,7 +42,7 @@ public class AuthSignUpRequest {
     private String belong;
 
     @JsonProperty("interest")
-    private String interest;
+    private List<String> interest;
 
     // 수정사항, JavaBeans 표준규격에 맞도록, 생성자, getter와 setter 수정
     // Default constructor for JavaBeans and Jackson
@@ -87,11 +89,11 @@ public class AuthSignUpRequest {
         this.belong = belong;
     }
 
-    public String getInterest() {
+    public List<String> getInterest() {
         return interest;
     }
 
-    public void setInterest(String interest) {
+    public void setInterest(List<String> interest) {
         this.interest = interest;
     }
 }
