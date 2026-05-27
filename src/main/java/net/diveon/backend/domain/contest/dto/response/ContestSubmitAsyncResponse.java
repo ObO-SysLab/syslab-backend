@@ -7,16 +7,16 @@ public class ContestSubmitAsyncResponse {
     @JsonProperty("submissionId")
     private Long submissionId;
 
-    @JsonProperty("status")
-    private String status;
+    @JsonProperty("submissionStatus")
+    private String submissionStatus;
 
     public ContestSubmitAsyncResponse() {}
 
-    public ContestSubmitAsyncResponse(Long submissionId, String status) {
+    public ContestSubmitAsyncResponse(Long submissionId, String submissionStatus) {
         this.submissionId = submissionId;
-        this.status = status;
+        this.submissionStatus = submissionStatus;
     }
 
     public Long getSubmissionId() { return submissionId; }
-    public String getStatus() { return status; }
+    public String getSubmissionStatus() { return submissionStatus; }
 }
