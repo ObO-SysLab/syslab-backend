@@ -194,6 +194,7 @@ public class ContestProblemNormalService {
          */
         return new ForDtoContestProblem(
                 buildDisplayId(problem.getCategory(), sequence),
+                contestProblem.getId(),
                 problem.getId(),
                 problem.getTitle(),
                 contestProblem.getPoints(),
