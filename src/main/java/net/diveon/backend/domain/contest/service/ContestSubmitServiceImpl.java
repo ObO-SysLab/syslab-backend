@@ -160,19 +160,16 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             throw new IllegalArgumentException("유효한 숫자를 입력해주세요.");
         }
 
-        int scoreToAdd = 0;
+        ContestParticipant participant = contestParticipantRepository
+                .findByContestIdAndUserId(contest.getId(), user.getId()).get();
 
         if (isCorrect) {
             List<Long> solvedProblems = contestSubmissionRepository
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                scoreToAdd = contestProblem.getPoints();
                 LocalDateTime now = LocalDateTime.now();
-                ContestParticipant participant = contestParticipantRepository
-                        .findByContestIdAndUserId(contest.getId(), user.getId())
-                        .get();
-                participant.addScore(scoreToAdd, now);
+                participant.addScore(contestProblem.getPoints(), now);
                 contestParticipantRepository.save(participant);
 
                 jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
@@ -180,15 +177,18 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             }
         }
 
+        int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
+
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
         submission.updateResult(isCorrect);
-        contestSubmissionRepository.save(submission);
+        ContestSubmission savedSubmission = contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
         setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
-        ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(isCorrect, scoreToAdd);
-        return ResponseEntity.ok(ApiResponse.success("제출이 완료되었습니다.", response));
+        ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(
+                savedSubmission.getId(), isCorrect, participant.getScore(), currentRank);
+        return ResponseEntity.ok(ApiResponse.success("채점 요청이 접수되었습니다.", response));
     }
 
     @Transactional
@@ -211,19 +211,16 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         String userAnswerHash = hashFlag(userAnswer);
         boolean isCorrect = userAnswerHash.equals(flagHash);
 
-        int scoreToAdd = 0;
+        ContestParticipant participant = contestParticipantRepository
+                .findByContestIdAndUserId(contest.getId(), user.getId()).get();
 
         if (isCorrect) {
             List<Long> solvedProblems = contestSubmissionRepository
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                scoreToAdd = contestProblem.getPoints();
                 LocalDateTime now = LocalDateTime.now();
-                ContestParticipant participant = contestParticipantRepository
-                        .findByContestIdAndUserId(contest.getId(), user.getId())
-                        .get();
-                participant.addScore(scoreToAdd, now);
+                participant.addScore(contestProblem.getPoints(), now);
                 contestParticipantRepository.save(participant);
 
                 jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
@@ -231,15 +228,18 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             }
         }
 
+        int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
+
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
         submission.updateResult(isCorrect);
-        contestSubmissionRepository.save(submission);
+        ContestSubmission savedSubmission = contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
         setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
-        ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(isCorrect, scoreToAdd);
-        return ResponseEntity.ok(ApiResponse.success("제출이 완료되었습니다.", response));
+        ContestSubmitImmediateResponse response = new ContestSubmitImmediateResponse(
+                savedSubmission.getId(), isCorrect, participant.getScore(), currentRank);
+        return ResponseEntity.ok(ApiResponse.success("채점 요청이 접수되었습니다.", response));
     }
 
     @Transactional
@@ -284,6 +284,20 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private void setCooldown(Long contestId, Long userId, Long contestProblemId) {
         String key = "contest:" + contestId + ":cooldown:" + userId + ":" + contestProblemId;
         redisTemplate.opsForValue().set(key, "1", 30, TimeUnit.SECONDS);
+    }
+
+    private int getRank(Long contestId, Long userId, int score) {
+        try {
+            Long zeroBasedRank = redisTemplate.opsForZSet()
+                    .reverseRank("scoreboard:" + contestId, String.valueOf(userId));
+            if (zeroBasedRank != null) {
+                return zeroBasedRank.intValue() + 1;
+            }
+        } catch (Exception ignored) {}
+        Integer higherCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM contest_participant WHERE contest_id = ? AND score > ?",
+                Integer.class, contestId, score);
+        return (higherCount != null ? higherCount : 0) + 1;
     }
 
     private void updateScoreboard(Long contestId, Long userId, int newTotalScore, LocalDateTime solvedAt) {
