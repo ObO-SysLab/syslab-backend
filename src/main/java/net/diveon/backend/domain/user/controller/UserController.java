@@ -8,9 +8,11 @@ import net.diveon.backend.domain.user.service.UserSignUpService;
 import net.diveon.backend.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,9 +21,24 @@ public class UserController {
 
     private final UserService userService;
     private final UserSignUpService userSignUpService;
+
     public UserController(UserService userService, UserSignUpService userSignUpService) {
         this.userService = userService;
         this.userSignUpService = userSignUpService;
+    }
+
+    @GetMapping("/check-loginId")
+    public ResponseEntity<ApiResponse<Boolean>> checkLoginId(@RequestParam String loginId) {
+        boolean available = userSignUpService.isLoginIdAvailable(loginId);
+        String message = available ? "사용 가능한 아이디입니다." : "이미 사용 중인 아이디입니다.";
+        return ResponseEntity.ok(ApiResponse.success(message, available));
+    }
+
+    @GetMapping("/check-nickname")
+    public ResponseEntity<ApiResponse<Boolean>> checkNickname(@RequestParam String nickname) {
+        boolean available = userSignUpService.isNicknameAvailable(nickname);
+        String message = available ? "사용 가능한 닉네임입니다." : "이미 사용 중인 닉네임입니다.";
+        return ResponseEntity.ok(ApiResponse.success(message, available));
     }
 
     @PostMapping("/login")
