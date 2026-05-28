@@ -44,7 +44,14 @@ public class UserSignUpService {
      * @param signup_request
      * @return boolen
      */
-    // 수정사항 - 04.18 - 안상완 - 표준 에러 출력을 위해, 기존의 boolean 반환에서 exception throw로 변경
+    public boolean isLoginIdAvailable(String loginId) {
+        return !userRepository.existsByLoginId(loginId);
+    }
+
+    public boolean isNicknameAvailable(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
+
     public void signup(AuthSignUpRequest signup_request){
 
 

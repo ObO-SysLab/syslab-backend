@@ -41,7 +41,7 @@ public class User {
     @Column(name = "birthday")
     private LocalDate birthday;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @Column(name = "phone_number")
@@ -55,9 +55,6 @@ public class User {
 
     @Column(name = "score", nullable = false)
     private Integer score;
-
-    @Column(name = "sex", length = 1)
-    private String sex;
 
     @Column(name = "belong")
     private String belong;
@@ -105,7 +102,6 @@ public class User {
     public String getComment() { return comment; }
     public Integer getTier() { return tier; }
     public Integer getScore() { return score; }
-    public String getSex() { return sex; }
     public String getBelong() { return belong; }
     public String getInterest() { return interest; }
 }
