@@ -13,10 +13,8 @@ public class ContestUpdateRequest {
     @NotBlank
     private String description;
 
-    @NotNull
     private LocalDateTime startTime;
 
-    @NotNull
     private LocalDateTime endTime;
 
     public String getTitle() { return title; }
