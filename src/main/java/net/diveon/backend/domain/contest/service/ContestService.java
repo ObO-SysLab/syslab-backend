@@ -167,10 +167,10 @@ public class ContestService {
     // 대회 생성
     @Transactional
     private void validateContestTime(LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime != null && !startTime.isAfter(LocalDateTime.now())) {
+        if (!startTime.isAfter(LocalDateTime.now())) {
             throw new InvalidContestTimeException("시작 시간은 현재 시간보다 나중이어야 합니다.");
         }
-        if (startTime != null && endTime != null && !endTime.isAfter(startTime)) {
+        if (!endTime.isAfter(startTime)) {
             throw new InvalidContestTimeException("종료 시간은 시작 시간보다 나중이어야 합니다.");
         }
     }
