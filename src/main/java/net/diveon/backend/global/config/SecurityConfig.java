@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/check-loginId", "/api/auth/check-nickname", "/api/auth/email/send", "/api/auth/email/verify", "/api/auth/email/find-id", "/api/auth/email/send-reset", "/api/auth/email/password/reset", "/api/ad/**", "/error").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/signup", "/api/auth/refresh", "/api/auth/check-loginId", "/api/auth/check-nickname", "/api/auth/email/send", "/api/auth/email/verify", "/api/auth/email/find-id", "/api/auth/email/send-reset", "/api/auth/email/password/reset", "/api/ad/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()
