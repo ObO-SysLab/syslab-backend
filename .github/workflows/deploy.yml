@@ -49,6 +49,10 @@ jobs:
               issuer: diveon
               secret: ${{ secrets.JWT_SECRET }}
               token-validity-in-seconds: 86400
+          ses:
+            access-key: ${{ secrets.AWS_SES_ACCESS_KEY }}
+            secret-key: ${{ secrets.AWS_SES_SECRET_KEY }}
+            region: ap-northeast-2     
           logging:
             level:
               org.springframework.web.servlet.DispatcherServlet: DEBUG
