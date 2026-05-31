@@ -500,6 +500,34 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 이메일 인증 코드 불일치/만료 → 400
+        @ExceptionHandler(EmailVerificationCodeInvalidException.class)
+        public ResponseEntity<ErrorResponse> handleEmailVerificationCodeInvalid(
+                EmailVerificationCodeInvalidException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/email-verification-code-invalid",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
+        // 이메일 인증 미완료 → 403
+        @ExceptionHandler(EmailNotVerifiedException.class)
+        public ResponseEntity<ErrorResponse> handleEmailNotVerified(
+                EmailNotVerifiedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/email-not-verified",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 대회 시간 유효하지 않음 → 400
         @ExceptionHandler(InvalidContestTimeException.class)
         public ResponseEntity<ErrorResponse> handleInvalidContestTime(
