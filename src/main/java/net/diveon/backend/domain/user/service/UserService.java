@@ -5,6 +5,7 @@ import net.diveon.backend.domain.user.dto.AuthLoginResponse;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.InvalidCredentialsException;
+import net.diveon.backend.global.exception.InvalidTokenException;
 import net.diveon.backend.global.security.JwtProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,12 +59,12 @@ public class UserService {
 
     public String refreshAccessToken(String refreshToken) {
         if (!jwtProvider.validateToken(refreshToken)) {
-            throw new InvalidCredentialsException();
+            throw new InvalidTokenException();
         }
         String userId = jwtProvider.getUserId(refreshToken);
         String stored = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
         if (!refreshToken.equals(stored)) {
-            throw new InvalidCredentialsException();
+            throw new InvalidTokenException();
         }
         return jwtProvider.generateAccessToken(userId);
     }

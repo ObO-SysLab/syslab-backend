@@ -500,6 +500,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 유효하지 않은 토큰 → 401
+        @ExceptionHandler(InvalidTokenException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidToken(
+                InvalidTokenException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-token",
+                        "Unauthorized",
+                        401,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+
         // 이메일 인증 코드 불일치/만료 → 400
         @ExceptionHandler(EmailVerificationCodeInvalidException.class)
         public ResponseEntity<ErrorResponse> handleEmailVerificationCodeInvalid(
