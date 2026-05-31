@@ -36,7 +36,6 @@ public class ProfileService {
         user.updateProfile(
                 request.getNickname(),
                 request.getSelfComment(),
-                request.getEmail(),
                 request.getBelong(),
                 request.getInterest()
         );

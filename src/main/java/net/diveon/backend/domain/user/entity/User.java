@@ -76,10 +76,9 @@ public class User {
         this.score = 0;
     }
 
-    public void updateProfile(String nickname, String comment, String email, String belong, List<String> interest) {
+    public void updateProfile(String nickname, String comment, String belong, List<String> interest) {
         if (nickname != null) this.nickname = nickname;
         if (comment != null) this.comment = comment;
-        if (email != null) this.email = email;
         if (belong != null) this.belong = belong;
         if (interest != null) this.interest = String.join(",", interest);
     }

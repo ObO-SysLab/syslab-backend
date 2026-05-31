@@ -1,6 +1,5 @@
 package net.diveon.backend.domain.user.service;
 
-import net.diveon.backend.domain.user.dto.PasswordResetRequest;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.EmailNotVerifiedException;
