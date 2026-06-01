@@ -22,6 +22,8 @@ import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.ProblemAccessDeniedException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -56,10 +58,17 @@ public class ProblemUpdateService {
         }
 
     // 객관식형
+    private void checkOwner(Problem problem, long userId) {
+        if (!problem.getAuthor().getId().equals(userId)) {
+            throw new ProblemAccessDeniedException();
+        }
+    }
+
     @Transactional
-    public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId, 
+    public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId,
         ProblemUpdateObjectiveRequest request){
-            Problem problem = problemRepository.findById(prodId).orElseThrow();
+            Problem problem = problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
+            checkOwner(problem, userId);
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
 
@@ -109,7 +118,8 @@ public class ProblemUpdateService {
     @Transactional
     public ProblemUpdateCodingResponse updateProblemCoding(long userId, long probId,
         ProblemUpdateCodingRequest request) {
-        Problem problem = problemRepository.findById(probId).orElseThrow();
+        Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+        checkOwner(problem, userId);
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
 
         problem.updateProblem(request.getTitle(), request.getCategory(), request.getDifficulty(), request.getVisibility());
@@ -147,7 +157,8 @@ public class ProblemUpdateService {
     @Transactional
     public ProblemUpdatePracticeResponse updateProblemPractice(long userId, long probId,
         ProblemUpdatePracticeRequest request){
-            Problem problem = problemRepository.findById(probId).orElseThrow();
+            Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+            checkOwner(problem, userId);
             ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
 
             problem.updateProblem(
