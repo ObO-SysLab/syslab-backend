@@ -103,11 +103,24 @@ public class EmailService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);
 
+        String loginId = user.getLoginId();
+        String maskedId = maskLoginId(loginId);
+
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom("noreply@diveon.net");
         msg.setTo(email);
         msg.setSubject("[DiveOn] 아이디 찾기");
-        msg.setText("회원님의 아이디는 [" + user.getLoginId() + "] 입니다.");
+        msg.setText("회원님의 아이디는 [" + maskedId + "] 입니다.");
         mailSender.send(msg);
+    }
+
+    private String maskLoginId(String loginId) {
+        if (loginId.length() <= 4) {
+            return loginId.charAt(0) + "****";
+        }
+        String prefix = loginId.substring(0, 3);
+        String suffix = String.valueOf(loginId.charAt(loginId.length() - 1));
+        String masked = "*".repeat(loginId.length() - 4);
+        return prefix + masked + suffix;
     }
 }
