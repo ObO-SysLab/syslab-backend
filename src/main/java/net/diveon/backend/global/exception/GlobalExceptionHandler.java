@@ -7,9 +7,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-
-// 수정사항 2024.04.18 - 안상완, 코드가 들여쓰기가 왜인지는 모르겠는데 다른곳보다 조금씩 큰데,
-// 그래서 반칸씩 떨어져 있던것을, 한칸씩 들여쓰기에 맞게 수정함.
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -501,6 +498,62 @@ public class GlobalExceptionHandler {
                         request.getRequestURI()
                 );
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
+        // 유효하지 않은 토큰 → 401
+        @ExceptionHandler(InvalidTokenException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidToken(
+                InvalidTokenException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-token",
+                        "Unauthorized",
+                        401,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+
+        // 이메일 인증 코드 불일치/만료 → 400
+        @ExceptionHandler(EmailVerificationCodeInvalidException.class)
+        public ResponseEntity<ErrorResponse> handleEmailVerificationCodeInvalid(
+                EmailVerificationCodeInvalidException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/email-verification-code-invalid",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
+        // 이메일 인증 미완료 → 403
+        @ExceptionHandler(EmailNotVerifiedException.class)
+        public ResponseEntity<ErrorResponse> handleEmailNotVerified(
+                EmailNotVerifiedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/email-not-verified",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
+        // 대회 시간 유효하지 않음 → 400
+        @ExceptionHandler(InvalidContestTimeException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidContestTime(
+                InvalidContestTimeException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-contest-time",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
 
         // 쿨다운 중 → 409

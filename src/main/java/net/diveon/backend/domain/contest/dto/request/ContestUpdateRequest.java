@@ -3,7 +3,6 @@ package net.diveon.backend.domain.contest.dto.request;
 import java.time.LocalDateTime;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class ContestUpdateRequest {
 
@@ -13,10 +12,8 @@ public class ContestUpdateRequest {
     @NotBlank
     private String description;
 
-    @NotNull
     private LocalDateTime startTime;
 
-    @NotNull
     private LocalDateTime endTime;
 
     public String getTitle() { return title; }
