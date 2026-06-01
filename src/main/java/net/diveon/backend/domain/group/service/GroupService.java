@@ -258,11 +258,15 @@ public class GroupService {
     /* findAllByUserId(userId) 로 내 userId로 조회하면 내가 속한 그룹들이 List<GroupUser> 형태로 나오고,
       각각에서 group.getId(), group.getTitle() 뽑아서 반환 */
     @Transactional(readOnly = true)
-    public List<GroupMyListResponse> getMyGroups(Long userId) {
+    public List<GroupMyListResponse> getMyGroups(Long userId, Long problemId) {
         List<GroupUser> groupUsers = groupUserRepository.findAllByUserId(userId);
         return groupUsers.stream()
-                .map(GroupMyListResponse::of)
-                .toList(); 
+                .map(groupUser -> {
+                    boolean isAlreadyAdded = problemId != null &&
+                            groupProblemRepository.existsByGroupIdAndProblemId(groupUser.getGroup().getId(), problemId);
+                    return GroupMyListResponse.of(groupUser, isAlreadyAdded);
+                })
+                .toList();
     }
 
     // 그룹 상세 조회
