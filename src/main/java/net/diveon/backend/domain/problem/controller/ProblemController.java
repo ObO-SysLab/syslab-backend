@@ -32,7 +32,8 @@ public class ProblemController {
         @RequestParam(required = false) String title,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) String difficulty,
-        @RequestParam(required = false) String visibility
+        @RequestParam(required = false) String visibility,
+        @RequestParam(defaultValue = "false") boolean onlyUnsolved
     ) {
         ProblemListResponse responseData = problemListService.listProblems(
             Long.parseLong(userId),
@@ -40,7 +41,8 @@ public class ProblemController {
             title,
             category,
             difficulty,
-            visibility
+            visibility,
+            onlyUnsolved
         );
 
         return ResponseEntity.status(200)

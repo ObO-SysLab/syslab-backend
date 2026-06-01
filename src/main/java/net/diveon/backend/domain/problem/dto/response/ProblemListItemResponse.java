@@ -10,27 +10,30 @@ public class ProblemListItemResponse {
     private String category;
     private String difficulty;
     private Integer solvedCount;
+    private Boolean isSolved;
 
     public ProblemListItemResponse() {
     }
 
-    public ProblemListItemResponse(Long probId, String type, String title, String category, String difficulty, Integer solvedCount) {
+    public ProblemListItemResponse(Long probId, String type, String title, String category, String difficulty, Integer solvedCount, Boolean isSolved) {
         this.probId = probId;
         this.type = type;
         this.title = title;
         this.category = category;
         this.difficulty = difficulty;
         this.solvedCount = solvedCount;
+        this.isSolved = isSolved;
     }
 
-    public static ProblemListItemResponse of(Problem problem) {
+    public static ProblemListItemResponse of(Problem problem, boolean isSolved) {
         return new ProblemListItemResponse(
             problem.getId(),
             problem.getType(),
             problem.getTitle(),
             problem.getCategory(),
             problem.getDifficulty(),
-            problem.getSolvedCount()
+            problem.getSolvedCount(),
+            isSolved
         );
     }
 
@@ -56,5 +59,9 @@ public class ProblemListItemResponse {
 
     public Integer getSolvedCount() {
         return solvedCount;
+    }
+
+    public Boolean getIsSolved() {
+        return isSolved;
     }
 }
