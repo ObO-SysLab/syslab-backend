@@ -99,15 +99,8 @@ public class ProblemPractice {
     public Boolean getIsDraft() { return isDraft; }
     public Integer getTimeLimitSec() { return timeLimitSec; }
 
-    public void updatePractice(String summary, String description, String osImage,
-                               List<String> allowedCommands, String cpuLimit,
-                               String memoryLimit, String flagHash) {
+    public void updatePractice(String summary, String description) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
-        if (osImage != null) this.osImage = osImage;
-        if (allowedCommands != null) this.allowedCommands = allowedCommands;
-        if (cpuLimit != null) this.cpuLimit = cpuLimit;
-        if (memoryLimit != null) this.memoryLimit = memoryLimit;
-        if (flagHash != null) this.flagHash = flagHash;
     }
 }
