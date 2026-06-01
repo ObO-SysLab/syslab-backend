@@ -67,8 +67,9 @@ public class GroupController {
     // 내가 속한 그룹 목록 조회
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<List<GroupMyListResponse>>> getMyGroups(
-            @AuthenticationPrincipal String userId) {
-        List<GroupMyListResponse> response = groupService.getMyGroups(Long.parseLong(userId));
+            @AuthenticationPrincipal String userId,
+            @RequestParam(required = false) Long problemId) {
+        List<GroupMyListResponse> response = groupService.getMyGroups(Long.parseLong(userId), problemId);
         return ResponseEntity.ok(ApiResponse.success("내 그룹 목록 조회 성공", response));
     }
 
