@@ -3,11 +3,13 @@ package net.diveon.backend.domain.user.controller;
 import net.diveon.backend.domain.user.dto.AuthLoginRequest;
 import net.diveon.backend.domain.user.dto.AuthLoginResponse;
 import net.diveon.backend.domain.user.dto.AuthSignUpRequest;
+import net.diveon.backend.domain.user.dto.RefreshTokenRequest;
 import net.diveon.backend.domain.user.service.UserService;
 import net.diveon.backend.domain.user.service.UserSignUpService;
 import net.diveon.backend.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -69,5 +71,16 @@ public class UserController {
         userSignUpService.signup(signupRequest);
         return ResponseEntity.status(201).body(ApiResponse.success(("회원가입에 성공했습니다."), null));
     }
-    
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<String>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        String newAccessToken = userService.refreshAccessToken(request.getRefreshToken());
+        return ResponseEntity.ok(ApiResponse.success("토큰이 재발급되었습니다.", newAccessToken));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal String userId) {
+        userService.logout(userId);
+        return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다.", null));
+    }
 }

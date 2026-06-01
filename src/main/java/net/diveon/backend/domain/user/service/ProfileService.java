@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// 프로필 수정 API 구현할 때 이 파일에 메서드 추가할 것임
+
 @Service
 public class ProfileService {
 
@@ -36,8 +36,6 @@ public class ProfileService {
         user.updateProfile(
                 request.getNickname(),
                 request.getSelfComment(),
-                request.getEmail(),
-                request.getPhoneNumber(),
                 request.getBelong(),
                 request.getInterest()
         );

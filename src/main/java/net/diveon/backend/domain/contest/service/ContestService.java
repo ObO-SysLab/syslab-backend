@@ -38,6 +38,7 @@ import net.diveon.backend.global.exception.ContestAlreadyParticipatedException;
 import net.diveon.backend.global.exception.ContestAlreadyStartedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
+import net.diveon.backend.global.exception.InvalidContestTimeException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 
 @Service
@@ -165,7 +166,17 @@ public class ContestService {
 
     // 대회 생성
     @Transactional
+    private void validateContestTime(LocalDateTime startTime, LocalDateTime endTime) {
+        if (!startTime.isAfter(LocalDateTime.now())) {
+            throw new InvalidContestTimeException("시작 시간은 현재 시간보다 나중이어야 합니다.");
+        }
+        if (!endTime.isAfter(startTime)) {
+            throw new InvalidContestTimeException("종료 시간은 시작 시간보다 나중이어야 합니다.");
+        }
+    }
+
     public ContestCreateResponse createContest(Long userId, ContestCreateRequest request) {
+        validateContestTime(request.getStartTime(), request.getEndTime());
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
         Group group = null;
@@ -244,7 +255,10 @@ public class ContestService {
         contest.updateTitleAndDescription(request.getTitle(), request.getDescription());
 
         if (contest.getStatus() == Contest.ContestStatus.UPCOMING) {
-            contest.updateTime(request.getStartTime(), request.getEndTime());
+            LocalDateTime newStartTime = request.getStartTime() != null ? request.getStartTime() : contest.getStartTime();
+            LocalDateTime newEndTime = request.getEndTime() != null ? request.getEndTime() : contest.getEndTime();
+            validateContestTime(newStartTime, newEndTime);
+            contest.updateTime(newStartTime, newEndTime);
         }
     }
 
