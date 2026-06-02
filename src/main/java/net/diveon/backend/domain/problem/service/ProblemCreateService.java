@@ -1,9 +1,17 @@
 package net.diveon.backend.domain.problem.service;
 
+import net.diveon.backend.domain.contest.entity.Contest;
+import net.diveon.backend.domain.contest.entity.ContestParticipant;
+import net.diveon.backend.domain.contest.entity.ContestProblem;
+import net.diveon.backend.domain.contest.repository.ContestParticipantRepository;
+import net.diveon.backend.domain.contest.repository.ContestProblemRepository;
+import net.diveon.backend.domain.contest.repository.ContestRepository;
+import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.domain.group.entity.Group;
 import net.diveon.backend.domain.group.entity.GroupProblem;
 import net.diveon.backend.domain.group.repository.GroupProblemRepository;
 import net.diveon.backend.domain.group.repository.GroupRepository;
+import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
@@ -43,6 +51,9 @@ public class ProblemCreateService {
     private final S3Service s3Service;
     private final GroupRepository groupRepository;
     private final GroupProblemRepository groupProblemRepository;
+    private final ContestRepository contestRepository;
+    private final ContestProblemRepository contestProblemRepository;
+    private final ContestParticipantRepository contestParticipantRepository;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
@@ -52,7 +63,10 @@ public class ProblemCreateService {
         OboStepRepository oboStepRepository,
         S3Service s3Service,
         GroupRepository groupRepository,
-        GroupProblemRepository groupProblemRepository){
+        GroupProblemRepository groupProblemRepository,
+        ContestRepository contestRepository,
+        ContestProblemRepository contestProblemRepository,
+        ContestParticipantRepository contestParticipantRepository){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
@@ -62,6 +76,9 @@ public class ProblemCreateService {
         this.s3Service = s3Service;
         this.groupRepository = groupRepository;
         this.groupProblemRepository = groupProblemRepository;
+        this.contestRepository = contestRepository;
+        this.contestProblemRepository = contestProblemRepository;
+        this.contestParticipantRepository = contestParticipantRepository;
     }
 
 
@@ -116,6 +133,7 @@ public class ProblemCreateService {
          */
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
+        saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
 
         return new ProblemCreateObjectiveResponse(
                 savedProblem.getId(),
@@ -158,6 +176,7 @@ public class ProblemCreateService {
         s3Service.uploadDockerfileZip(savedProblem.getId(), request.getDockerfile());
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
+        saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),
@@ -204,6 +223,7 @@ public class ProblemCreateService {
         s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
+        saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
 
         return new ProblemCreateCodingResponse(
                 savedProblem.getId(),
@@ -229,6 +249,17 @@ public class ProblemCreateService {
             Group group = groupRepository.findById(groupId)
                     .orElseThrow(GroupNotFoundException::new);
             groupProblemRepository.save(new GroupProblem(problem, group));
+        }
+    }
+
+    private void saveContestProblemIfNeeded(Problem problem, Long contestId, String visibility, long userId) {
+        if ("contest".equals(visibility) && contestId != null) {
+            Contest contest = contestRepository.findById(contestId)
+                    .orElseThrow(ContestNotFoundException::new);
+            contestParticipantRepository.findByContestIdAndUserId(contestId, userId)
+                    .filter(p -> p.getRole() == ContestParticipant.ContestRole.ADMIN)
+                    .orElseThrow(ContestAccessDeniedException::new);
+            contestProblemRepository.save(new ContestProblem(contest, problem, 100));
         }
     }
 

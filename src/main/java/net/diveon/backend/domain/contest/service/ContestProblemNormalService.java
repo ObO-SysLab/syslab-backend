@@ -101,8 +101,12 @@ public class ContestProblemNormalService {
             throw new ContestAccessDeniedException();
         }
 
-        // 현재는 대회 문제만 제거하고, 문제 자체는 삭제하지 않는것으로 구현함
+        Problem problem = contestProblem.getProblem();
         contestProblemRepository.delete(contestProblem);
+
+        if (contest.getStatus() == Contest.ContestStatus.UPCOMING && "contest".equals(problem.getVisibility())) {
+            problemRepository.delete(problem);
+        }
     }
 
     @Transactional
