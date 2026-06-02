@@ -30,19 +30,21 @@ public class ProblemController {
         @AuthenticationPrincipal String userId,
         @RequestParam(defaultValue = "1") int page,
         @RequestParam(required = false) String title,
+        @RequestParam(required = false) String type,
         @RequestParam(required = false) String category,
         @RequestParam(required = false) String difficulty,
-        @RequestParam(required = false) String visibility,
-        @RequestParam(defaultValue = "false") boolean onlyUnsolved
+        @RequestParam(defaultValue = "false") boolean onlyUnsolved,
+        @RequestParam(defaultValue = "false") boolean onlyMine
     ) {
         ProblemListResponse responseData = problemListService.listProblems(
             Long.parseLong(userId),
             page,
             title,
+            type,
             category,
             difficulty,
-            visibility,
-            onlyUnsolved
+            onlyUnsolved,
+            onlyMine
         );
 
         return ResponseEntity.status(200)

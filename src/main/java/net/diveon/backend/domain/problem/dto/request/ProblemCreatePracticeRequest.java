@@ -38,6 +38,7 @@ public class ProblemCreatePracticeRequest {
     private String visibility;
 
     private Long groupId;
+    private Long contestId;
 
     @NotBlank
     private String osImage;
@@ -81,6 +82,8 @@ public class ProblemCreatePracticeRequest {
 
     public Long getGroupId() { return groupId; }
     public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getContestId() { return contestId; }
+    public void setContestId(Long contestId) { this.contestId = contestId; }
 
     public String getOsImage() { return osImage; }
     public void setOsImage(String osImage) { this.osImage = osImage; }

@@ -14,6 +14,7 @@ public class ProblemCreateCodingRequest {
     private String difficulty;
     private String visibility;
     private Long groupId;
+    private Long contestId;
     private Constraints constraints;
 
     @JsonProperty("inputDescription")
@@ -52,6 +53,8 @@ public class ProblemCreateCodingRequest {
 
     public Long getGroupId() { return groupId; }
     public void setGroupId(Long groupId) { this.groupId = groupId; }
+    public Long getContestId() { return contestId; }
+    public void setContestId(Long contestId) { this.contestId = contestId; }
 
     public Constraints getConstraints() { return constraints; }
     public void setConstraints(Constraints constraints) { this.constraints = constraints; }
