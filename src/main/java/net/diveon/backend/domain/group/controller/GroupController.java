@@ -93,6 +93,16 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.success("그룹 문제 목록 조회 성공", response));
     }
 
+    // 그룹 문제 삭제
+    @DeleteMapping("/{groupId}/problems/{problemId}")
+    public ResponseEntity<ApiResponse<Void>> deleteGroupProblem(
+            @PathVariable Long groupId,
+            @PathVariable Long problemId,
+            @AuthenticationPrincipal String userId) {
+        groupService.deleteGroupProblem(groupId, problemId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("그룹에서 문제가 삭제되었습니다.", null));
+    }
+
     // 공개 문제 그룹에 추가
     @PostMapping("/{groupId}/problems")
     public ResponseEntity<ApiResponse<Void>> addProblems(
