@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.contest.repository.ContestParticipantRepository;
 import net.diveon.backend.domain.group.repository.GroupRepository;
-import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.UserExitNotAllowedException;
@@ -28,20 +27,17 @@ public class UserExitService {
     private final SecureRandom secureRandom = new SecureRandom();
 
     private final UserRepository userRepository;
-    private final ProblemRepository problemRepository;
     private final GroupRepository groupRepository;
     private final ContestParticipantRepository contestParticipantRepository;
     private final RedisTemplate<String, String> redisTemplate;
     private final PasswordEncoder passwordEncoder;
 
     public UserExitService(UserRepository userRepository,
-                           ProblemRepository problemRepository,
                            GroupRepository groupRepository,
                            ContestParticipantRepository contestParticipantRepository,
                            RedisTemplate<String, String> redisTemplate,
                            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.problemRepository = problemRepository;
         this.groupRepository = groupRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.redisTemplate = redisTemplate;
@@ -60,10 +56,6 @@ public class UserExitService {
     }
 
     private void validateCanExit(Long userId) {
-        if (problemRepository.existsByAuthorId(userId)) {
-            throw new UserExitNotAllowedException("생성한 문제가 있는 사용자는 회원 탈퇴가 불가능합니다.");
-        }
-
         if (groupRepository.existsByLeaderId(userId)) {
             throw new UserExitNotAllowedException("그룹 관리자인 사용자는 회원 탈퇴가 불가능합니다.");
         }
