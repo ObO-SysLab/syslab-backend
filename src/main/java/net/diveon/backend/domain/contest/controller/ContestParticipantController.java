@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import net.diveon.backend.domain.contest.dto.request.ContestLeadershipTransferRequest;
 import net.diveon.backend.domain.contest.dto.request.ContestParticipantBanRequest;
+import net.diveon.backend.domain.contest.dto.response.ContestLeadershipTransferResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestParticipantBanResponse;
 import net.diveon.backend.domain.contest.dto.response.ContestParticipantListResponse;
 import net.diveon.backend.domain.contest.service.ContestParticipantService;
@@ -59,5 +61,18 @@ public class ContestParticipantController {
         ContestParticipantBanResponse response = contestParticipantService.updateContestParticipantBanStatus(
                 contestId, participantUserId, Long.parseLong(userId), request);
         return ResponseEntity.ok(ApiResponse.success("해당 참가자의 상태가 변경되었습니다.", response));
+    }
+
+    @PatchMapping("/leadership/transfer")
+    public ResponseEntity<ApiResponse<ContestLeadershipTransferResponse>> transferContestLeadership(
+            @PathVariable Long contestId,
+            @AuthenticationPrincipal String userId,
+            @RequestBody ContestLeadershipTransferRequest request) {
+        ContestLeadershipTransferResponse response = contestParticipantService.transferContestLeadership(
+                contestId,
+                Long.parseLong(userId),
+                request
+        );
+        return ResponseEntity.ok(ApiResponse.success("대회 관리자 권한이 이관되었습니다.", response));
     }
 }
