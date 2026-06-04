@@ -66,6 +66,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 회원 탈퇴 불가 → 409
+        @ExceptionHandler(UserExitNotAllowedException.class)
+        public ResponseEntity<ErrorResponse> handleUserExitNotAllowed(
+                UserExitNotAllowedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/user-exit-not-allowed",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
         // 댓글을 찾을 수 없음 → 404
         @ExceptionHandler(CommentNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleCommentNotFound(

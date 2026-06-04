@@ -26,4 +26,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     Page<Group> findAllWithFilters(@Param("tag") String tag, @Param("userId") Long userId, Pageable pageable);
 
     Page<Group> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+
+    boolean existsByLeaderId(Long userId);
 }

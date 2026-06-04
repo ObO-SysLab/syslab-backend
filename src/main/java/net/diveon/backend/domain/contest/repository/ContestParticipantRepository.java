@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.contest.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,6 +16,16 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     Optional<ContestParticipant> findByContestIdAndUserId(Long contestId, Long userId);
     long countByContestId(Long contestId);
     long countByContestIdAndScoreGreaterThan(Long contestId, Integer score);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(cp) > 0 THEN true ELSE false END
+            FROM ContestParticipant cp
+            WHERE cp.user.id = :userId
+            AND cp.contest.endTime > :now
+            """)
+    boolean existsByUserIdAndContestEndTimeAfter(
+            @Param("userId") Long userId,
+            @Param("now") LocalDateTime now);
 
     @Query(
             value = """

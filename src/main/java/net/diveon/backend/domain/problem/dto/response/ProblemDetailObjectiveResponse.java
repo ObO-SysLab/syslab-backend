@@ -149,7 +149,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
 
         return new ProblemDetailObjectiveResponse(
             problem.getId(),
-            problem.getAuthor().getNickname(),
+            resolveAuthorName(problem),
             problem.getType(),
             problem.getTitle(),
             problem.getCategory(),
@@ -166,6 +166,13 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
+    }
+
+    private static String resolveAuthorName(Problem problem) {
+        if ("ExitedUser".equals(problem.getAuthor().getRealName())) {
+            return "탈퇴한유저";
+        }
+        return problem.getAuthor().getNickname();
     }
 
     public Long getProbId() {

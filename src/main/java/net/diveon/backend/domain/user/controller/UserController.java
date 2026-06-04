@@ -4,12 +4,14 @@ import net.diveon.backend.domain.user.dto.AuthLoginRequest;
 import net.diveon.backend.domain.user.dto.AuthLoginResponse;
 import net.diveon.backend.domain.user.dto.AuthSignUpRequest;
 import net.diveon.backend.domain.user.dto.RefreshTokenRequest;
+import net.diveon.backend.domain.user.service.UserExitService;
 import net.diveon.backend.domain.user.service.UserService;
 import net.diveon.backend.domain.user.service.UserSignUpService;
 import net.diveon.backend.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,10 +25,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserSignUpService userSignUpService;
+    private final UserExitService userExitService;
 
-    public UserController(UserService userService, UserSignUpService userSignUpService) {
+    public UserController(UserService userService, UserSignUpService userSignUpService, UserExitService userExitService) {
         this.userService = userService;
         this.userSignUpService = userSignUpService;
+        this.userExitService = userExitService;
     }
 
     @GetMapping("/check-loginId")
@@ -82,5 +86,11 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> logout(@AuthenticationPrincipal String userId) {
         userService.logout(userId);
         return ResponseEntity.ok(ApiResponse.success("로그아웃되었습니다.", null));
+    }
+
+    @DeleteMapping("/exit")
+    public ResponseEntity<ApiResponse<Void>> exit(@AuthenticationPrincipal String userId) {
+        userExitService.exit(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("회원 탈퇴가 완료되었습니다.", null));
     }
 }

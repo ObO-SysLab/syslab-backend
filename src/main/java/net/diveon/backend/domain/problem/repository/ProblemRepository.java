@@ -7,4 +7,5 @@ import net.diveon.backend.domain.problem.entity.Problem;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long>, JpaSpecificationExecutor<Problem> {
 
+    boolean existsByAuthorId(Long userId);
 }

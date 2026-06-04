@@ -62,6 +62,10 @@ public class User {
     @Column(name = "interest")
     private String interest;
 
+    // TODO: soft delete policy 확정 시 실제 컬럼으로 추가
+    // private Boolean isDeleted;
+    // private LocalDateTime deletedAt;
+
     public User() {}
 
     public User(String loginId, String password, String nickname, String email, String belong, List<String> interest) {
@@ -85,6 +89,27 @@ public class User {
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+    }
+
+    public void exit(String anonymizedLoginId,
+                     String anonymizedNickname,
+                     String anonymizedEmail,
+                     String encodedPassword) {
+        String exitedUser = "ExitedUser";
+
+        this.loginId = anonymizedLoginId;
+        this.nickname = anonymizedNickname;
+        this.email = anonymizedEmail;
+        this.password = encodedPassword;
+        this.realName = exitedUser;
+        this.profileImgUrl = exitedUser;
+        this.birthday = LocalDate.now();
+        this.phoneNumber = exitedUser;
+        this.comment = exitedUser;
+        this.tier = 0;
+        this.score = 0;
+        this.belong = exitedUser;
+        this.interest = exitedUser;
     }
 
     public Long getId() { return id; }

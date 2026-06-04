@@ -79,7 +79,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
 
         return new ProblemDetailPracticeResponse(
             problem.getId(),
-            problem.getAuthor().getNickname(),
+            resolveAuthorName(problem),
             problem.getType(),
             problem.getTitle(),
             problem.getCategory(),
@@ -93,6 +93,13 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
+    }
+
+    private static String resolveAuthorName(Problem problem) {
+        if ("ExitedUser".equals(problem.getAuthor().getRealName())) {
+            return "탈퇴한유저";
+        }
+        return problem.getAuthor().getNickname();
     }
 
     public Long getProbId() { return probId; }
