@@ -54,6 +54,17 @@ public class ProblemDeleteService {
         this.oboStepRepository = oboStepRepository;
     }
 
+    @Transactional
+    public void deleteProblemByType(long probId, String type) {
+        if ("objective".equals(type)) {
+            deleteProblemObjective(0L, probId);
+        } else if ("coding".equals(type)) {
+            deleteProblemCoding(0L, probId);
+        } else if ("practice".equals(type)) {
+            deleteProblemPractice(0L, probId);
+        }
+    }
+
     // 분기 로직
     @Transactional
     public ProblemDeleteResponse deleteProblem(long userId, long probId){
