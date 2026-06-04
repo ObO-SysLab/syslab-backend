@@ -94,6 +94,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 문제 수정/삭제 권한 없음 → 403
+        @ExceptionHandler(ProblemAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleProblemAccessDenied(
+                ProblemAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/problem-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 문제 삭제 권한 없음 → 403
         @ExceptionHandler(ProblemDeletePermisionDeny.class)
         public ResponseEntity<ErrorResponse> handleProblemDeletePermisionDeny(

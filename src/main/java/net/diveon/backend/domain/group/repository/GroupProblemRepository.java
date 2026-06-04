@@ -11,6 +11,7 @@ import net.diveon.backend.domain.group.entity.GroupProblem;
 public interface GroupProblemRepository extends JpaRepository<GroupProblem, Long> {
     long countByGroupId(Long groupId);
     boolean existsByGroupIdAndProblemId(Long groupId, Long problemId);
+    java.util.Optional<net.diveon.backend.domain.group.entity.GroupProblem> findByGroupIdAndProblemId(Long groupId, Long problemId);
     Page<GroupProblem> findAllByGroupId(Long groupId, Pageable pageable);
     List<GroupProblem> findAllByGroupId(Long groupId);
 }
