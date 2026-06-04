@@ -59,6 +59,8 @@ bin/
 .springBeans
 .sts4-cache
 
+.claude/
+
 ### 5. OS & Misc Files ###
 .DS_Store
 Thumbs.db
