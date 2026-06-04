@@ -49,6 +49,7 @@ public class ProblemCreateObjectiveRequest {
     private String difficulty;
     private String visibility;
     private Long groupId;
+    private Long contestId;
     private String summary;
     private List<ForDtoChoice> choices;
     private List<Integer> answer;
@@ -100,6 +101,10 @@ public class ProblemCreateObjectiveRequest {
 
     public Long getGroupId() {
         return groupId;
+    }
+
+    public Long getContestId() {
+        return contestId;
     }
 
     public void setGroupId(Long groupId) {

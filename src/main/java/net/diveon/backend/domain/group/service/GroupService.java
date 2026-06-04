@@ -29,8 +29,10 @@ import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GroupAccessDeniedException;
+import net.diveon.backend.global.exception.GroupLeaderPermissionDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupProblemAlreadyExistsException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -254,15 +256,42 @@ public class GroupService {
         groupProblemRepository.save(new GroupProblem(problem, group));
     }
 
+    // 그룹 문제 삭제
+    @Transactional
+    public void deleteGroupProblem(Long groupId, Long problemId, Long userId) {
+        groupRepository.findById(groupId).orElseThrow(GroupNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        if (groupUser.getRole() != GroupUser.GroupRole.LEADER) {
+            throw new GroupLeaderPermissionDeniedException();
+        }
+
+        GroupProblem groupProblem = groupProblemRepository.findByGroupIdAndProblemId(groupId, problemId)
+                .orElseThrow(ProblemNotFoundException::new);
+
+        Problem problem = groupProblem.getProblem();
+        groupProblemRepository.delete(groupProblem);
+
+        if ("group".equals(problem.getVisibility())) {
+            problemRepository.delete(problem);
+        }
+    }
+
     // 내가 속한 그룹 목록 조회
     /* findAllByUserId(userId) 로 내 userId로 조회하면 내가 속한 그룹들이 List<GroupUser> 형태로 나오고,
       각각에서 group.getId(), group.getTitle() 뽑아서 반환 */
     @Transactional(readOnly = true)
-    public List<GroupMyListResponse> getMyGroups(Long userId) {
+    public List<GroupMyListResponse> getMyGroups(Long userId, Long problemId) {
         List<GroupUser> groupUsers = groupUserRepository.findAllByUserId(userId);
         return groupUsers.stream()
-                .map(GroupMyListResponse::of)
-                .toList(); 
+                .map(groupUser -> {
+                    boolean isAlreadyAdded = problemId != null &&
+                            groupProblemRepository.existsByGroupIdAndProblemId(groupUser.getGroup().getId(), problemId);
+                    return GroupMyListResponse.of(groupUser, isAlreadyAdded);
+                })
+                .toList();
     }
 
     // 그룹 상세 조회

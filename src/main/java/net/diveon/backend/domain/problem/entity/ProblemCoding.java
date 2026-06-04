@@ -117,21 +117,8 @@ public class ProblemCoding {
     public void setOboInitialImageUrl(String oboInitialImageUrl) { this.oboInitialImageUrl = oboInitialImageUrl; }
 
     // 5. 비즈니스 로직
-    public void updateProblemCoding(String summary, String description,
-                                    String inputDescription, String outputDescription,
-                                    Integer timeLimitMs, Integer memoryLimitMb,
-                                    List<String> allowedLanguages, List<ForDtoTestCase> testcases,
-                                    String fileUrl, Boolean oboEnabled, String oboInitialImageUrl) {
+    public void updateProblemCoding(String summary, String description) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
-        if (inputDescription != null) this.inputDescription = inputDescription;
-        if (outputDescription != null) this.outputDescription = outputDescription;
-        if (timeLimitMs != null) this.timeLimitMs = timeLimitMs;
-        if (memoryLimitMb != null) this.memoryLimitMb = memoryLimitMb;
-        if (allowedLanguages != null) this.allowedLanguages = allowedLanguages;
-        if (testcases != null) this.testcases = testcases;
-        if (fileUrl != null) this.fileUrl = fileUrl;
-        if (oboEnabled != null) this.oboEnabled = oboEnabled;
-        if (oboInitialImageUrl != null) this.oboInitialImageUrl = oboInitialImageUrl;
     }
 }

@@ -83,12 +83,8 @@ public class ProblemObjective {
      * - oboEnabled; boolean, ???
      * </pre>
      */
-    public void updateProblemObjective(String summary, String description,
-        List<ForDtoChoice> choices, List<Integer> answer, Boolean oboEnabled){
-            if(summary != null) this.summary = summary;
-            if(description != null)this.description = description;
-            if(choices != null)this.choices = choices;
-            if(answer != null)this.answer = answer;
-            if(oboEnabled != null)this.oboEnabled = oboEnabled;
+    public void updateProblemObjective(String summary, String description) {
+        if (summary != null) this.summary = summary;
+        if (description != null) this.description = description;
     }
 }

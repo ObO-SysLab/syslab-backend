@@ -22,6 +22,8 @@ import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.ProblemAccessDeniedException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -56,125 +58,52 @@ public class ProblemUpdateService {
         }
 
     // 객관식형
+    private void checkOwner(Problem problem, long userId) {
+        if (!problem.getAuthor().getId().equals(userId)) {
+            throw new ProblemAccessDeniedException();
+        }
+    }
+
     @Transactional
-    public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId, 
+    public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId,
         ProblemUpdateObjectiveRequest request){
-            Problem problem = problemRepository.findById(prodId).orElseThrow();
+            Problem problem = problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
+            checkOwner(problem, userId);
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
 
-            problem.updateProblem(request.getTitle(), request.getCategory(), request.getDifficulty(), request.getVisibility());
+            problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
+            problemObjective.updateProblemObjective(request.getSummary(), request.getDescription());
 
-            problemObjective.updateProblemObjective(
-                request.getSummary(),
-                request.getDescription(),
-                request.getChoices(),
-                request.getAnswer(),
-                request.getOboEnabled()
-            );
-
-            // List<OboStep> existingSteps = oboStepRepository.findByProblemOrderByStepAsc(problem);
-            // if (!existingSteps.isEmpty()) {
-            //     oboStepRepository.deleteAll(existingSteps);
-            // }
-
-            //이 아래의 로직은, obo step에 대해서, 일단 전부 삭제하고 전부 삽입하는것이라, 
-            // update에서 아무 값도 안주면 바로 다 삭제되는 방식입니다.
-
-
-            /**
-             * TODO : 현재 객관식 업데이트에서 obo step을 업데이트 하는 방법을 고도화 하기
-             * 고도화 하는 방법은 다음과 같음
-             * 1. 현재 삭제 방식을 다듬어서, 값이 주어지지 않는다면, 삭제가 되지 않도록 하기
-             * 2. 개별 삭제 기능을 구현할 것.
-             */
-            boolean oboProvided = request.getObo() != null;
-            boolean oboDisabled = Boolean.FALSE.equals(request.getOboEnabled());
-
-            if (oboProvided || oboDisabled) {
-                oboStepRepository.deleteByProblem_Id(prodId);
-            }
-
-            // 개별 업데이트 개선 필요
-            if (Boolean.TRUE.equals(problemObjective.getOboEnabled()) && oboProvided && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
-                List<OboStep> oboSteps = request.getObo().getSteps().stream()
-                    .map(step -> toOboStep(problem, step))
-                    .toList();
-                oboStepRepository.saveAll(oboSteps);
-            }
-            return new ProblemUpdateObjectiveResponse(prodId, request.getCategory(), request.getTitle(), problem.getUpatedAt().toString());
+            return new ProblemUpdateObjectiveResponse(prodId, problem.getCategory(), problem.getTitle(), problem.getUpatedAt().toString());
     }
 
     // 코딩형
     @Transactional
     public ProblemUpdateCodingResponse updateProblemCoding(long userId, long probId,
         ProblemUpdateCodingRequest request) {
-        Problem problem = problemRepository.findById(probId).orElseThrow();
+        Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+        checkOwner(problem, userId);
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
 
-        problem.updateProblem(request.getTitle(), request.getCategory(), request.getDifficulty(), request.getVisibility());
+        problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
+        problemCoding.updateProblemCoding(request.getSummary(), request.getDescription());
 
-        ProblemUpdateCodingRequest.Constraints constraints = request.getConstraints();
-        ProblemUpdateCodingRequest.Obo obo = request.getObo();
-
-        problemCoding.updateProblemCoding(
-            request.getSummary(),
-            request.getDescription(),
-            request.getInputDescription(),
-            request.getOutputDescription(),
-            constraints != null ? constraints.getTimeLimitMs() : null,
-            constraints != null ? constraints.getMemoryLimitMb() : null,
-            constraints != null ? constraints.getAllowedLanguages() : null,
-            request.getTestcases(),
-            request.getFileUrl(),
-            obo != null ? obo.getEnabled() : null,
-            obo != null ? obo.getInitialImageUrl() : null
-        );
-
-        if (request.getTestcases() != null) {
-            s3Service.uploadCodingTestcases(probId, request.getTestcases());
-        }
-
-        return new ProblemUpdateCodingResponse(
-            probId,
-            problem.getType(),
-            problem.getTitle(),
-            problem.getUpatedAt().toString()
-        );
+        return new ProblemUpdateCodingResponse(probId, problem.getType(), problem.getTitle(), problem.getUpatedAt().toString());
     }
     
     // 실습형
     @Transactional
     public ProblemUpdatePracticeResponse updateProblemPractice(long userId, long probId,
         ProblemUpdatePracticeRequest request){
-            Problem problem = problemRepository.findById(probId).orElseThrow();
+            Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+            checkOwner(problem, userId);
             ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
 
-            problem.updateProblem(
-                request.getTitle(),
-                request.getCategory(),
-                request.getDifficulty(),
-                request.getVisibility()
-            );
+            problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
+            problemPractice.updatePractice(request.getSummary(), request.getDescription());
 
-            String flagHash = request.getFlag() != null ? hashFlag(request.getFlag()) : null;
-
-            problemPractice.updatePractice(
-                request.getSummary(),
-                request.getDescription(),
-                request.getOsImage(),
-                request.getAllowedCommands(),
-                request.getCpuLimit(),
-                request.getMemoryLimit(),
-                flagHash
-            );
-
-            return new ProblemUpdatePracticeResponse(
-                probId,
-                problem.getType(),
-                problem.getTitle(),
-                problem.getUpatedAt().toString()
-            );
+            return new ProblemUpdatePracticeResponse(probId, problem.getType(), problem.getTitle(), problem.getUpatedAt().toString());
     }
     
     // flag 원문을 암호화해서 저장 - DB에 정답 노출 안 되도록 (실습형)
