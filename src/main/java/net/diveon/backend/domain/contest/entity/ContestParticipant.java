@@ -86,6 +86,10 @@ public class ContestParticipant {
     public void ban() { this.isBanned = true; }
     public void unban() { this.isBanned = false; }
 
+    public void updateRole(ContestRole role) {
+        this.role = role;
+    }
+
     public void addScore(Integer points, LocalDateTime solvedAt) {
         this.score += points;
         this.lastSolvedAt = solvedAt;

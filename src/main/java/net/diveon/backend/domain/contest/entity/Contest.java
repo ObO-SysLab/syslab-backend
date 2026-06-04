@@ -158,4 +158,9 @@ public class Contest {
         this.endTime = endTime;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void transferLeadership(User newLeader) {
+        this.createdBy = newLeader;
+        this.updatedAt = LocalDateTime.now();
+    }
 }
