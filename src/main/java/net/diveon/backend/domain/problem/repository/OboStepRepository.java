@@ -11,8 +11,8 @@ import java.util.Optional;
 @Repository
 public interface OboStepRepository extends JpaRepository<OboStep, Long> {
     /**
-     * 이놈과  List<OboStep> findByProblemOrderByStepAsc(Problem problem);  
-     * 이놈은List<OboStep> findByProblem_IdOrderByStepAsc(Long probId);
+     * List<OboStep> findByProblemOrderByStepAsc(Problem problem);  
+     * List<OboStep> findByProblem_IdOrderByStepAsc(Long probId);
      * 조건에 따라서 다르게 쓸 수 있음, 만약 prob_id가 안주어지면 처음이 효율적임
      * 
      */

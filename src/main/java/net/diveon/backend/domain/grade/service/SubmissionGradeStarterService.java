@@ -3,7 +3,6 @@ package net.diveon.backend.domain.grade.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-//반드시 요 아래놈으로 써야함, 그냥 자카르타로쓰면 별로임
 import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.grade.dto.request.SubmissionGradeReqeust;
