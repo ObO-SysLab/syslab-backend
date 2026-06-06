@@ -150,6 +150,7 @@ public class SubmissionGradeAsyncService {
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
+            problem.incrementSolvedCount();
         }else{
             //오답
             SolveResult result = new SolveResult(submission, SolveResultState.WRONG);
@@ -197,6 +198,7 @@ public class SubmissionGradeAsyncService {
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
+            problem.incrementSolvedCount();
         }else{
             //오답
             SolveResult result = new SolveResult(submission, SolveResultState.WRONG);

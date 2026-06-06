@@ -179,6 +179,9 @@ public class SubmissionGradeStarterService {
 
 
 
+        
+        problem.incrementSolvedCount();
+        problemRepository.save(problem);
         // 그냥 오류 방지용, 바꿔야함
         return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name(), problemType);
     }
