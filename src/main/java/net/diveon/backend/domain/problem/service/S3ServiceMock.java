@@ -27,4 +27,14 @@ public class S3ServiceMock implements S3Service {
         log.info("[Mock] 코딩형 테스트케이스 S3 업로드 생략 - probId: {}, testcaseCount: {}, prefix: testcases/prob-{}/",
                 probId, testcaseCount, probId);
     }
+
+    @Override
+    public void deleteDockerfileZip(Long probId) {
+        log.info("[Mock] S3 Dockerfile zip 삭제 생략 - probId: {}, key: prob-{}/source.zip", probId, probId);
+    }
+
+    @Override
+    public void deleteCodingTestcases(Long probId) {
+        log.info("[Mock] S3 코딩형 테스트케이스 삭제 생략 - probId: {}, prefix: testcases/prob-{}/", probId, probId);
+    }
 }

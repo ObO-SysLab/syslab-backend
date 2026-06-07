@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface S3Service {
     void uploadDockerfileZip(Long probId, MultipartFile file);
-
     void uploadCodingTestcases(Long probId, List<ForDtoTestCase> testcases);
+
+    void deleteDockerfileZip(Long probId);
+    void deleteCodingTestcases(Long probId);
 }
