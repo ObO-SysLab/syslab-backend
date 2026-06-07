@@ -14,6 +14,7 @@ public class ForDtoContestProblem {
 
     private String title;
     private Integer points;
+    private Integer submittedCount;
     private Integer solvedCount;
     private String category;
 
@@ -24,12 +25,13 @@ public class ForDtoContestProblem {
     }
 
     public ForDtoContestProblem(String id, Long contestProblemId, Long problemId, String title, Integer points,
-                                Integer solvedCount, String category, Boolean isSolved) {
+                                Integer submittedCount, Integer solvedCount, String category, Boolean isSolved) {
         this.id = id;
         this.contestProblemId = contestProblemId;
         this.problemId = problemId;
         this.title = title;
         this.points = points;
+        this.submittedCount = submittedCount;
         this.solvedCount = solvedCount;
         this.category = category;
         this.isSolved = isSolved;
@@ -40,6 +42,7 @@ public class ForDtoContestProblem {
     public Long getProblemId() { return problemId; }
     public String getTitle() { return title; }
     public Integer getPoints() { return points; }
+    public Integer getSubmittedCount() { return submittedCount; }
     public Integer getSolvedCount() { return solvedCount; }
     public String getCategory() { return category; }
     public Boolean getIsSolved() { return isSolved; }
@@ -49,6 +52,7 @@ public class ForDtoContestProblem {
     public void setProblemId(Long problemId) { this.problemId = problemId; }
     public void setTitle(String title) { this.title = title; }
     public void setPoints(Integer points) { this.points = points; }
+    public void setSubmittedCount(Integer submittedCount) { this.submittedCount = submittedCount; }
     public void setSolvedCount(Integer solvedCount) { this.solvedCount = solvedCount; }
     public void setCategory(String category) { this.category = category; }
     public void setIsSolved(Boolean isSolved) { this.isSolved = isSolved; }

@@ -29,4 +29,20 @@ public interface ContestSubmissionRepository extends JpaRepository<ContestSubmis
     List<Object[]> countSolvedByUserForContest(@Param("contestId") Long contestId);
 
     Optional<ContestSubmission> findBySolveSubmissionId(Long solveSubmissionId);
+
+    @Query("""
+            SELECT cs.contestProblem.id, COUNT(cs)
+            FROM ContestSubmission cs
+            WHERE cs.contest.id = :contestId
+            GROUP BY cs.contestProblem.id
+            """)
+    List<Object[]> countSubmissionsPerProblem(@Param("contestId") Long contestId);
+
+    @Query("""
+            SELECT cs.contestProblem.id, COUNT(cs)
+            FROM ContestSubmission cs
+            WHERE cs.contest.id = :contestId AND cs.isCorrect = true
+            GROUP BY cs.contestProblem.id
+            """)
+    List<Object[]> countSolvedPerProblem(@Param("contestId") Long contestId);
 }
