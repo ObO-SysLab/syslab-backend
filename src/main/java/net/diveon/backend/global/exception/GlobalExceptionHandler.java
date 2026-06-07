@@ -570,6 +570,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
         }
 
+        // 이미지 파일 없음 / 허용되지 않는 확장자 / 크기 초과 → 400
+        @ExceptionHandler(InvalidImageFileException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidImageFile(
+                InvalidImageFileException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invalid-image-file",
+                        "Bad Request",
+                        400,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        }
+
         // 쿨다운 중 → 409
         @ExceptionHandler(ContestCooldownException.class)
         public ResponseEntity<ErrorResponse> handleContestCooldown(
