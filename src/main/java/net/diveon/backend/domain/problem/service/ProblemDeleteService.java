@@ -1,10 +1,13 @@
 package net.diveon.backend.domain.problem.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import net.diveon.backend.domain.problem.dto.response.ProblemDeleteResponse;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.OboStepRepository;
 import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
@@ -30,28 +33,31 @@ import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 @Service
 public class ProblemDeleteService {
-    /**
-     * 객관식: 구현중
-     * 코드형: 놉
-     * 실습형: 구현중
-     */
+
+    private static final Logger log = LoggerFactory.getLogger(ProblemDeleteService.class);
 
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
     private final ProblemPracticeRepository problemPracticeRepository;
     private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
+    private final S3Service s3Service;
+    private final EcrService ecrService;
 
     public ProblemDeleteService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
         ProblemCodingRepository problemCodingRepository,
-        OboStepRepository oboStepRepository){
+        OboStepRepository oboStepRepository,
+        S3Service s3Service,
+        EcrService ecrService) {
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
         this.oboStepRepository = oboStepRepository;
+        this.s3Service = s3Service;
+        this.ecrService = ecrService;
     }
 
     @Transactional
@@ -121,18 +127,41 @@ public class ProblemDeleteService {
 
     // 실습형
     @Transactional
-    public ProblemDeleteResponse deleteProblemPractice(long userId, long probId){
+    public ProblemDeleteResponse deleteProblemPractice(long userId, long probId) {
+        ProblemPractice practice = problemPracticeRepository.findById(probId).orElse(null);
+        boolean isReady = practice != null && "READY".equals(practice.getImageStatus());
+
         problemPracticeRepository.deleteById(probId);
         problemRepository.deleteById(probId);
+
+        try {
+            s3Service.deleteDockerfileZip(probId);
+        } catch (Exception e) {
+            log.warn("S3 Dockerfile zip 삭제 실패 - probId: {}", probId, e);
+        }
+
+        if (isReady) {
+            try {
+                ecrService.deleteImage(probId);
+            } catch (Exception e) {
+                log.warn("ECR 이미지 삭제 실패 - probId: {}", probId, e);
+            }
+        }
 
         return new ProblemDeleteResponse(probId);
     }
 
     // 코딩형
     @Transactional
-    public ProblemDeleteResponse deleteProblemCoding(long userId, long probId){
+    public ProblemDeleteResponse deleteProblemCoding(long userId, long probId) {
         problemCodingRepository.deleteById(probId);
         problemRepository.deleteById(probId);
+
+        try {
+            s3Service.deleteCodingTestcases(probId);
+        } catch (Exception e) {
+            log.warn("S3 테스트케이스 삭제 실패 - probId: {}", probId, e);
+        }
 
         return new ProblemDeleteResponse(probId);
     }
