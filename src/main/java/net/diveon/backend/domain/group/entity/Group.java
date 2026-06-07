@@ -88,4 +88,8 @@ public class Group {
         this.isPrivate = isPrivate;
         this.isAutoApprove = isAutoApprove;
     }
+
+    public void updateImage(String image) {
+        this.image = image;
+    }
 }
