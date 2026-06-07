@@ -1,6 +1,8 @@
 package net.diveon.backend.domain.contest.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -70,9 +72,15 @@ public class ContestProblemNormalService {
         Set<Long> solvedContestProblemIds = Set.copyOf(
                 contestSubmissionRepository.findSolvedContestProblemIds(contestId, userId));
 
+        Map<Long, Integer> submittedCountMap = toCountMap(
+                contestSubmissionRepository.countSubmissionsPerProblem(contestId));
+        Map<Long, Integer> solvedCountMap = toCountMap(
+                contestSubmissionRepository.countSolvedPerProblem(contestId));
+
         List<ForDtoContestProblem> problems = new java.util.ArrayList<>();
         for (int i = 0; i < contestProblems.size(); i++) {
-            problems.add(toResponse(contestProblems.get(i), solvedContestProblemIds, i + 1));
+            problems.add(toResponse(contestProblems.get(i), solvedContestProblemIds,
+                    submittedCountMap, solvedCountMap, i + 1));
         }
 
         return new ContestProblemListResponse(problems);
@@ -185,27 +193,30 @@ public class ContestProblemNormalService {
         contestProblemRepository.save(contestProblem);
     }
 
-    private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds, int sequence) {
+    private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds,
+                                             Map<Long, Integer> submittedCountMap, Map<Long, Integer> solvedCountMap,
+                                             int sequence) {
         Problem problem = contestProblem.getProblem();
-
-        /*
-         * 현재 대회 문제는 신규 생성되고 Problem.visibility 값이 "contest"인 전용 문제만 사용하므로
-         * solvedCount는 Problem.solvedCount를 그대로 사용한다.
-         *
-         * 추후 기존 문제를 대회에 추가할 수 있게 되면 Problem.solvedCount는 전체 풀이 수가 되므로,
-         * ContestSubmission에서 contest_problem_id별 is_correct = true인 distinct user_id 수를
-         * 집계하는 방식으로 확장해야 한다.
-         */
+        Long cpId = contestProblem.getId();
         return new ForDtoContestProblem(
                 buildDisplayId(problem.getCategory(), sequence),
-                contestProblem.getId(),
+                cpId,
                 problem.getId(),
                 problem.getTitle(),
                 contestProblem.getPoints(),
-                problem.getSolvedCount(),
+                submittedCountMap.getOrDefault(cpId, 0),
+                solvedCountMap.getOrDefault(cpId, 0),
                 problem.getCategory(),
-                solvedContestProblemIds.contains(contestProblem.getId())
+                solvedContestProblemIds.contains(cpId)
         );
+    }
+
+    private Map<Long, Integer> toCountMap(List<Object[]> rows) {
+        Map<Long, Integer> map = new HashMap<>();
+        for (Object[] row : rows) {
+            map.put((Long) row[0], ((Number) row[1]).intValue());
+        }
+        return map;
     }
 
     private String buildDisplayId(String category, int sequence) {
