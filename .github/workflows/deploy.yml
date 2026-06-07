@@ -103,5 +103,6 @@ jobs:
               --name syslab-backend \
               --restart always \
               --network host \
+              -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul" \
               -v /home/ec2-user/syslab-key.pem:/app/syslab-key.pem:ro \
               ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
