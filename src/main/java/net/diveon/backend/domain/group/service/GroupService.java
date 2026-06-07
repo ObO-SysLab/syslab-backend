@@ -25,6 +25,8 @@ import net.diveon.backend.domain.group.repository.GroupTagRepository;
 import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.problem.service.ProblemDeleteService;
 import net.diveon.backend.domain.user.entity.User;
@@ -41,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupService {
@@ -52,6 +56,7 @@ public class GroupService {
     private final GroupProblemRepository groupProblemRepository;
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final ContestRepository contestRepository;
     private final ProblemDeleteService problemDeleteService;
 
@@ -61,6 +66,7 @@ public class GroupService {
                         GroupProblemRepository groupProblemRepository,
                         UserRepository userRepository,
                         ProblemRepository problemRepository,
+                        ProblemPracticeRepository problemPracticeRepository,
                         ContestRepository contestRepository,
                         ProblemDeleteService problemDeleteService) {
         this.groupRepository = groupRepository;
@@ -70,6 +76,7 @@ public class GroupService {
         this.groupProblemRepository = groupProblemRepository;
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
+        this.problemPracticeRepository = problemPracticeRepository;
         this.contestRepository = contestRepository;
         this.problemDeleteService = problemDeleteService;
     }
@@ -224,8 +231,24 @@ public class GroupService {
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "assignedAt"));
         Page<GroupProblem> groupProblemPage = groupProblemRepository.findAllByGroupId(groupId, pageable);
 
+        Set<Long> practiceProblemIds = groupProblemPage.getContent().stream()
+                .map(GroupProblem::getProblem)
+                .filter(p -> "practice".equals(p.getType()))
+                .map(Problem::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> readyPracticeIds = practiceProblemIds.isEmpty() ? Set.of() :
+                problemPracticeRepository.findAllById(practiceProblemIds).stream()
+                        .filter(pp -> "READY".equals(pp.getImageStatus()))
+                        .map(ProblemPractice::getProbId)
+                        .collect(Collectors.toSet());
+
         List<GroupProblemListResponse.ProblemItem> problems = groupProblemPage.getContent()
                 .stream()
+                .filter(gp -> {
+                    if (!"practice".equals(gp.getProblem().getType())) return true;
+                    return readyPracticeIds.contains(gp.getProblem().getId());
+                })
                 .map(GroupProblemListResponse.ProblemItem::of)
                 .toList();
 
