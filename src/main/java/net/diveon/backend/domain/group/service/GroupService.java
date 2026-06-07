@@ -37,8 +37,11 @@ import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupProblemAlreadyExistsException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.s3.ImageUploadService;
+import net.diveon.backend.global.util.ImageFileValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -59,6 +62,7 @@ public class GroupService {
     private final ProblemPracticeRepository problemPracticeRepository;
     private final ContestRepository contestRepository;
     private final ProblemDeleteService problemDeleteService;
+    private final ImageUploadService imageUploadService;
 
     public GroupService(GroupRepository groupRepository, GroupTagRepository groupTagRepository,
                         GroupUserRepository groupUserRepository,
@@ -68,7 +72,8 @@ public class GroupService {
                         ProblemRepository problemRepository,
                         ProblemPracticeRepository problemPracticeRepository,
                         ContestRepository contestRepository,
-                        ProblemDeleteService problemDeleteService) {
+                        ProblemDeleteService problemDeleteService,
+                        ImageUploadService imageUploadService) {
         this.groupRepository = groupRepository;
         this.groupTagRepository = groupTagRepository;
         this.groupUserRepository = groupUserRepository;
@@ -79,6 +84,7 @@ public class GroupService {
         this.problemPracticeRepository = problemPracticeRepository;
         this.contestRepository = contestRepository;
         this.problemDeleteService = problemDeleteService;
+        this.imageUploadService = imageUploadService;
     }
 
     // 그룹 목록 조회
@@ -167,6 +173,27 @@ public class GroupService {
                 groupTagRepository.save(new GroupTag(group, tag));
             }
         }
+    }
+
+    // 그룹 이미지 업로드 (그룹장만 가능)
+    @Transactional
+    public String uploadGroupImage(Long groupId, Long userId, MultipartFile image) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        if (groupUser.getRole() != GroupUser.GroupRole.LEADER) {
+            throw new GroupAccessDeniedException();
+        }
+
+        String extension = ImageFileValidator.validateAndGetExtension(image);
+        String key = "groups/" + groupId + "." + extension;
+        String imageUrl = imageUploadService.upload(key, image);
+
+        group.updateImage(imageUrl);
+        return imageUrl;
     }
 
     // 그룹 삭제
