@@ -189,7 +189,7 @@ public class GroupService {
         }
 
         String extension = ImageFileValidator.validateAndGetExtension(image);
-        String key = "groups/" + groupId + "." + extension;
+        String key = "profiles/groups/" + groupId + "." + extension;
         String imageUrl = imageUploadService.upload(key, image);
 
         group.updateImage(imageUrl);

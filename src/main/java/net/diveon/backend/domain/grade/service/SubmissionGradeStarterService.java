@@ -93,6 +93,7 @@ public class SubmissionGradeStarterService {
         
         //TODO: exception logic must be improved
         Problem problem = problemRepository.findById(probId).orElseThrow(() -> new RuntimeException("문제가 없습니다."));
+        boolean alreadySolved = solveResultRepository.existsCorrectResultByUserIdAndProblemId(userId, probId);
 
         // objective / coding / practice
         String problemType = problem.getType();
@@ -180,8 +181,10 @@ public class SubmissionGradeStarterService {
 
 
         
-        problem.incrementSolvedCount();
-        problemRepository.save(problem);
+        if (!alreadySolved) {
+            problem.incrementSubmittedCount();
+            problemRepository.save(problem);
+        }
         // 그냥 오류 방지용, 바꿔야함
         return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name(), problemType);
     }

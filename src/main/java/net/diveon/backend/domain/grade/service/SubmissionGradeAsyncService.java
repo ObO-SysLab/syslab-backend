@@ -147,10 +147,13 @@ public class SubmissionGradeAsyncService {
 
         if(correctness){
             //정답
+            boolean alreadySolved = solveResultRepository.existsCorrectResultByUserIdAndProblemId(submitterId, probId);
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
-            problem.incrementSolvedCount();
+            if (!alreadySolved) {
+                problem.incrementSolvedCount();
+            }
         }else{
             //오답
             SolveResult result = new SolveResult(submission, SolveResultState.WRONG);
@@ -195,10 +198,13 @@ public class SubmissionGradeAsyncService {
 
         if(correctness){
             //정답
+            boolean alreadySolved = solveResultRepository.existsCorrectResultByUserIdAndProblemId(submitterId, probId);
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
-            problem.incrementSolvedCount();
+            if (!alreadySolved) {
+                problem.incrementSolvedCount();
+            }
         }else{
             //오답
             SolveResult result = new SolveResult(submission, SolveResultState.WRONG);
