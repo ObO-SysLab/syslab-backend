@@ -55,6 +55,10 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     private Long probId;
 
     private String author;
+
+    @JsonProperty("isOwner")
+    private boolean isOwner;
+
     private String type;
     private String title;
     private String description;
@@ -93,6 +97,7 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     public ProblemDetailCodingResponse(
         Long probId,
         String author,
+        boolean isOwner,
         String type,
         String title,
         String description,
@@ -112,6 +117,7 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     ) {
         this.probId = probId;
         this.author = author;
+        this.isOwner = isOwner;
         this.type = type;
         this.title = title;
         this.description = description;
@@ -132,7 +138,8 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
 
     public static ProblemDetailCodingResponse of(
         Problem problem,
-        ProblemCoding problemCoding
+        ProblemCoding problemCoding,
+        boolean isOwner
     ) {
         Constraints constraints = new Constraints(
             problemCoding.getTimeLimitMs(),
@@ -143,6 +150,7 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
         return new ProblemDetailCodingResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
+            isOwner,
             problem.getType(),
             problem.getTitle(),
             problemCoding.getDescription(),
@@ -165,6 +173,7 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     // Getters
     public Long getProbId() { return probId; }
     public String getAuthor() { return author; }
+    public boolean getIsOwner() { return isOwner; }
     public String getType() { return type; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
