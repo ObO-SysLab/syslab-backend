@@ -63,7 +63,7 @@ public class ProfileService {
                 .orElseThrow(UserNotFoundException::new);
 
         String extension = ImageFileValidator.validateAndGetExtension(image);
-        String key = "profiles/" + userId + "." + extension;
+        String key = "profiles/users/" + userId + "." + extension;
         String imageUrl = imageUploadService.upload(key, image);
 
         user.updateProfileImage(imageUrl);
