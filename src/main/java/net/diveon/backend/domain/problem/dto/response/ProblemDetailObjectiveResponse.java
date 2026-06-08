@@ -49,6 +49,10 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     private Long probId;
 
     private String author;
+
+    @JsonProperty("isOwner")
+    private boolean isOwner;
+
     private String type;
     private String title;
     private String category;
@@ -83,6 +87,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     public ProblemDetailObjectiveResponse(
         Long probId,
         String author,
+        boolean isOwner,
         String type,
         String title,
         String category,
@@ -101,6 +106,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     ) {
         this.probId = probId;
         this.author = author;
+        this.isOwner = isOwner;
         this.type = type;
         this.title = title;
         this.category = category;
@@ -137,7 +143,8 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     public static ProblemDetailObjectiveResponse of(
         Problem problem,
         ProblemObjective problemObjective,
-        List<OboStep> oboSteps
+        List<OboStep> oboSteps,
+        boolean isOwner
     ) {
         List<ForDtoOboStep> oboStepResponses = oboSteps.stream()
             .map(oboStep -> new ForDtoOboStep(
@@ -150,6 +157,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
         return new ProblemDetailObjectiveResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
+            isOwner,
             problem.getType(),
             problem.getTitle(),
             problem.getCategory(),
@@ -174,6 +182,10 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
 
     public String getAuthor() {
         return author;
+    }
+
+    public boolean getIsOwner() {
+        return isOwner;
     }
 
     public String getType() {

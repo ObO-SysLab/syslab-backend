@@ -54,34 +54,36 @@ public class ProblemDetailService {
         Problem problem = problemRepository.findById(probId)
             .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
 
+        boolean isOwner = problem.getAuthor().getId().equals(userId);
+
         if (problem.getType().equals("objective")) {
-            return detailProblemObjective(problem, probId);
+            return detailProblemObjective(problem, probId, isOwner);
         } else if (problem.getType().equals("practice")) {
-            return detailProblemPractice(problem, probId);
+            return detailProblemPractice(problem, probId, isOwner);
         } else if (problem.getType().equals("coding")) {
-            return detailProblemCoding(problem, probId);
+            return detailProblemCoding(problem, probId, isOwner);
         } else {
             throw new ProblemNotFoundException(probId + "번 문제의 타입을 알 수 없습니다.");
         }
     }
 
-    private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId) {
+    private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId, boolean isOwner) {
         ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
         if (!"READY".equals(problemPractice.getImageStatus())) {
             throw new ProblemNotFoundException(probId + "번 문제는 아직 준비 중입니다.");
         }
-        return ProblemDetailPracticeResponse.of(problem, problemPractice);
+        return ProblemDetailPracticeResponse.of(problem, problemPractice, isOwner);
     }
 
-    private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId) {
+    private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId, boolean isOwner) {
         ProblemObjective problemObjective = problemObjectiveRepository.findById(probId).orElseThrow();
         List<OboStep> oboSteps = oboStepRepository.findByProblem_IdOrderByStepAsc(probId);
 
-        return ProblemDetailObjectiveResponse.of(problem, problemObjective, oboSteps);
+        return ProblemDetailObjectiveResponse.of(problem, problemObjective, oboSteps, isOwner);
     }
 
-    private ProblemDetailCodingResponse detailProblemCoding(Problem problem, long probId) {
+    private ProblemDetailCodingResponse detailProblemCoding(Problem problem, long probId, boolean isOwner) {
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
-        return ProblemDetailCodingResponse.of(problem, problemCoding);
+        return ProblemDetailCodingResponse.of(problem, problemCoding, isOwner);
     }
 }
