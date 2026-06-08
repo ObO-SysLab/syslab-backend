@@ -7,6 +7,7 @@ public class ProblemListItemResponse {
     private Long probId;
     private String type;
     private String title;
+    private String author;
     private String category;
     private String difficulty;
     private Integer solvedCount;
@@ -15,10 +16,11 @@ public class ProblemListItemResponse {
     public ProblemListItemResponse() {
     }
 
-    public ProblemListItemResponse(Long probId, String type, String title, String category, String difficulty, Integer solvedCount, Boolean isSolved) {
+    public ProblemListItemResponse(Long probId, String type, String title, String author, String category, String difficulty, Integer solvedCount, Boolean isSolved) {
         this.probId = probId;
         this.type = type;
         this.title = title;
+        this.author = author;
         this.category = category;
         this.difficulty = difficulty;
         this.solvedCount = solvedCount;
@@ -30,6 +32,7 @@ public class ProblemListItemResponse {
             problem.getId(),
             problem.getType(),
             problem.getTitle(),
+            problem.getAuthor().getNickname(),
             problem.getCategory(),
             problem.getDifficulty(),
             problem.getSolvedCount(),
@@ -47,6 +50,10 @@ public class ProblemListItemResponse {
 
     public String getTitle() {
         return title;
+    }
+
+    public String getAuthor() {
+        return author;
     }
 
     public String getCategory() {

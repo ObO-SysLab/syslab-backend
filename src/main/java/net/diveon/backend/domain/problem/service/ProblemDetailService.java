@@ -67,6 +67,9 @@ public class ProblemDetailService {
 
     private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId) {
         ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
+        if (!"READY".equals(problemPractice.getImageStatus())) {
+            throw new ProblemNotFoundException(probId + "번 문제는 아직 준비 중입니다.");
+        }
         return ProblemDetailPracticeResponse.of(problem, problemPractice);
     }
 

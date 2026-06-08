@@ -7,9 +7,12 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.InvalidCredentialsException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.s3.ImageUploadService;
+import net.diveon.backend.global.util.ImageFileValidator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 
 @Service
@@ -17,10 +20,13 @@ public class ProfileService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ImageUploadService imageUploadService;
 
-    public ProfileService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public ProfileService(UserRepository userRepository, PasswordEncoder passwordEncoder,
+                           ImageUploadService imageUploadService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.imageUploadService = imageUploadService;
     }
 
     public ProfileShowResponse getProfile(long userId) {
@@ -49,5 +55,18 @@ public class ProfileService {
             throw new InvalidCredentialsException();
         }
         user.updatePassword(passwordEncoder.encode(request.getNewPassword()));
+    }
+
+    @Transactional
+    public String uploadProfileImage(Long userId, MultipartFile image) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        String extension = ImageFileValidator.validateAndGetExtension(image);
+        String key = "profiles/" + userId + "." + extension;
+        String imageUrl = imageUploadService.upload(key, image);
+
+        user.updateProfileImage(imageUrl);
+        return imageUrl;
     }
 }

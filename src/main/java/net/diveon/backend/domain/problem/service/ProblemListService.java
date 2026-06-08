@@ -5,6 +5,7 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.problem.dto.response.ProblemListItemResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import org.springframework.data.domain.Page;
@@ -96,6 +97,16 @@ public class ProblemListService {
             if (onlyUnsolved && !solvedIds.isEmpty()) {
                 predicates.add(root.get("id").in(solvedIds).not());
             }
+
+            // practice 문제는 image_status = READY 인 것만 노출
+            var readySubquery = query.subquery(Long.class);
+            var ppRoot = readySubquery.from(ProblemPractice.class);
+            readySubquery.select(ppRoot.get("probId"))
+                    .where(cb.equal(ppRoot.get("imageStatus"), "READY"));
+            predicates.add(cb.or(
+                    cb.notEqual(root.get("type"), "practice"),
+                    root.get("id").in(readySubquery)
+            ));
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

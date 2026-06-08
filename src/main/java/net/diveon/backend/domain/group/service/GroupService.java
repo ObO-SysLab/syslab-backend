@@ -25,6 +25,8 @@ import net.diveon.backend.domain.group.repository.GroupTagRepository;
 import net.diveon.backend.domain.group.repository.GroupUserRepository;
 import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemPractice;
+import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.problem.service.ProblemDeleteService;
 import net.diveon.backend.domain.user.entity.User;
@@ -35,12 +37,17 @@ import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupProblemAlreadyExistsException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.s3.ImageUploadService;
+import net.diveon.backend.global.util.ImageFileValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class GroupService {
@@ -52,8 +59,10 @@ public class GroupService {
     private final GroupProblemRepository groupProblemRepository;
     private final UserRepository userRepository;
     private final ProblemRepository problemRepository;
+    private final ProblemPracticeRepository problemPracticeRepository;
     private final ContestRepository contestRepository;
     private final ProblemDeleteService problemDeleteService;
+    private final ImageUploadService imageUploadService;
 
     public GroupService(GroupRepository groupRepository, GroupTagRepository groupTagRepository,
                         GroupUserRepository groupUserRepository,
@@ -61,8 +70,10 @@ public class GroupService {
                         GroupProblemRepository groupProblemRepository,
                         UserRepository userRepository,
                         ProblemRepository problemRepository,
+                        ProblemPracticeRepository problemPracticeRepository,
                         ContestRepository contestRepository,
-                        ProblemDeleteService problemDeleteService) {
+                        ProblemDeleteService problemDeleteService,
+                        ImageUploadService imageUploadService) {
         this.groupRepository = groupRepository;
         this.groupTagRepository = groupTagRepository;
         this.groupUserRepository = groupUserRepository;
@@ -70,8 +81,10 @@ public class GroupService {
         this.groupProblemRepository = groupProblemRepository;
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
+        this.problemPracticeRepository = problemPracticeRepository;
         this.contestRepository = contestRepository;
         this.problemDeleteService = problemDeleteService;
+        this.imageUploadService = imageUploadService;
     }
 
     // 그룹 목록 조회
@@ -162,6 +175,27 @@ public class GroupService {
         }
     }
 
+    // 그룹 이미지 업로드 (그룹장만 가능)
+    @Transactional
+    public String uploadGroupImage(Long groupId, Long userId, MultipartFile image) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+
+        if (groupUser.getRole() != GroupUser.GroupRole.LEADER) {
+            throw new GroupAccessDeniedException();
+        }
+
+        String extension = ImageFileValidator.validateAndGetExtension(image);
+        String key = "groups/" + groupId + "." + extension;
+        String imageUrl = imageUploadService.upload(key, image);
+
+        group.updateImage(imageUrl);
+        return imageUrl;
+    }
+
     // 그룹 삭제
     @Transactional
     public void deleteGroup(Long groupId, Long userId) {
@@ -224,8 +258,24 @@ public class GroupService {
         Pageable pageable = PageRequest.of(page - 1, 10, Sort.by(Sort.Direction.DESC, "assignedAt"));
         Page<GroupProblem> groupProblemPage = groupProblemRepository.findAllByGroupId(groupId, pageable);
 
+        Set<Long> practiceProblemIds = groupProblemPage.getContent().stream()
+                .map(GroupProblem::getProblem)
+                .filter(p -> "practice".equals(p.getType()))
+                .map(Problem::getId)
+                .collect(Collectors.toSet());
+
+        Set<Long> readyPracticeIds = practiceProblemIds.isEmpty() ? Set.of() :
+                problemPracticeRepository.findAllById(practiceProblemIds).stream()
+                        .filter(pp -> "READY".equals(pp.getImageStatus()))
+                        .map(ProblemPractice::getProbId)
+                        .collect(Collectors.toSet());
+
         List<GroupProblemListResponse.ProblemItem> problems = groupProblemPage.getContent()
                 .stream()
+                .filter(gp -> {
+                    if (!"practice".equals(gp.getProblem().getType())) return true;
+                    return readyPracticeIds.contains(gp.getProblem().getId());
+                })
                 .map(GroupProblemListResponse.ProblemItem::of)
                 .toList();
 
