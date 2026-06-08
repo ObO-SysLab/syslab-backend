@@ -7,16 +7,18 @@ public class GroupDetailResponse {
     private final Long groupId;
     private final String title;
     private final String description;
+    private final String imageUrl;
     private final List<String> tags;
     private final Stats stats;
     private final Settings settings;
     private final UserContext userContext;
 
-    public GroupDetailResponse(Long groupId, String title, String description, List<String> tags,
+    public GroupDetailResponse(Long groupId, String title, String description, String imageUrl, List<String> tags,
                                Stats stats, Settings settings, UserContext userContext) {
         this.groupId = groupId;
         this.title = title;
         this.description = description;
+        this.imageUrl = imageUrl;
         this.tags = tags;
         this.stats = stats;
         this.settings = settings;
@@ -26,6 +28,7 @@ public class GroupDetailResponse {
     public Long getGroupId() { return groupId; }
     public String getTitle() { return title; }
     public String getDescription() { return description; }
+    public String getImageUrl() { return imageUrl; }
     public List<String> getTags() { return tags; }
     public Stats getStats() { return stats; }
     public Settings getSettings() { return settings; }

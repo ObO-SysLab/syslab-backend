@@ -380,6 +380,7 @@ public class GroupService {
                 group.getId(),
                 group.getTitle(),
                 group.getDescription(),
+                group.getImage(),
                 tags,
                 new GroupDetailResponse.Stats(memberCount, problemCount, contestCount),
                 new GroupDetailResponse.Settings(group.getIsPrivate(), group.getIsAutoApprove()),
