@@ -13,6 +13,10 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     private Long probId;
 
     private String author;
+
+    @JsonProperty("isOwner")
+    private boolean isOwner;
+
     private String type;
     private String title;
     private String category;
@@ -42,6 +46,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     public ProblemDetailPracticeResponse(
         Long probId,
         String author,
+        boolean isOwner,
         String type,
         String title,
         String category,
@@ -57,6 +62,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     ) {
         this.probId = probId;
         this.author = author;
+        this.isOwner = isOwner;
         this.type = type;
         this.title = title;
         this.category = category;
@@ -71,7 +77,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
         this.updatedAt = updatedAt;
     }
 
-    public static ProblemDetailPracticeResponse of(Problem problem, ProblemPractice problemPractice) {
+    public static ProblemDetailPracticeResponse of(Problem problem, ProblemPractice problemPractice, boolean isOwner) {
         VmInfo vmInfo = new VmInfo(
             problemPractice.getOsImage(),
             problemPractice.getAllowedCommands()
@@ -80,6 +86,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
         return new ProblemDetailPracticeResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
+            isOwner,
             problem.getType(),
             problem.getTitle(),
             problem.getCategory(),
@@ -97,6 +104,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
 
     public Long getProbId() { return probId; }
     public String getAuthor() { return author; }
+    public boolean getIsOwner() { return isOwner; }
     public String getType() { return type; }
     public String getTitle() { return title; }
     public String getCategory() { return category; }
