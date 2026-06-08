@@ -87,6 +87,10 @@ public class User {
         this.password = encodedPassword;
     }
 
+    public void updateProfileImage(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
+
     public Long getId() { return id; }
     public String getLoginId() { return loginId; }
     public String getPassword() { return password; }

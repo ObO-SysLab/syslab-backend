@@ -7,6 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.Delete;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectsRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ObjectIdentifier;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.List;
@@ -64,6 +69,33 @@ public class S3ServiceImpl implements S3Service {
         } catch (Exception e) {
             throw new RuntimeException("코딩형 테스트케이스 S3 업로드 실패: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public void deleteDockerfileZip(Long probId) {
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key("prob-" + probId + "/source.zip")
+                .build());
+    }
+
+    @Override
+    public void deleteCodingTestcases(Long probId) {
+        String prefix = "testcases/prob-" + probId + "/";
+        List<ObjectIdentifier> keys = s3Client.listObjectsV2(ListObjectsV2Request.builder()
+                        .bucket(codeBucket)
+                        .prefix(prefix)
+                        .build())
+                .contents().stream()
+                .map(o -> ObjectIdentifier.builder().key(o.key()).build())
+                .toList();
+
+        if (keys.isEmpty()) return;
+
+        s3Client.deleteObjects(DeleteObjectsRequest.builder()
+                .bucket(codeBucket)
+                .delete(Delete.builder().objects(keys).build())
+                .build());
     }
 
     private void uploadTextFile(String key, String content) {

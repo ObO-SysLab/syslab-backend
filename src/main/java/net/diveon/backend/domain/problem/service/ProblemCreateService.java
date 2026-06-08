@@ -109,9 +109,8 @@ public class ProblemCreateService {
         );
         problemObjectiveRepository.save(problemObjective);
         //TODO : 이 로직이 왜 이런건지 확인하기
-        // 아 그리고 지금 구조가 request.getObo().getSteps() 이런식이라 
+        // 지금 구조가 request.getObo().getSteps() 이런식이라 
         // 이건 request를 수정하든 다른 방식을추가해야할듯. 
-        // 뻑나기 쉬워보임null.getSteps() 될거같음
         if (Boolean.TRUE.equals(oboEnabled) && request.getObo() != null && request.getObo().getSteps() != null && !request.getObo().getSteps().isEmpty()) {
             List<OboStep> oboSteps = request.getObo().getSteps().stream()
                 .map(step -> toOboStep(savedProblem, step))
