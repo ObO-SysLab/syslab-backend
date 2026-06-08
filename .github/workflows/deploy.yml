@@ -94,6 +94,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
+            set -e
             aws ecr get-login-password --region ap-northeast-2 | \
               docker login --username AWS --password-stdin \
               ${{ secrets.ECR_REGISTRY }}
@@ -107,3 +108,4 @@ jobs:
               -e JAVA_TOOL_OPTIONS="-Duser.timezone=Asia/Seoul" \
               -v /home/ec2-user/syslab-key.pem:/app/syslab-key.pem:ro \
               ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:latest
+            docker image prune -af
