@@ -62,8 +62,8 @@ public class ProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        String extension = ImageFileValidator.validateAndGetExtension(image);
-        String key = "profiles/users/" + userId + "." + extension;
+        ImageFileValidator.validateAndGetExtension(image);
+        String key = "profiles/users/" + userId;
         String imageUrl = imageUploadService.upload(key, image);
 
         user.updateProfileImage(imageUrl);
