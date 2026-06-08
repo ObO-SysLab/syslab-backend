@@ -40,6 +40,7 @@ jobs:
               bucket-code: syslab-code
               bucket-frontend: syslab-frontend
               bucket-practice-dockerfile: ${{ secrets.S3_PRACTICE_BUCKET }}
+              cloudfront-domain: d3ghudecvdi62z.cloudfront.net
             ecr:
               practice-registry: 290373175858.dkr.ecr.ap-northeast-2.amazonaws.com
               practice-repository: ${{ secrets.ECR_PRACTICE_REPOSITORY }}
