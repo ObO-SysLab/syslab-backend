@@ -188,8 +188,8 @@ public class GroupService {
             throw new GroupAccessDeniedException();
         }
 
-        String extension = ImageFileValidator.validateAndGetExtension(image);
-        String key = "profiles/groups/" + groupId + "." + extension;
+        ImageFileValidator.validateAndGetExtension(image);
+        String key = "profiles/groups/" + groupId;
         String imageUrl = imageUploadService.upload(key, image);
 
         group.updateImage(imageUrl);
