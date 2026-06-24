@@ -2,8 +2,10 @@ package net.diveon.backend.domain.problem.controller;
 
 import net.diveon.backend.domain.problem.dto.response.interfaces.ProblemDetailResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemRankingResponse;
 import net.diveon.backend.domain.problem.service.ProblemDetailService;
 import net.diveon.backend.domain.problem.service.ProblemListService;
+import net.diveon.backend.domain.problem.service.ProblemRankingService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,10 +21,13 @@ public class ProblemController {
 
     private final ProblemDetailService problemDetailService;
     private final ProblemListService problemListService;
+    private final ProblemRankingService problemRankingService;
 
-    public ProblemController(ProblemDetailService problemDetailService, ProblemListService problemListService) {
+    public ProblemController(ProblemDetailService problemDetailService, ProblemListService problemListService,
+                             ProblemRankingService problemRankingService) {
         this.problemDetailService = problemDetailService;
         this.problemListService = problemListService;
+        this.problemRankingService = problemRankingService;
     }
 
     @GetMapping("")
@@ -66,5 +71,14 @@ public class ProblemController {
 
         return ResponseEntity.status(200)
             .body(ApiResponse.success("문제 상세 조회에 성공하였습니다.", responseData));
+    }
+
+    @GetMapping("/{probId}/ranking")
+    public ResponseEntity<ApiResponse<ProblemRankingResponse>> getRanking(
+        @PathVariable("probId") long probId,
+        @RequestParam(defaultValue = "1") int page
+    ) {
+        ProblemRankingResponse responseData = problemRankingService.getRanking(probId, page);
+        return ResponseEntity.ok(ApiResponse.success("문제 랭킹 조회에 성공하였습니다.", responseData));
     }
 }
