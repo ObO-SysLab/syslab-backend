@@ -27,7 +27,7 @@ import org.hibernate.annotations.OnDeleteAction;
 | result       | enum      | NOT NULL                                   | 클래스 enum 참고 |
 | submitted_at | TIMESTAMP | NOT NULL, DEFAULT NOW()                    | 제출 시각       |
 </pre>
- */
+ */ 
 @Entity
 public class SolveSubmission {
 
