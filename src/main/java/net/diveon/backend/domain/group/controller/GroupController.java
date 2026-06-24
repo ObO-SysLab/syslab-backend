@@ -9,11 +9,13 @@ import net.diveon.backend.domain.group.dto.GroupImageUploadResponse;
 import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
+import net.diveon.backend.domain.group.dto.GroupRankingResponse;
 import net.diveon.backend.domain.group.dto.GroupUpdateRequest;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import net.diveon.backend.domain.contest.dto.response.GroupContestListResponse;
 import net.diveon.backend.domain.contest.service.ContestService;
+import net.diveon.backend.domain.group.service.GroupRankingService;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.MediaType;
@@ -36,10 +38,21 @@ public class GroupController {
 
     private final GroupService groupService;
     private final ContestService contestService;
+    private final GroupRankingService groupRankingService;
 
-    public GroupController(GroupService groupService, ContestService contestService) {
+    public GroupController(GroupService groupService, ContestService contestService,
+                           GroupRankingService groupRankingService) {
         this.groupService = groupService;
         this.contestService = contestService;
+        this.groupRankingService = groupRankingService;
+    }
+
+    // 그룹 랭킹 조회
+    @GetMapping("/ranking")
+    public ResponseEntity<ApiResponse<GroupRankingResponse>> getGroupRanking(
+            @RequestParam(defaultValue = "1") int page) {
+        GroupRankingResponse response = groupRankingService.getRanking(page);
+        return ResponseEntity.ok(ApiResponse.success("그룹 랭킹 조회에 성공하였습니다.", response));
     }
 
     // 그룹 검색
