@@ -27,6 +27,7 @@ import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.domain.user.service.UserTierService;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -65,6 +66,7 @@ public class SubmissionGradeAsyncService {
 
     private final SolveResultRepository solveResultRepository;
     private final CodingGradeQueueService codingGradeQueueService;
+    private final UserTierService userTierService;
 
     public SubmissionGradeAsyncService(UserRepository userRepository,
         ProblemRepository problemRepository,
@@ -76,7 +78,8 @@ public class SubmissionGradeAsyncService {
         SolveSubmissionCodingRepository solveSubmissionCodingRepository,
         SolveSubmissionPracticeRepository solveSubmissionPracticeRepository,
         SolveResultRepository solveResultRepository,
-        CodingGradeQueueService codingGradeQueueService
+        CodingGradeQueueService codingGradeQueueService,
+        UserTierService userTierService
     ){
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -90,6 +93,7 @@ public class SubmissionGradeAsyncService {
         this.solveSubmissionPracticeRepository = solveSubmissionPracticeRepository;
         this.solveSubmissionObjectiveRepository = solveSubmissionObjectiveRepository;
         this.codingGradeQueueService = codingGradeQueueService;
+        this.userTierService = userTierService;
     }
 
 
@@ -153,6 +157,7 @@ public class SubmissionGradeAsyncService {
             submission.setSubmissionState(SubmissionState.COMPLETED);
             if (!alreadySolved) {
                 problem.incrementSolvedCount();
+                userTierService.refreshTierScore(submitterId);
             }
         }else{
             //오답
@@ -204,6 +209,7 @@ public class SubmissionGradeAsyncService {
             submission.setSubmissionState(SubmissionState.COMPLETED);
             if (!alreadySolved) {
                 problem.incrementSolvedCount();
+                userTierService.refreshTierScore(submitterId);
             }
         }else{
             //오답
