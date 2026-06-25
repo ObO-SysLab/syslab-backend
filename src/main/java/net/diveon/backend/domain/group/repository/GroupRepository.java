@@ -44,18 +44,18 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
                 SELECT gp.group_id, COUNT(*) AS cnt
                 FROM solve_submission ss
                 JOIN solve_result sr ON sr.submission_id = ss.id AND sr.result_status = 'CORRECT'
-                JOIN group_problem gp ON gp.problem_id = ss.problem_id
-                JOIN group_user gu ON gu.group_id = gp.group_id AND gu.user_id = ss.user_id
-                JOIN problem_summary p ON p.id = ss.problem_id AND p.visibility = 'public'
+                JOIN group_problem gp ON gp.problem_id = ss.prob_id
+                JOIN group_user gu ON gu.group_id = gp.group_id AND gu.user_id = ss.submitter_id
+                JOIN problem_summary p ON p.id = ss.prob_id AND p.visibility = 'public'
                 GROUP BY gp.group_id
             ) ps ON ps.group_id = g.id
             LEFT JOIN (
                 SELECT gp.group_id, COUNT(*) AS cnt
                 FROM solve_submission ss
                 JOIN solve_result sr ON sr.submission_id = ss.id AND sr.result_status = 'CORRECT'
-                JOIN group_problem gp ON gp.problem_id = ss.problem_id
-                JOIN group_user gu ON gu.group_id = gp.group_id AND gu.user_id = ss.user_id
-                JOIN problem_summary p ON p.id = ss.problem_id AND p.visibility = 'group'
+                JOIN group_problem gp ON gp.problem_id = ss.prob_id
+                JOIN group_user gu ON gu.group_id = gp.group_id AND gu.user_id = ss.submitter_id
+                JOIN problem_summary p ON p.id = ss.prob_id AND p.visibility = 'group'
                 GROUP BY gp.group_id
             ) gs ON gs.group_id = g.id
             LEFT JOIN (
