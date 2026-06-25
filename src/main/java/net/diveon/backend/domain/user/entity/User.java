@@ -91,6 +91,11 @@ public class User {
         this.profileImgUrl = profileImgUrl;
     }
 
+    public void updateTierScore(Integer score, Integer tier) {
+        this.score = score;
+        this.tier = tier;
+    }
+
     public Long getId() { return id; }
     public String getLoginId() { return loginId; }
     public String getPassword() { return password; }
