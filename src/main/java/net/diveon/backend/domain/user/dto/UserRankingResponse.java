@@ -35,7 +35,7 @@ public class UserRankingResponse {
         private final Long userId;
         private final String nickname;
         private final String profileImgUrl;
-        private final Integer tier;
+        private final String tier;
         private final Integer score;
 
         public RankingEntry(Integer rank, Long userId, String nickname, String profileImgUrl, Integer tier, Integer score) {
@@ -43,7 +43,7 @@ public class UserRankingResponse {
             this.userId = userId;
             this.nickname = nickname;
             this.profileImgUrl = profileImgUrl;
-            this.tier = tier;
+            this.tier = String.valueOf(tier);
             this.score = score;
         }
 
@@ -51,7 +51,7 @@ public class UserRankingResponse {
         public Long getUserId() { return userId; }
         public String getNickname() { return nickname; }
         public String getProfileImgUrl() { return profileImgUrl; }
-        public Integer getTier() { return tier; }
+        public String getTier() { return tier; }
         public Integer getScore() { return score; }
     }
 }
