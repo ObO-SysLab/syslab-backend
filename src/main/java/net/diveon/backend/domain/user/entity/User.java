@@ -76,6 +76,20 @@ public class User {
         this.score = 0;
     }
 
+    public static User createSocialUser(String loginId, String password, String nickname, String email, String realName, String profileImgUrl) {
+        User user = new User();
+        user.loginId = loginId;
+        user.password = password;
+        user.nickname = nickname;
+        user.email = email;
+        user.realName = realName;
+        user.profileImgUrl = profileImgUrl;
+        user.createdAt = LocalDateTime.now();
+        user.tier = 0;
+        user.score = 0;
+        return user;
+    }
+
     public void updateProfile(String nickname, String comment, String belong, List<String> interest) {
         if (nickname != null) this.nickname = nickname;
         if (comment != null) this.comment = comment;
