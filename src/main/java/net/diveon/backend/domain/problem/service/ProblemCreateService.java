@@ -16,6 +16,7 @@ import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateCodingRequest;
+import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreatePracticeResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateCodingResponse;
@@ -107,6 +108,7 @@ public class ProblemCreateService {
                 request.getAnswer(),
                 oboEnabled
         );
+        applyOboJson(problemObjective, request.getOboJson());
         problemObjectiveRepository.save(problemObjective);
         //TODO : 이 로직이 왜 이런건지 확인하기
         // 지금 구조가 request.getObo().getSteps() 이런식이라 
@@ -218,6 +220,7 @@ public class ProblemCreateService {
                 oboEnabled,
                 oboInitialImageUrl
         );
+        applyOboJson(problemCoding, request.getOboJson());
         problemCodingRepository.save(problemCoding);
         s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
 
@@ -264,5 +267,23 @@ public class ProblemCreateService {
 
     private OboStep toOboStep(Problem problem, ForDtoOboStep step) {
         return new OboStep(problem, step.getStep(), step.getDescription(), step.getImageUrl());
+    }
+
+    private void applyOboJson(ProblemObjective problemObjective, OboPassThroughResponse oboJson) {
+        if (oboJson == null) {
+            return;
+        }
+        problemObjective.setNodes(oboJson.getNodes());
+        problemObjective.setEdges(oboJson.getEdges());
+        problemObjective.setFrames(oboJson.getFrames());
+    }
+
+    private void applyOboJson(ProblemCoding problemCoding, OboPassThroughResponse oboJson) {
+        if (oboJson == null) {
+            return;
+        }
+        problemCoding.setNodes(oboJson.getNodes());
+        problemCoding.setEdges(oboJson.getEdges());
+        problemCoding.setFrames(oboJson.getFrames());
     }
 }

@@ -5,7 +5,13 @@ package net.diveon.backend.domain.problem.entity;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import net.diveon.backend.domain.problem.others.ForDtoChoice;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
 
@@ -45,6 +51,22 @@ public class ProblemObjective {
     @Column(name = "obo_enabled", nullable = false)
     private Boolean oboEnabled = false;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_nodes", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode nodes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_edges", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode edges;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_frames", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode frames;
+
+
     // 1. JPA용 기본 생성자
     public ProblemObjective() {
     }
@@ -69,6 +91,19 @@ public class ProblemObjective {
     public List<ForDtoChoice> getChoices() { return choices; }
     public List<Integer> getAnswer() { return answer; }
     public Boolean getOboEnabled() { return oboEnabled; }
+
+
+    //getter for new obo jso, 20260708
+    public JsonNode getNodes() { return nodes; }
+    public JsonNode getEdges() { return edges; }
+    public JsonNode getFrames() { return frames; }
+
+
+    //setter for new obo jso, 20260708
+    public void setNodes(JsonNode nodes) { this.nodes = nodes; }
+    public void setEdges(JsonNode edges) { this.edges = edges; }
+    public void setFrames(JsonNode frames) { this.frames = frames; }
+
     /**
      * <pre>
      * 수정-추가 안상완
