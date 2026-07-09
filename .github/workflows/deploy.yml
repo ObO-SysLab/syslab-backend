@@ -53,6 +53,11 @@ jobs:
             ec2-user: ec2-user
             ec2-key-path: /app/syslab-key.pem
           auth:
+            google:
+              client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
+              client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+              redirect-uri: https://www.diveon.net
+              allowed-origins: https://www.diveon.net
             jwt:
               header: Authorization
               issuer: diveon
