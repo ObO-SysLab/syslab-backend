@@ -56,8 +56,8 @@ jobs:
             google:
               client-id: ${{ secrets.GOOGLE_CLIENT_ID }}
               client-secret: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-              redirect-uri: ${{ secrets.GOOGLE_REDIRECT_URI }}
-              allowed-origins: ${{ secrets.GOOGLE_ALLOWED_ORIGINS }}
+              redirect-uri: https://www.diveon.net
+              allowed-origins: https://www.diveon.net
             jwt:
               header: Authorization
               issuer: diveon
