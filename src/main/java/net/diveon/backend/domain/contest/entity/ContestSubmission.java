@@ -2,6 +2,7 @@ package net.diveon.backend.domain.contest.entity;
 
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -46,7 +47,8 @@ public class ContestSubmission {
     @OnDelete(action = OnDeleteAction.SET_NULL)
     private SolveSubmission solveSubmission;
 
-    @Column(name = "submission_status", nullable = false, columnDefinition = "VARCHAR(20) DEFAULT 'COMPLETED'")
+    @Column(name = "submission_status", nullable = false, length = 20)
+    @ColumnDefault("'COMPLETED'")
     private String submissionStatus;
 
     @Column(name = "is_correct")

@@ -20,10 +20,13 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
 
     @Query("SELECT g FROM Group g WHERE " +
            "(:tag IS NULL OR EXISTS (SELECT gt FROM GroupTag gt WHERE gt.group = g AND gt.tag = :tag)) AND " +
-           "(:userId IS NULL OR EXISTS (SELECT gu FROM GroupUser gu WHERE gu.group = g AND gu.user.id = :userId))")
-    Page<Group> findAllWithFilters(@Param("tag") String tag, @Param("userId") Long userId, Pageable pageable);
+           "(:filterUserId IS NULL OR EXISTS (SELECT gu FROM GroupUser gu WHERE gu.group = g AND gu.user.id = :filterUserId)) AND " +
+           "(g.isPrivate = false OR (:currentUserId IS NOT NULL AND EXISTS (SELECT gu FROM GroupUser gu WHERE gu.group = g AND gu.user.id = :currentUserId)))")
+    Page<Group> findAllWithFilters(@Param("tag") String tag, @Param("filterUserId") Long filterUserId, @Param("currentUserId") Long currentUserId, Pageable pageable);
 
     Page<Group> findByTitleContainingIgnoreCase(String keyword, Pageable pageable);
+
+    Optional<Group> findByInvitationCode(String invitationCode);
 
     @Query(value = """
             SELECT
@@ -35,6 +38,7 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
                     + COALESCE(gs.cnt, 0) * 10
                     + COALESCE(cc.cnt, 0) * 100)                             AS score
             FROM domain_group g
+            WHERE g.is_private = false
             LEFT JOIN (
                 SELECT group_id, COUNT(*) AS cnt
                 FROM group_user
@@ -66,7 +70,16 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
             ) cc ON cc.group_id = g.id
             ORDER BY score DESC
             """,
-            countQuery = "SELECT COUNT(*) FROM domain_group",
+            countQuery = "SELECT COUNT(*) FROM domain_group WHERE is_private = false",
             nativeQuery = true)
     Page<GroupRankingProjection> findGroupRanking(Pageable pageable);
 }
+/* 지금 방식 (SQL 한 방):
+DB에 쿼리 1번 → 결과 한 번에 받아옴
+
+Java에서 계산하는 방식: (N+1 문제)
+그룹이 10개면 → DB에 쿼리 30번
+그룹이 100개면 → DB에 쿼리 300번
+
+SQL문이 길고 복잡하긴 한데 성능상 차라리 낫다고 해서 선택
+*/

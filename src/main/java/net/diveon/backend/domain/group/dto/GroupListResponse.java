@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.group.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 public class GroupListResponse {
@@ -29,8 +30,9 @@ public class GroupListResponse {
         private int totalMembers;
         private List<String> tags;
         private boolean joined;
+        private boolean isPrivate;
 
-        public GroupItem(Long groupId, String title, String leader, int memberCount, int totalMembers, List<String> tags, boolean joined) {
+        public GroupItem(Long groupId, String title, String leader, int memberCount, int totalMembers, List<String> tags, boolean joined, boolean isPrivate) {
             this.groupId = groupId;
             this.title = title;
             this.leader = leader;
@@ -38,6 +40,7 @@ public class GroupListResponse {
             this.totalMembers = totalMembers;
             this.tags = tags;
             this.joined = joined;
+            this.isPrivate = isPrivate;
         }
 
         public Long getGroupId() { return groupId; }
@@ -47,5 +50,6 @@ public class GroupListResponse {
         public int getTotalMembers() { return totalMembers; }
         public List<String> getTags() { return tags; }
         public boolean isJoined() { return joined; }
+        public boolean getIsPrivate() { return isPrivate; }
     }
 }

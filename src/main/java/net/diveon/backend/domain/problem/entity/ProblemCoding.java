@@ -10,7 +10,13 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import net.diveon.backend.domain.problem.others.ForDtoTestCase;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.List;
 
@@ -63,6 +69,22 @@ public class ProblemCoding {
     @Column(name = "obo_initial_image_url", length = 500)
     private String oboInitialImageUrl;
 
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_nodes", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode nodes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_edges", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode edges;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "obo_frames", columnDefinition = "jsonb")
+    @ColumnDefault("NULL")
+    private JsonNode frames;
+
     // 1. JPA용 기본 생성자
     public ProblemCoding() {
     }
@@ -101,6 +123,10 @@ public class ProblemCoding {
     public String getFileUrl() { return fileUrl; }
     public Boolean getOboEnabled() { return oboEnabled; }
     public String getOboInitialImageUrl() { return oboInitialImageUrl; }
+    //for new obo jso, 20260708
+    public JsonNode getNodes() { return nodes; }
+    public JsonNode getEdges() { return edges; }
+    public JsonNode getFrames() { return frames; }
 
     // 4. Setter 메서드
     public void setProblem(Problem problem) { this.problem = problem; }
@@ -115,6 +141,10 @@ public class ProblemCoding {
     public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
     public void setOboEnabled(Boolean oboEnabled) { this.oboEnabled = oboEnabled; }
     public void setOboInitialImageUrl(String oboInitialImageUrl) { this.oboInitialImageUrl = oboInitialImageUrl; }
+    //for new obo jso, 20260708
+    public void setNodes(JsonNode nodes) { this.nodes = nodes; }
+    public void setEdges(JsonNode edges) { this.edges = edges; }
+    public void setFrames(JsonNode frames) { this.frames = frames; }
 
     // 5. 비즈니스 로직
     public void updateProblemCoding(String summary, String description) {

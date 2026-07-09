@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.problem.dto.request;
 
+import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
 import net.diveon.backend.domain.problem.others.ForDtoChoice;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 
@@ -55,6 +56,7 @@ public class ProblemCreateObjectiveRequest {
     private List<Integer> answer;
     private Boolean oboEnabled;
     private Obo obo;
+    private OboPassThroughResponse oboJson;
 
     public ProblemCreateObjectiveRequest() {
     }
@@ -149,6 +151,14 @@ public class ProblemCreateObjectiveRequest {
 
     public void setObo(Obo obo) {
         this.obo = obo;
+    }
+
+    public OboPassThroughResponse getOboJson() {
+        return oboJson;
+    }
+
+    public void setOboJson(OboPassThroughResponse oboJson) {
+        this.oboJson = oboJson;
     }
 
     public static class Obo {
