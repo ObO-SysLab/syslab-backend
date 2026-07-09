@@ -38,7 +38,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
                     + COALESCE(gs.cnt, 0) * 10
                     + COALESCE(cc.cnt, 0) * 100)                             AS score
             FROM domain_group g
-            WHERE g.is_private = false
             LEFT JOIN (
                 SELECT group_id, COUNT(*) AS cnt
                 FROM group_user
@@ -68,6 +67,7 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
                 WHERE group_id IS NOT NULL
                 GROUP BY group_id
             ) cc ON cc.group_id = g.id
+            WHERE g.is_private = false
             ORDER BY score DESC
             """,
             countQuery = "SELECT COUNT(*) FROM domain_group WHERE is_private = false",
