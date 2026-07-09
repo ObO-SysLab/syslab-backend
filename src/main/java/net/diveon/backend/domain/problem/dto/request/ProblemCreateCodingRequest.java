@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.problem.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
 import net.diveon.backend.domain.problem.others.ForDtoTestCase;
 
 import java.util.List;
@@ -29,6 +30,7 @@ public class ProblemCreateCodingRequest {
     private String fileUrl;
 
     private Obo obo;
+    private OboPassThroughResponse oboJson;
 
     public ProblemCreateCodingRequest() {
     }
@@ -73,6 +75,9 @@ public class ProblemCreateCodingRequest {
 
     public Obo getObo() { return obo; }
     public void setObo(Obo obo) { this.obo = obo; }
+
+    public OboPassThroughResponse getOboJson() { return oboJson; }
+    public void setOboJson(OboPassThroughResponse oboJson) { this.oboJson = oboJson; }
 
     public static class Constraints {
         @JsonProperty("timeLimitMs")

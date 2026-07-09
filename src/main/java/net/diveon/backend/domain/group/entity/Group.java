@@ -55,11 +55,14 @@ public class Group {
     @Column(name = "invitation_code", unique = true, length = 50)
     private String invitationCode;
 
+    @Column(name = "invitation_code_expires_at")
+    private LocalDateTime invitationCodeExpiresAt;
+
     public Group() {
     }
 
     public Group(User leader, Short limitMemberCount, String image, String title, String description,
-                 Boolean isPrivate, Boolean isAutoApprove, String invitationCode) {
+                 Boolean isPrivate, Boolean isAutoApprove, String invitationCode, LocalDateTime invitationCodeExpiresAt) {
         this.leader = leader;
         this.createdAt = LocalDateTime.now();
         this.limitMemberCount = limitMemberCount != null ? limitMemberCount : 50;
@@ -69,6 +72,7 @@ public class Group {
         this.isPrivate = isPrivate != null ? isPrivate : false;
         this.isAutoApprove = isAutoApprove != null ? isAutoApprove : false;
         this.invitationCode = invitationCode;
+        this.invitationCodeExpiresAt = invitationCodeExpiresAt;
     }
 
     public Long getId() { return id; }
@@ -81,6 +85,12 @@ public class Group {
     public Boolean getIsPrivate() { return isPrivate; }
     public Boolean getIsAutoApprove() { return isAutoApprove; }
     public String getInvitationCode() { return invitationCode; }
+    public LocalDateTime getInvitationCodeExpiresAt() { return invitationCodeExpiresAt; }
+
+    public void updateInvitationCode(String code, LocalDateTime expiresAt) {
+        this.invitationCode = code;
+        this.invitationCodeExpiresAt = expiresAt;
+    }
 
     public void update(String title, String description, Boolean isPrivate, Boolean isAutoApprove) {
         this.title = title;

@@ -5,6 +5,7 @@ import net.diveon.backend.domain.group.dto.GroupUpdateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
+import net.diveon.backend.domain.group.dto.GroupInviteCodeResponse;
 import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
@@ -43,10 +44,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -97,7 +100,7 @@ public class GroupService {
         // isJoined=true면 내 그룹만, 아니면 전체 조회
         Long filterUserId = Boolean.TRUE.equals(isJoined) ? userId : null;
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Group> groupPage = groupRepository.findAllWithFilters(tag, filterUserId, pageable);
+        Page<Group> groupPage = groupRepository.findAllWithFilters(tag, filterUserId, userId, pageable);
         return buildGroupListResponse(groupPage, userId, page);
     }
 
@@ -142,9 +145,10 @@ public class GroupService {
                         group.getTitle(),
                         group.getLeader().getNickname(),
                         memberCountMap.getOrDefault(group.getId(), 0L).intValue(),
-                        group.getLimitMemberCount(),
+                        group.getLimitMemberCount().intValue(),
                         tagMap.getOrDefault(group.getId(), List.of()),
-                        joinedGroupIds.contains(group.getId())
+                        joinedGroupIds.contains(group.getId()),
+                        group.getIsPrivate()
                 )).toList();
 
         return new GroupListResponse(groupPage.getTotalElements(), groupPage.getTotalPages(), page, groups);
@@ -224,15 +228,17 @@ public class GroupService {
         User leader = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
+        boolean isPrivate = Boolean.TRUE.equals(request.getIsPrivate());
         Group group = new Group(
                 leader,
-                null, // limitMemberCount → 기본값 50
-                null, // image → 이미지 업로드 추후 구현
+                null,
+                null,
                 request.getTitle(),
                 request.getDescription(),
                 request.getIsPrivate(),
                 request.getIsAutoApprove(),
-                null // invitationCode → 초대코드 추후 구현
+                isPrivate ? UUID.randomUUID().toString() : null,
+                isPrivate ? LocalDateTime.now().plusDays(30) : null
         );
         groupRepository.save(group);
 
@@ -346,6 +352,33 @@ public class GroupService {
                     return GroupMyListResponse.of(groupUser, isAlreadyAdded);
                 })
                 .toList();
+    }
+
+    // 초대코드 재발급 (그룹장만)
+    @Transactional
+    public GroupInviteCodeResponse regenerateInviteCode(Long groupId, Long userId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+        if (groupUser.getRole() != GroupRole.LEADER) {
+            throw new GroupLeaderPermissionDeniedException();
+        }
+        group.updateInvitationCode(UUID.randomUUID().toString(), LocalDateTime.now().plusDays(30));
+        return new GroupInviteCodeResponse(group.getInvitationCode(), group.getInvitationCodeExpiresAt());
+    }
+
+    // 초대코드 조회 (그룹장만)
+    @Transactional(readOnly = true)
+    public GroupInviteCodeResponse getInviteCode(Long groupId, Long userId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(GroupNotFoundException::new);
+        GroupUser groupUser = groupUserRepository.findByGroupIdAndUserId(groupId, userId)
+                .orElseThrow(GroupAccessDeniedException::new);
+        if (groupUser.getRole() != GroupRole.LEADER) {
+            throw new GroupLeaderPermissionDeniedException();
+        }
+        return new GroupInviteCodeResponse(group.getInvitationCode(), group.getInvitationCodeExpiresAt());
     }
 
     // 그룹 상세 조회

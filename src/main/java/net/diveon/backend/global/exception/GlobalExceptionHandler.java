@@ -248,6 +248,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 초대링크 만료 → 410
+        @ExceptionHandler(InvitationCodeExpiredException.class)
+        public ResponseEntity<ErrorResponse> handleInvitationCodeExpired(
+                InvitationCodeExpiredException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invitation-code-expired",
+                        "Gone",
+                        410,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.GONE).body(body);
+        }
+
         // 그룹 유저 없음 → 404
         @ExceptionHandler(GroupUserNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleGroupUserNotFound(
@@ -526,6 +540,34 @@ public class GlobalExceptionHandler {
                         request.getRequestURI()
                 );
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+
+        // 구글 소셜 로그인 실패 → 401
+        @ExceptionHandler(GoogleOAuthException.class)
+        public ResponseEntity<ErrorResponse> handleGoogleOAuth(
+                GoogleOAuthException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/google-oauth-failed",
+                        "Unauthorized",
+                        401,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+        }
+
+        // 이미 다른 로그인 방식으로 가입된 이메일 → 409
+        @ExceptionHandler(SocialAccountConflictException.class)
+        public ResponseEntity<ErrorResponse> handleSocialAccountConflict(
+                SocialAccountConflictException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/social-account",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
         // 이메일 인증 코드 불일치/만료 → 400

@@ -1,11 +1,14 @@
 package net.diveon.backend.domain.problem.controller;
 
 import net.diveon.backend.domain.problem.dto.response.interfaces.ProblemDetailResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemListItemResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemRankingResponse;
 import net.diveon.backend.domain.problem.service.ProblemDetailService;
 import net.diveon.backend.domain.problem.service.ProblemListService;
 import net.diveon.backend.domain.problem.service.ProblemRankingService;
+import net.diveon.backend.domain.problem.service.ProblemRandomService;
+import net.diveon.backend.domain.problem.service.ProblemTodayService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,12 +25,17 @@ public class ProblemController {
     private final ProblemDetailService problemDetailService;
     private final ProblemListService problemListService;
     private final ProblemRankingService problemRankingService;
+    private final ProblemRandomService problemRandomService;
+    private final ProblemTodayService problemTodayService;
 
     public ProblemController(ProblemDetailService problemDetailService, ProblemListService problemListService,
-                             ProblemRankingService problemRankingService) {
+                             ProblemRankingService problemRankingService, ProblemRandomService problemRandomService,
+                             ProblemTodayService problemTodayService) {
         this.problemDetailService = problemDetailService;
         this.problemListService = problemListService;
         this.problemRankingService = problemRankingService;
+        this.problemRandomService = problemRandomService;
+        this.problemTodayService = problemTodayService;
     }
 
     @GetMapping("")
@@ -71,6 +79,22 @@ public class ProblemController {
 
         return ResponseEntity.status(200)
             .body(ApiResponse.success("문제 상세 조회에 성공하였습니다.", responseData));
+    }
+
+    @GetMapping("/today")
+    public ResponseEntity<ApiResponse<ProblemListItemResponse>> getTodayProblem(
+        @AuthenticationPrincipal String userId
+    ) {
+        ProblemListItemResponse responseData = problemTodayService.getTodayProblem(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("오늘의 문제 조회에 성공하였습니다.", responseData));
+    }
+
+    @GetMapping("/random")
+    public ResponseEntity<ApiResponse<ProblemListItemResponse>> getRandomProblem(
+        @AuthenticationPrincipal String userId
+    ) {
+        ProblemListItemResponse responseData = problemRandomService.getRandomProblem(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("랜덤 문제 조회에 성공하였습니다.", responseData));
     }
 
     @GetMapping("/{probId}/ranking")

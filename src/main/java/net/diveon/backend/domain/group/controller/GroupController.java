@@ -6,6 +6,7 @@ import net.diveon.backend.domain.group.dto.GroupCreateRequest;
 import net.diveon.backend.domain.group.dto.GroupCreateResponse;
 import net.diveon.backend.domain.group.dto.GroupDetailResponse;
 import net.diveon.backend.domain.group.dto.GroupImageUploadResponse;
+import net.diveon.backend.domain.group.dto.GroupInviteCodeResponse;
 import net.diveon.backend.domain.group.dto.GroupListResponse;
 import net.diveon.backend.domain.group.dto.GroupMyListResponse;
 import net.diveon.backend.domain.group.dto.GroupProblemListResponse;
@@ -15,6 +16,9 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import net.diveon.backend.domain.contest.dto.response.GroupContestListResponse;
 import net.diveon.backend.domain.contest.service.ContestService;
+import net.diveon.backend.domain.group.dto.GroupJoinByInviteResponse;
+import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
+import net.diveon.backend.domain.group.service.GroupMemberService;
 import net.diveon.backend.domain.group.service.GroupRankingService;
 import net.diveon.backend.domain.group.service.GroupService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -37,12 +41,14 @@ import java.util.List;
 public class GroupController {
 
     private final GroupService groupService;
+    private final GroupMemberService groupMemberService;
     private final ContestService contestService;
     private final GroupRankingService groupRankingService;
 
-    public GroupController(GroupService groupService, ContestService contestService,
-                           GroupRankingService groupRankingService) {
+    public GroupController(GroupService groupService, GroupMemberService groupMemberService,
+                           ContestService contestService, GroupRankingService groupRankingService) {
         this.groupService = groupService;
+        this.groupMemberService = groupMemberService;
         this.contestService = contestService;
         this.groupRankingService = groupRankingService;
     }
@@ -159,6 +165,16 @@ public class GroupController {
         return ResponseEntity.ok(ApiResponse.success("그룹 전용 대회 목록 조회 성공", response));
     }
 
+    // 초대링크로 그룹 가입
+    @PostMapping("/join")
+    public ResponseEntity<ApiResponse<GroupJoinByInviteResponse>> joinByInviteCode(
+            @RequestParam String code,
+            @AuthenticationPrincipal String userId) {
+        GroupJoinByInviteResponse response = groupMemberService.joinByInviteCode(code, Long.parseLong(userId));
+        String message = "already_member".equals(response.getNewStatus()) ? "이미 가입된 그룹입니다." : "그룹에 참여했습니다.";
+        return ResponseEntity.ok(ApiResponse.success(message, response));
+    }
+
     // 그룹 생성
     @PostMapping
     public ResponseEntity<ApiResponse<GroupCreateResponse>> createGroup(
@@ -166,6 +182,24 @@ public class GroupController {
             @Valid @RequestBody GroupCreateRequest request) {
         GroupCreateResponse response = groupService.createGroup(Long.parseLong(userId), request);
         return ResponseEntity.status(201).body(ApiResponse.created("그룹이 성공적으로 생성되었습니다.", response));
+    }
+
+    // 초대코드 재발급 (그룹장만)
+    @PatchMapping("/{groupId}/invite-code")
+    public ResponseEntity<ApiResponse<GroupInviteCodeResponse>> regenerateInviteCode(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId) {
+        GroupInviteCodeResponse response = groupService.regenerateInviteCode(groupId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("초대코드 재발급 성공", response));
+    }
+
+    // 초대코드 조회 (그룹장만)
+    @GetMapping("/{groupId}/invite-code")
+    public ResponseEntity<ApiResponse<GroupInviteCodeResponse>> getInviteCode(
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal String userId) {
+        GroupInviteCodeResponse response = groupService.getInviteCode(groupId, Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("초대코드 조회 성공", response));
     }
 
     // 그룹 이미지 업로드 (그룹장만 가능)
