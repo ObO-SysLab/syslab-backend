@@ -248,6 +248,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 초대링크 만료 → 410
+        @ExceptionHandler(InvitationCodeExpiredException.class)
+        public ResponseEntity<ErrorResponse> handleInvitationCodeExpired(
+                InvitationCodeExpiredException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/invitation-code-expired",
+                        "Gone",
+                        410,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.GONE).body(body);
+        }
+
         // 그룹 유저 없음 → 404
         @ExceptionHandler(GroupUserNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleGroupUserNotFound(
