@@ -1,9 +1,11 @@
 package net.diveon.backend.domain.group.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import net.diveon.backend.domain.group.dto.GroupAssignDecisionRequest;
+import net.diveon.backend.domain.group.dto.GroupJoinByInviteResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberListResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberKickResponse;
 import net.diveon.backend.domain.group.dto.GroupMemberCommonResponse;
@@ -24,6 +26,7 @@ import net.diveon.backend.global.exception.GroupLeaderCannotLeaveException;
 import net.diveon.backend.global.exception.GroupLeaderPermissionDeniedException;
 import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.global.exception.GroupUserNotFoundException;
+import net.diveon.backend.global.exception.InvitationCodeExpiredException;
 import net.diveon.backend.global.exception.UserNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +50,24 @@ public class GroupMemberService {
         this.groupUserRepository = groupUserRepository;
         this.groupAssignRequestRepository = groupAssignRequestRepository;
         this.userRepository = userRepository;
+    }
+
+    // 초대링크로 그룹 가입
+    @Transactional
+    public GroupJoinByInviteResponse joinByInviteCode(String code, Long userId) {
+        Group group = groupRepository.findByInvitationCode(code)
+                .orElseThrow(GroupNotFoundException::new);
+        if (group.getInvitationCodeExpiresAt() == null ||
+                group.getInvitationCodeExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new InvitationCodeExpiredException();
+        }
+        if (groupUserRepository.findByGroupIdAndUserId(group.getId(), userId).isPresent()) {
+            return new GroupJoinByInviteResponse(userId, "already_member", group.getId(), group.getTitle());
+        }
+        validateGroupCapacity(group.getId(), group);
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        groupUserRepository.save(new GroupUser(group, user, GroupRole.MEMBER));
+        return new GroupJoinByInviteResponse(userId, "member", group.getId(), group.getTitle());
     }
 
     // 그룹 가입 신청
