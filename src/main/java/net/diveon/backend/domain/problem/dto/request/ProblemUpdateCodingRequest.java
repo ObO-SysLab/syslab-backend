@@ -1,11 +1,14 @@
 package net.diveon.backend.domain.problem.dto.request;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 public class ProblemUpdateCodingRequest {
 
     private String title;
     private String summary;
     private String description;
     private String difficulty;
+    private JsonNode oboJson;
 
     public ProblemUpdateCodingRequest() {}
 
@@ -20,4 +23,7 @@ public class ProblemUpdateCodingRequest {
 
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
+    public JsonNode getOboJson() { return oboJson; }
+    public void setOboJson(JsonNode oboJson) { this.oboJson = oboJson; }
 }

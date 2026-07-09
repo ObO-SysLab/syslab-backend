@@ -1,6 +1,6 @@
 package net.diveon.backend.domain.problem.controller;
 
-import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.diveon.backend.domain.problem.service.ProblemOboService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +19,7 @@ public class ProblemOboController {
     }
 
     @GetMapping("/obo")
-    public ResponseEntity<OboPassThroughResponse> getOboJson(@RequestParam("id") Long problemId) {
+    public ResponseEntity<JsonNode> getOboJson(@RequestParam("id") Long problemId) {
         return ResponseEntity.ok(problemOboService.getOboJson(problemId));
     }
 }
