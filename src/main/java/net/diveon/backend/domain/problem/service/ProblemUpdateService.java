@@ -1,5 +1,7 @@
 package net.diveon.backend.domain.problem.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -74,6 +76,7 @@ public class ProblemUpdateService {
 
             problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
             problemObjective.updateProblemObjective(request.getSummary(), request.getDescription());
+            applyOboJson(problemObjective, request.getOboJson());
 
             return new ProblemUpdateObjectiveResponse(prodId, problem.getCategory(), problem.getTitle(), problem.getUpatedAt().toString());
     }
@@ -88,6 +91,7 @@ public class ProblemUpdateService {
 
         problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
         problemCoding.updateProblemCoding(request.getSummary(), request.getDescription());
+        applyOboJson(problemCoding, request.getOboJson());
 
         return new ProblemUpdateCodingResponse(probId, problem.getType(), problem.getTitle(), problem.getUpatedAt().toString());
     }
@@ -119,5 +123,19 @@ public class ProblemUpdateService {
 
     private OboStep toOboStep(Problem problem, ForDtoOboStep step) {
         return new OboStep(problem, step.getStep(), step.getDescription(), step.getImageUrl());
+    }
+
+    private void applyOboJson(ProblemObjective problemObjective, JsonNode oboJson) {
+        if (oboJson == null) {
+            return;
+        }
+        problemObjective.setOboJsonData(oboJson);
+    }
+
+    private void applyOboJson(ProblemCoding problemCoding, JsonNode oboJson) {
+        if (oboJson == null) {
+            return;
+        }
+        problemCoding.setOboJsonData(oboJson);
     }
 }
