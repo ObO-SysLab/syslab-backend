@@ -1,6 +1,6 @@
 package net.diveon.backend.domain.problem.dto.request;
 
-import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.diveon.backend.domain.problem.others.ForDtoChoice;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
 
@@ -56,7 +56,7 @@ public class ProblemCreateObjectiveRequest {
     private List<Integer> answer;
     private Boolean oboEnabled;
     private Obo obo;
-    private OboPassThroughResponse oboJson;
+    private JsonNode oboJson;
 
     public ProblemCreateObjectiveRequest() {
     }
@@ -153,11 +153,11 @@ public class ProblemCreateObjectiveRequest {
         this.obo = obo;
     }
 
-    public OboPassThroughResponse getOboJson() {
+    public JsonNode getOboJson() {
         return oboJson;
     }
 
-    public void setOboJson(OboPassThroughResponse oboJson) {
+    public void setOboJson(JsonNode oboJson) {
         this.oboJson = oboJson;
     }
 
