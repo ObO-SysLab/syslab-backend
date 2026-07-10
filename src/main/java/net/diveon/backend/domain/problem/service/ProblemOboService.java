@@ -1,6 +1,6 @@
 package net.diveon.backend.domain.problem.service;
 
-import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.entity.ProblemObjective;
@@ -29,7 +29,7 @@ public class ProblemOboService {
     }
 
     @Transactional(readOnly = true)
-    public OboPassThroughResponse getOboJson(Long problemId) {
+    public JsonNode getOboJson(Long problemId) {
         Problem problem = problemRepository.findById(problemId)
             .orElseThrow(() -> new ProblemNotFoundException(problemId + "번에 해당하는 문제가 존재하지 않습니다."));
 
@@ -48,29 +48,11 @@ public class ProblemOboService {
         return null;
     }
 
-    private OboPassThroughResponse toResponseOrNull(ProblemObjective problemObjective) {
-        if (problemObjective.getNodes() == null
-            && problemObjective.getEdges() == null
-            && problemObjective.getFrames() == null) {
-            return null;
-        }
-        return new OboPassThroughResponse(
-            problemObjective.getNodes(),
-            problemObjective.getEdges(),
-            problemObjective.getFrames()
-        );
+    private JsonNode toResponseOrNull(ProblemObjective problemObjective) {
+        return problemObjective.getOboJsonData();
     }
 
-    private OboPassThroughResponse toResponseOrNull(ProblemCoding problemCoding) {
-        if (problemCoding.getNodes() == null
-            && problemCoding.getEdges() == null
-            && problemCoding.getFrames() == null) {
-            return null;
-        }
-        return new OboPassThroughResponse(
-            problemCoding.getNodes(),
-            problemCoding.getEdges(),
-            problemCoding.getFrames()
-        );
+    private JsonNode toResponseOrNull(ProblemCoding problemCoding) {
+        return problemCoding.getOboJsonData();
     }
 }

@@ -52,19 +52,9 @@ public class ProblemObjective {
     private Boolean oboEnabled = false;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "obo_nodes", columnDefinition = "jsonb")
+    @Column(name = "obo_json_data", columnDefinition = "jsonb")
     @ColumnDefault("NULL")
-    private JsonNode nodes;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "obo_edges", columnDefinition = "jsonb")
-    @ColumnDefault("NULL")
-    private JsonNode edges;
-
-    @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "obo_frames", columnDefinition = "jsonb")
-    @ColumnDefault("NULL")
-    private JsonNode frames;
+    private JsonNode oboJsonData;
 
 
     // 1. JPA용 기본 생성자
@@ -93,16 +83,9 @@ public class ProblemObjective {
     public Boolean getOboEnabled() { return oboEnabled; }
 
 
-    //getter for new obo jso, 20260708
-    public JsonNode getNodes() { return nodes; }
-    public JsonNode getEdges() { return edges; }
-    public JsonNode getFrames() { return frames; }
+    public JsonNode getOboJsonData() { return oboJsonData; }
 
-
-    //setter for new obo jso, 20260708
-    public void setNodes(JsonNode nodes) { this.nodes = nodes; }
-    public void setEdges(JsonNode edges) { this.edges = edges; }
-    public void setFrames(JsonNode frames) { this.frames = frames; }
+    public void setOboJsonData(JsonNode oboJsonData) { this.oboJsonData = oboJsonData; }
 
     /**
      * <pre>

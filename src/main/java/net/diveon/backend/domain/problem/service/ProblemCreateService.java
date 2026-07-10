@@ -16,7 +16,7 @@ import net.diveon.backend.global.exception.GroupNotFoundException;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateObjectiveRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCreateCodingRequest;
-import net.diveon.backend.domain.problem.dto.response.OboPassThroughResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateObjectiveResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreatePracticeResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemCreateCodingResponse;
@@ -269,21 +269,17 @@ public class ProblemCreateService {
         return new OboStep(problem, step.getStep(), step.getDescription(), step.getImageUrl());
     }
 
-    private void applyOboJson(ProblemObjective problemObjective, OboPassThroughResponse oboJson) {
+    private void applyOboJson(ProblemObjective problemObjective, JsonNode oboJson) {
         if (oboJson == null) {
             return;
         }
-        problemObjective.setNodes(oboJson.getNodes());
-        problemObjective.setEdges(oboJson.getEdges());
-        problemObjective.setFrames(oboJson.getFrames());
+        problemObjective.setOboJsonData(oboJson);
     }
 
-    private void applyOboJson(ProblemCoding problemCoding, OboPassThroughResponse oboJson) {
+    private void applyOboJson(ProblemCoding problemCoding, JsonNode oboJson) {
         if (oboJson == null) {
             return;
         }
-        problemCoding.setNodes(oboJson.getNodes());
-        problemCoding.setEdges(oboJson.getEdges());
-        problemCoding.setFrames(oboJson.getFrames());
+        problemCoding.setOboJsonData(oboJson);
     }
 }
