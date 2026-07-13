@@ -61,6 +61,9 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     private String description;
     private List<ForDtoChoice> choices;
 
+    @JsonProperty("isSeqeuntialAnswer")
+    private Boolean isSeqeuntialAnswer;
+
     @JsonProperty("oboEnabled")
     private Boolean oboEnabled;
 
@@ -94,6 +97,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
         String summary,
         String description,
         List<ForDtoChoice> choices,
+        Boolean isSeqeuntialAnswer,
         Boolean oboEnabled,
         List<ForDtoOboStep> oboSteps,
         Integer solvedCount,
@@ -112,6 +116,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
         this.summary = summary;
         this.description = description;
         this.choices = choices;
+        this.isSeqeuntialAnswer = isSeqeuntialAnswer;
         this.oboEnabled = oboEnabled;
         this.oboSteps = oboSteps;
         this.solvedCount = solvedCount;
@@ -162,6 +167,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
             problemObjective.getSummary(),
             problemObjective.getDescription(),
             problemObjective.getChoices(),
+            problemObjective.getIsSeqeuntialAnswer(),
             problemObjective.getOboEnabled(),
             oboStepResponses,
             problem.getSolvedCount(),
@@ -213,6 +219,10 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
 
     public List<ForDtoChoice> getChoices() {
         return choices;
+    }
+
+    public Boolean getIsSeqeuntialAnswer() {
+        return isSeqeuntialAnswer;
     }
 
     public Boolean getOboEnabled() {
