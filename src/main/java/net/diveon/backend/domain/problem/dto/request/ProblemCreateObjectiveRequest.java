@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.problem.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import net.diveon.backend.domain.problem.others.ForDtoChoice;
 import net.diveon.backend.domain.problem.others.ForDtoOboStep;
@@ -54,6 +55,8 @@ public class ProblemCreateObjectiveRequest {
     private String summary;
     private List<ForDtoChoice> choices;
     private List<Integer> answer;
+    @JsonProperty("isSeqeuntialAnswer")
+    private Boolean isSeqeuntialAnswer;
     private Boolean oboEnabled;
     private Obo obo;
     private JsonNode oboJson;
@@ -135,6 +138,14 @@ public class ProblemCreateObjectiveRequest {
 
     public void setAnswer(List<Integer> answer) {
         this.answer = answer;
+    }
+
+    public Boolean getIsSeqeuntialAnswer() {
+        return isSeqeuntialAnswer;
+    }
+
+    public void setIsSeqeuntialAnswer(Boolean isSeqeuntialAnswer) {
+        this.isSeqeuntialAnswer = isSeqeuntialAnswer;
     }
 
     public Boolean getOboEnabled() {

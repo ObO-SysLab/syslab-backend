@@ -2,10 +2,12 @@ package net.diveon.backend.domain.contest.service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -132,13 +134,15 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private ResponseEntity<ApiResponse<?>> handleObjectiveSubmission(
             Contest contest, ContestProblem contestProblem, Problem problem, User user, ContestSubmitRequest request) {
 
-        String answerJson = jdbcTemplate.queryForObject(
-                "SELECT answer::text FROM problem_objective WHERE prob_id = ?",
-                String.class, problem.getId());
+        Map<String, Object> objectiveProblem = jdbcTemplate.queryForMap(
+                "SELECT answer::text AS answer, is_seqeuntial AS is_seqeuntial FROM problem_objective WHERE prob_id = ?",
+                problem.getId());
 
+        String answerJson = (String) objectiveProblem.get("answer");
         if (answerJson == null) {
             throw new RuntimeException("객관식 문제 정보를 찾을 수 없습니다.");
         }
+        Boolean isSeqeuntialAnswer = (Boolean) objectiveProblem.get("is_seqeuntial");
 
         List<Integer> correctAnswers;
         try {
@@ -152,13 +156,13 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             throw new IllegalArgumentException("답을 입력해주세요.");
         }
 
-        boolean isCorrect = false;
+        List<Integer> submittedAnswers;
         try {
-            int userAnswerNum = Integer.parseInt(userAnswer);
-            isCorrect = correctAnswers.contains(userAnswerNum);
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("유효한 숫자를 입력해주세요.");
+            submittedAnswers = parseObjectiveAnswer(userAnswer);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("유효한 숫자 또는 숫자 배열을 입력해주세요.");
         }
+        boolean isCorrect = isCorrectObjectiveAnswer(correctAnswers, submittedAnswers, isSeqeuntialAnswer);
 
         ContestParticipant participant = contestParticipantRepository
                 .findByContestIdAndUserId(contest.getId(), user.getId()).get();
@@ -314,5 +318,33 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
         }
+    }
+
+    private List<Integer> parseObjectiveAnswer(String answer) throws Exception {
+        String trimmedAnswer = answer.trim();
+        if (trimmedAnswer.startsWith("[")) {
+            return objectMapper.readValue(trimmedAnswer, new TypeReference<List<Integer>>() {});
+        }
+        return List.of(Integer.parseInt(trimmedAnswer));
+    }
+
+    private boolean isCorrectObjectiveAnswer(List<Integer> correctAnswer, List<Integer> submittedAnswer, Boolean isSeqeuntialAnswer) {
+        if (correctAnswer == null || submittedAnswer == null) {
+            return false;
+        }
+
+        if (Boolean.TRUE.equals(isSeqeuntialAnswer)) {
+            return correctAnswer.equals(submittedAnswer);
+        }
+
+        return toAnswerCountMap(correctAnswer).equals(toAnswerCountMap(submittedAnswer));
+    }
+
+    private Map<Integer, Integer> toAnswerCountMap(List<Integer> answers) {
+        Map<Integer, Integer> answerCountMap = new HashMap<>();
+        for (Integer answer : answers) {
+            answerCountMap.merge(answer, 1, Integer::sum);
+        }
+        return answerCountMap;
     }
 }
