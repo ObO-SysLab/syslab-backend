@@ -1,5 +1,6 @@
 package net.diveon.backend.domain.grade.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +24,19 @@ public interface SolveResultRepository extends JpaRepository<SolveResult, Long>{
         @Param("userId") Long userId,
         @Param("probId") Long probId
     );
+
+    @Query("""
+        SELECT p.category, COUNT(r) AS cnt
+        FROM SolveResult r
+        JOIN r.submission ss
+        JOIN ss.problem p
+        WHERE ss.user.id = :userId
+          AND r.resultState = 'WRONG'
+          AND p.visibility = 'public'
+        GROUP BY p.category
+        ORDER BY cnt DESC
+        """)
+    List<Object[]> findWeakCategories(@Param("userId") Long userId);
 
     @Query(value = """
         SELECT COALESCE(SUM(solved.score), 0)
