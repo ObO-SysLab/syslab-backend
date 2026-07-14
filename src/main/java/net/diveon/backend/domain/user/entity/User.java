@@ -62,6 +62,10 @@ public class User {
     @Column(name = "interest")
     private String interest;
 
+    @Column(name = "deleted_at", nullable = true, columnDefinition = "TIMESTAMP DEFAULT NULL")
+    private LocalDateTime deletedAt = null;
+
+
     public User() {}
 
     public User(String loginId, String password, String nickname, String email, String belong, List<String> interest) {
@@ -74,6 +78,7 @@ public class User {
         this.createdAt = LocalDateTime.now();
         this.tier = 0;
         this.score = 0;
+        this.deletedAt = null;
     }
 
     public static User createSocialUser(String loginId, String password, String nickname, String email, String realName, String profileImgUrl) {
@@ -87,6 +92,7 @@ public class User {
         user.createdAt = LocalDateTime.now();
         user.tier = 0;
         user.score = 0;
+        user.deletedAt = null;
         return user;
     }
 
@@ -108,6 +114,14 @@ public class User {
     public void updateTierScore(Integer score, Integer tier) {
         this.score = score;
         this.tier = tier;
+    }
+
+    public boolean isDeleted(){
+        if(this.deletedAt != null){
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public Long getId() { return id; }

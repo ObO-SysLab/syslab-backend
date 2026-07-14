@@ -1,7 +1,9 @@
 package net.diveon.backend.global.config;
 
+import net.diveon.backend.domain.user.service.UserStatusService;
 import net.diveon.backend.global.security.JwtFilter;
 import net.diveon.backend.global.security.JwtProvider;
+import net.diveon.backend.global.security.WithdrawnUserCheckFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,9 +26,11 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final UserStatusService userStatusService;
 
-    public SecurityConfig(JwtProvider jwtProvider) {
+    public SecurityConfig(JwtProvider jwtProvider, UserStatusService userStatusService) {
         this.jwtProvider = jwtProvider;
+        this.userStatusService = userStatusService;
     }
 
     @Bean
@@ -50,7 +54,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(new WithdrawnUserCheckFilter(userStatusService), JwtFilter.class);
         return http.build();
     }
 

@@ -23,19 +23,22 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final UserStatusService userStatusService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider, RedisTemplate<String, String> redisTemplate) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider,
+                       RedisTemplate<String, String> redisTemplate, UserStatusService userStatusService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
         this.redisTemplate = redisTemplate;
+        this.userStatusService = userStatusService;
     }
 
     public AuthLoginResponse login(AuthLoginRequest request) {
         User user = userRepository.findByLoginId(request.getLoginId())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+        if (user.isDeleted() || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidCredentialsException();
         }
 
@@ -62,6 +65,13 @@ public class UserService {
             throw new InvalidTokenException();
         }
         String userId = jwtProvider.getUserId(refreshToken);
+        try {
+            if (!userStatusService.isActiveUser(Long.valueOf(userId))) {
+                throw new InvalidTokenException();
+            }
+        } catch (NumberFormatException e) {
+            throw new InvalidTokenException();
+        }
         String stored = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
         if (!refreshToken.equals(stored)) {
             throw new InvalidTokenException();

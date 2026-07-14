@@ -10,6 +10,7 @@ import net.diveon.backend.domain.user.dto.GoogleLoginRequest;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.GoogleOAuthException;
+import net.diveon.backend.global.exception.InvalidCredentialsException;
 import net.diveon.backend.global.exception.SocialAccountConflictException;
 import net.diveon.backend.global.security.JwtProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -83,6 +84,10 @@ public class LocalGoogleOAuthService {
 
         User user = userRepository.findByLoginId(loginId)
                 .orElseGet(() -> createUser(loginId, payload));
+
+        if (user.isDeleted()) {
+            throw new InvalidCredentialsException();
+        }
 
         return issueTokens(user);
     }
