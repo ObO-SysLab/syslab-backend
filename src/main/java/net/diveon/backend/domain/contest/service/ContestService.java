@@ -178,6 +178,9 @@ public class ContestService {
     public ContestCreateResponse createContest(Long userId, ContestCreateRequest request) {
         validateContestTime(request.getStartTime(), request.getEndTime());
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        if (user.getTier() < 3) {
+            throw new ContestAccessDeniedException("티어 3 이상만 대회를 개최할 수 있습니다.");
+        }
 
         Group group = null;
         if (request.getGroupId() != null) {

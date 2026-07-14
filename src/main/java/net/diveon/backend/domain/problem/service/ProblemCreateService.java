@@ -106,6 +106,7 @@ public class ProblemCreateService {
                 request.getDescription(),
                 request.getChoices(),
                 request.getAnswer(),
+                request.getIsSeqeuntialAnswer(),
                 oboEnabled
         );
         applyOboJson(problemObjective, request.getOboJson());

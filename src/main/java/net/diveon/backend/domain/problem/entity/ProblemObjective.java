@@ -48,6 +48,10 @@ public class ProblemObjective {
     @Column(name = "answer", columnDefinition = "JSONB", nullable = false)
     private List<Integer> answer;
 
+    @Column(name = "is_seqeuntial", nullable = false)
+    @ColumnDefault("false")
+    private Boolean isSeqeuntialAnswer = false;
+
     @Column(name = "obo_enabled", nullable = false)
     private Boolean oboEnabled = false;
 
@@ -64,12 +68,13 @@ public class ProblemObjective {
     // 2. 데이터 생성을 위한 생성자
     public ProblemObjective(Problem problem, String summary, String description, 
                             List<ForDtoChoice> choices, List<Integer> answer,
-                            Boolean oboEnabled) {
+                            Boolean isSeqeuntialAnswer, Boolean oboEnabled) {
         this.problem = problem;
         this.summary = summary;
         this.description = description;
         this.choices = choices;
         this.answer = answer;
+        this.isSeqeuntialAnswer = (isSeqeuntialAnswer != null) ? isSeqeuntialAnswer : false;
         this.oboEnabled = (oboEnabled != null) ? oboEnabled : false;
     }
 
@@ -80,6 +85,7 @@ public class ProblemObjective {
     public String getDescription() { return description; }
     public List<ForDtoChoice> getChoices() { return choices; }
     public List<Integer> getAnswer() { return answer; }
+    public Boolean getIsSeqeuntialAnswer() { return isSeqeuntialAnswer; }
     public Boolean getOboEnabled() { return oboEnabled; }
 
 

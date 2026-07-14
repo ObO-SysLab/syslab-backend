@@ -2,8 +2,10 @@ package net.diveon.backend.domain.grade.service;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -147,7 +149,11 @@ public class SubmissionGradeAsyncService {
         List<Integer> correctAnswer = problemObjective.getAnswer();
         List<Integer> submittedAnswer = submissionObjective.getAnswer();
 
-        boolean correctness = correctAnswer.equals(submittedAnswer);
+        boolean correctness = isCorrectObjectiveAnswer(
+            correctAnswer,
+            submittedAnswer,
+            problemObjective.getIsSeqeuntialAnswer()
+        );
 
         if(correctness){
             //정답
@@ -234,6 +240,26 @@ public class SubmissionGradeAsyncService {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException("SHA-256 알고리즘을 찾을 수 없습니다.", e);
         }
+    }
+
+    private boolean isCorrectObjectiveAnswer(List<Integer> correctAnswer, List<Integer> submittedAnswer, Boolean isSeqeuntialAnswer) {
+        if (correctAnswer == null || submittedAnswer == null) {
+            return false;
+        }
+
+        if (Boolean.TRUE.equals(isSeqeuntialAnswer)) {
+            return correctAnswer.equals(submittedAnswer);
+        }
+
+        return toAnswerCountMap(correctAnswer).equals(toAnswerCountMap(submittedAnswer));
+    }
+
+    private Map<Integer, Integer> toAnswerCountMap(List<Integer> answers) {
+        Map<Integer, Integer> answerCountMap = new HashMap<>();
+        for (Integer answer : answers) {
+            answerCountMap.merge(answer, 1, Integer::sum);
+        }
+        return answerCountMap;
     }
 
     

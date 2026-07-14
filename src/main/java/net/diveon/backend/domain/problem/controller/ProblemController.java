@@ -4,10 +4,12 @@ import net.diveon.backend.domain.problem.dto.response.interfaces.ProblemDetailRe
 import net.diveon.backend.domain.problem.dto.response.ProblemListItemResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemListResponse;
 import net.diveon.backend.domain.problem.dto.response.ProblemRankingResponse;
+import net.diveon.backend.domain.problem.dto.response.ProblemRecommendResponse;
 import net.diveon.backend.domain.problem.service.ProblemDetailService;
 import net.diveon.backend.domain.problem.service.ProblemListService;
 import net.diveon.backend.domain.problem.service.ProblemRankingService;
 import net.diveon.backend.domain.problem.service.ProblemRandomService;
+import net.diveon.backend.domain.problem.service.ProblemRecommendService;
 import net.diveon.backend.domain.problem.service.ProblemTodayService;
 import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
@@ -27,15 +29,17 @@ public class ProblemController {
     private final ProblemRankingService problemRankingService;
     private final ProblemRandomService problemRandomService;
     private final ProblemTodayService problemTodayService;
+    private final ProblemRecommendService problemRecommendService;
 
     public ProblemController(ProblemDetailService problemDetailService, ProblemListService problemListService,
                              ProblemRankingService problemRankingService, ProblemRandomService problemRandomService,
-                             ProblemTodayService problemTodayService) {
+                             ProblemTodayService problemTodayService, ProblemRecommendService problemRecommendService) {
         this.problemDetailService = problemDetailService;
         this.problemListService = problemListService;
         this.problemRankingService = problemRankingService;
         this.problemRandomService = problemRandomService;
         this.problemTodayService = problemTodayService;
+        this.problemRecommendService = problemRecommendService;
     }
 
     @GetMapping("")
@@ -95,6 +99,14 @@ public class ProblemController {
     ) {
         ProblemListItemResponse responseData = problemRandomService.getRandomProblem(Long.parseLong(userId));
         return ResponseEntity.ok(ApiResponse.success("랜덤 문제 조회에 성공하였습니다.", responseData));
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<ApiResponse<ProblemRecommendResponse>> getRecommendProblems(
+        @AuthenticationPrincipal String userId
+    ) {
+        ProblemRecommendResponse responseData = problemRecommendService.recommend(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("추천 문제 조회에 성공하였습니다.", responseData));
     }
 
     @GetMapping("/{probId}/ranking")
