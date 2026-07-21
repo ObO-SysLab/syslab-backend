@@ -70,4 +70,15 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     List<ContestParticipant> findByContestIdAndUserIds(
             @Param("contestId") Long contestId,
             @Param("userIds") List<Long> userIds);
+
+    @Query(value = """
+            SELECT cp FROM ContestParticipant cp
+            JOIN FETCH cp.contest c
+            WHERE cp.user.id = :userId
+            ORDER BY cp.joinedAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(cp) FROM ContestParticipant cp WHERE cp.user.id = :userId
+            """)
+    Page<ContestParticipant> findMyContestsByUserId(@Param("userId") Long userId, Pageable pageable);
 }
