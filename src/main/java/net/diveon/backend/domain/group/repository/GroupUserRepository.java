@@ -34,4 +34,16 @@ public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
     );
     List<GroupUser> findAllByUserId(Long userId);
     List<GroupUser> findAllByGroupIdIn(List<Long> groupIds);
+
+    @Query(value = """
+            SELECT gu FROM GroupUser gu
+            JOIN FETCH gu.group g
+            JOIN FETCH g.leader
+            WHERE gu.user.id = :userId
+            ORDER BY gu.joinedAt DESC
+            """,
+            countQuery = """
+            SELECT COUNT(gu) FROM GroupUser gu WHERE gu.user.id = :userId
+            """)
+    Page<GroupUser> findMyGroupsByUserId(@Param("userId") Long userId, Pageable pageable);
 }
