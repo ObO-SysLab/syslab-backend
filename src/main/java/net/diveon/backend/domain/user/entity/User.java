@@ -72,7 +72,7 @@ public class User {
         this.belong = belong;
         this.interest = interest == null ? null : String.join(",", interest);
         this.createdAt = LocalDateTime.now();
-        this.tier = 0;
+        this.tier = 1;
         this.score = 0;
     }
 
@@ -85,7 +85,7 @@ public class User {
         user.realName = realName;
         user.profileImgUrl = profileImgUrl;
         user.createdAt = LocalDateTime.now();
-        user.tier = 0;
+        user.tier = 1;
         user.score = 0;
         return user;
     }

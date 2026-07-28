@@ -47,7 +47,7 @@ public class UserRankingSnapshotRefreshService {
                 ?,
                 u.id,
                 CAST(DENSE_RANK() OVER (ORDER BY COALESCE(u.score, 0) DESC) AS INTEGER),
-                COALESCE(u.tier, 0),
+                COALESCE(u.tier, 1),
                 COALESCE(u.score, 0)
             FROM domain_user u
             ORDER BY COALESCE(u.score, 0) DESC, u.id ASC
