@@ -30,13 +30,14 @@ public class UserTierService {
     }
 
     private int calculateTier(int score) {
-        if (score >= 6600) return 7;
-        if (score >= 5400) return 6;
-        if (score >= 4000) return 5;
-        if (score >= 2400) return 4;
-        if (score >= 1350) return 3;
-        if (score >= 600) return 2;
-        if (score >= 150) return 1;
-        return 0;
+        // 최고 티어를 7로 유지하므로 6,600점 이상을 별도 티어로 구분하지 않는다.
+        // if (score >= 6600) return 8;
+        if (score >= 5400) return 7;
+        if (score >= 4000) return 6;
+        if (score >= 2400) return 5;
+        if (score >= 1350) return 4;
+        if (score >= 600) return 3;
+        if (score >= 150) return 2;
+        return 1;
     }
 }
