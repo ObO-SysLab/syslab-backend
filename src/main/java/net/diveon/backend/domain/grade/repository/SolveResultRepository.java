@@ -58,6 +58,7 @@ public interface SolveResultRepository extends JpaRepository<SolveResult, Long>{
             WHERE ss.submitter_id = :userId
               AND sr.result_status = 'CORRECT'
               AND ps.visibility NOT IN ('group', 'contest')
+              AND ps.author_id != ss.submitter_id
             GROUP BY ps.id, ps.category, ps.difficulty
         ) deduped
         GROUP BY category
@@ -84,6 +85,7 @@ public interface SolveResultRepository extends JpaRepository<SolveResult, Long>{
             WHERE ss.submitter_id = :userId
               AND sr.result_status = 'CORRECT'
               AND ps.visibility NOT IN ('group', 'contest')
+              AND ps.author_id != ss.submitter_id
             GROUP BY ps.id, ps.difficulty
             ORDER BY score DESC
             LIMIT 100
