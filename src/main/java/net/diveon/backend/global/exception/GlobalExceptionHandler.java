@@ -178,6 +178,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // VM EC2에서 컨테이너 생성 실패 → 502
+        @ExceptionHandler(VmCreationFailedException.class)
+        public ResponseEntity<ErrorResponse> handleVmCreationFailed(
+                VmCreationFailedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/vm-creation-failed",
+                        "Bad Gateway",
+                        502,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);
+        }
+
         // 본인 VM이 아닌 경우 → 403
         @ExceptionHandler(VmAccessDeniedException.class)
         public ResponseEntity<ErrorResponse> handleVmAccessDenied(
