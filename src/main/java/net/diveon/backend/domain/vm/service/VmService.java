@@ -12,6 +12,8 @@ import net.diveon.backend.domain.vm.repository.VmSessionRepository;
 import net.diveon.backend.global.exception.ImageNotReadyException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import net.diveon.backend.global.exception.VmNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +22,8 @@ import java.util.Optional;
 
 @Service
 public class VmService {
+
+    private static final Logger log = LoggerFactory.getLogger(VmService.class);
 
     private final VmSessionRepository vmSessionRepository;
     private final ProblemPracticeRepository problemPracticeRepository;
@@ -43,7 +47,7 @@ public class VmService {
             return VmStatusResponse.imageNotReady();
         }
 
-        Optional<VmSession> session = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING");
+        Optional<VmSession> session = vmSessionRepository.findFirstByUserIdAndProbIdAndStatus(userId, probId, "RUNNING");
         if (session.isPresent()) {
             return VmStatusResponse.running(session.get().getContainerId());
         }
@@ -64,10 +68,23 @@ public class VmService {
             throw new ImageNotReadyException("이미지가 아직 준비 중입니다. (image_status: " + practice.getImageStatus() + ")");
         }
 
-        // 이미 기존 생성된 VM이 있는지 확인, 있으면 반환 (유저당 VM 생성 1개 제한)
+        // 이미 기존 생성된 VM이 있는지 확인 (유저당 VM 생성 1개 제한)
         Optional<VmSession> existing = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING");
         if (existing.isPresent()) {
-            return VmCreateResponse.from(existing.get(), "기존 VM을 반환합니다.");
+            VmSession existingSession = existing.get();
+
+            // 같은 문제의 VM이 이미 떠있으면 그대로 재사용
+            if (existingSession.getProbId().equals(probId)) {
+                return VmCreateResponse.from(existingSession, "기존 VM을 반환합니다.");
+            }
+
+            // 다른 문제의 VM이 떠있으면 종료하고 새로 생성 (컨테이너 정리 실패해도 새 VM 생성은 진행)
+            try {
+                dockerService.stopAndRemoveContainer(existingSession.getContainerId());
+            } catch (Exception e) {
+                log.warn("이전 VM 컨테이너 정리 실패 (containerId: {})", existingSession.getContainerId(), e);
+            }
+            existingSession.stop();
         }
 
         // 없으면 DockerService 호출해서 컨테이너 생성하고, DB에 세션 저장하고, 응답 반환
