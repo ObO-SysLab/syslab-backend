@@ -56,6 +56,11 @@ public class ProblemDetailService {
 
         boolean isOwner = problem.getAuthor().getId().equals(userId);
 
+        // 비공개 문제는 출제자만 조회 가능 (존재 여부도 숨기기 위해 404 처리)
+        if ("private".equals(problem.getVisibility()) && !isOwner) {
+            throw new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다.");
+        }
+
         if (problem.getType().equals("objective")) {
             return detailProblemObjective(problem, probId, isOwner);
         } else if (problem.getType().equals("practice")) {

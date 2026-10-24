@@ -9,6 +9,7 @@ import net.diveon.backend.domain.problem.repository.ProblemCommentRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.global.exception.CommentAccessDeniedException;
 import net.diveon.backend.global.exception.CommentNotFoundException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
 import org.springframework.data.domain.Page;
@@ -97,8 +98,7 @@ public class ProblemCommentService {
     // 댓글 수정
     @Transactional
     public ProblemCommentResponse.CommentUpdate updateComment(long userId, long probId, long commentId, ProblemCommentUpdateRequest request) {
-        ProblemComment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
+        ProblemComment comment = findOwnedComment(userId, probId, commentId);
 
         comment.updateComment(request.getContent(), request.getIsPrivate());
 
@@ -108,11 +108,26 @@ public class ProblemCommentService {
     // 댓글 삭제
     @Transactional
     public ProblemCommentResponse.CommentDelete deleteComment(long userId, long probId, long commentId) {
-        ProblemComment comment = commentRepository.findById(commentId)
-            .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
+        ProblemComment comment = findOwnedComment(userId, probId, commentId);
 
         commentRepository.delete(comment);
 
         return new ProblemCommentResponse.CommentDelete(commentId);
+    }
+
+    // 댓글이 해당 문제의 것이고 요청자가 작성자인지 확인한 뒤 반환
+    private ProblemComment findOwnedComment(long userId, long probId, long commentId) {
+        ProblemComment comment = commentRepository.findById(commentId)
+            .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
+
+        if (!comment.getProblem().getId().equals(probId)) {
+            throw new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다.");
+        }
+
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new CommentAccessDeniedException();
+        }
+
+        return comment;
     }
 }
