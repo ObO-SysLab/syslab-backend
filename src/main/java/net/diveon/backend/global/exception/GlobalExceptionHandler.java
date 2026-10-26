@@ -80,6 +80,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
         }
 
+        // 댓글 수정/삭제 권한 없음 → 403
+        @ExceptionHandler(CommentAccessDeniedException.class)
+        public ResponseEntity<ErrorResponse> handleCommentAccessDenied(
+                CommentAccessDeniedException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/comment-access-denied",
+                        "Forbidden",
+                        403,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+        }
+
         // 문제를 찾을 수 없음 → 404
         @ExceptionHandler(ProblemNotFoundException.class)
         public ResponseEntity<ErrorResponse> handleProblemNotFound(
