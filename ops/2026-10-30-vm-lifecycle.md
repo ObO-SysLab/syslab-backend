@@ -28,9 +28,13 @@ Docker 문서: [create 후 start](https://docs.docker.com/reference/cli/docker/c
 
 DB 활성 세션을 ID 순서로 최대 20개씩 순환한다. STOPPING, 2분 이상 CREATING, 만료/권한 회수/실제 중지 RUNNING을 정리한다. 개별 실패가 뒤의 세션을 막지 않도록 커서를 이동한다. 원격 manifest도 별도 순환해 DB STOPPED 이후 늦게 생긴 자원을 찾는다. API 프로세스·DB·SSH·Docker 장애 시 정리가 지연되며, 배치와 요청 제한 때문에 **30초는 주기이지 삭제 완료 보장 시간이 아니다**. 무기한 중단에 대비한 독립 감시/운영 알림 검증은 별도 잔여 사항이다.
 
-## 로컬 임시 PostgreSQL 검증 실행안 — 승인 필요
+## 로컬 임시 PostgreSQL 검증 — 승인 후 완료 (2026-10-30)
 
-현재 검증: Java 선택 회귀 109개 통과(신규 39 + 기존 70), 원격 helper 모의 18개, 프론트 55개 및 TypeScript 검사 통과. 아래 실제 PostgreSQL 테스트 6개는 승인 대기 상태로 건너뛰었다. Linux flock·실제 SSH/Docker·브라우저 통합은 아직 실행하지 않았다.
+검증 결과: 기존 Java 선택 회귀 109개(신규 39 + 기존 70)에 더해, 사용자가 아래 실행·복구안을 승인한 뒤 실제 JPA/PostgreSQL 테스트 6개를 별도로 실행해 모두 통과했다. 두 실행 합계 Java 115개이며 실패·오류·최종 미실행 0이다. 이번에는 코드 수정이 필요하지 않았다. 원격 helper 모의 18개, 프론트 55개 및 TypeScript 통과 기록은 앞선 실행 결과다. Linux flock·실제 SSH/Docker·브라우저 통합은 아직 실행하지 않았다.
+
+실제 PostgreSQL 17.9 / Java 21에서 준비된 SQL을 임시 스키마에 적용하고 사용자 잠금에 따른 동시 예약 1건, 부분 유일 인덱스의 외부 중복 INSERT 거부, 호출자 롤백과 독립된 생성/정리 상태 확정, 오래된 활성화/종료의 새 세션 보호, 사용자·문제 범위 조회를 확인했다. 중복 키 오류 로그는 유일성 검증에서 의도한 거부다.
+
+임시 DB는 `127.0.0.1:20426`, 데이터/로그는 OS TEMP의 `diveon-vm-pg-15939534724035084331`에만 만들었다. 테스트 종료 시 fast stop 성공, 종료 로그, postmaster.pid 부재와 `pg_ctl status` 종료 코드 3(`no server running`)을 확인했다. 로그/데이터는 보존했으며 운영 DB·AWS·Docker·서비스 서버·배포·push는 사용하지 않았다. 상세 근거는 `ops/2026-10-30-vm-postgres-validation.json`이다.
 
 대상은 `VmSessionPostgresTest`다. 기본 환경에서는 건너뛰며 `DIVEON_VM_PG_TEST=approved`가 있어야 실행한다. 전체 애플리케이션 컨텍스트/설정 파일을 로드하지 않고 User·VmSession 엔티티와 실제 JPA 저장소·트랜잭션 프록시만 사용한다.
 
