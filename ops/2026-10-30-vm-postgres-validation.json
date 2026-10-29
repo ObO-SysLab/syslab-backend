@@ -1,0 +1,38 @@
+{
+  "date_kst": "2026-10-30",
+  "issues": ["AUDIT-03", "AUDIT-04"],
+  "tested_code_commit": "94093750226fc1dff4e1d5480f34ed6a035f41a3",
+  "authorization": "User explicitly approved the prepared temporary loopback PostgreSQL validation and cleanup plan",
+  "command_scope": "Gradle test --tests '*VmSessionPostgresTest'; DIVEON_VM_PG_TEST=approved; PG_BIN explicitly set",
+  "java": "21",
+  "postgresql": "17.9",
+  "tests": 6,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "cases": [
+    "lateActivationAndOldStopCannotAffectReplacement",
+    "concurrentReservationsCommitOnlyOneActiveSession",
+    "actualRepositoryScopesOwnerAndProblem",
+    "stoppingSurvivesRollbackAndBlocksReplacementUntilConfirmed",
+    "databaseConstraintAlsoBlocksWritersOutsideStore",
+    "creationIntentSurvivesCallerRollback"
+  ],
+  "test_data_directory": "%TEMP%/diveon-vm-pg-15939534724035084331/data",
+  "listen_address": "127.0.0.1",
+  "port": 20426,
+  "cleanup": {
+    "fast_stop": "success",
+    "server_log": "database system is shut down",
+    "postmaster_pid_exists": false,
+    "pg_ctl_status_exit": 3,
+    "pg_ctl_status": "no server running",
+    "data_and_logs": "retained"
+  },
+  "code_changes_required": false,
+  "production_database_accessed": false,
+  "aws_or_docker_used": false,
+  "application_server_started": false,
+  "deployed_or_pushed": false,
+  "limitations": ["Linux flock", "actual SSH/Docker lifecycle", "browser/PTY integration", "production migration and deployment"]
+}
