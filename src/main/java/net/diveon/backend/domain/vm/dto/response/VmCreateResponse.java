@@ -16,6 +16,8 @@ public class VmCreateResponse {
 
     @JsonProperty("expiresAt")
     private LocalDateTime expiresAt;
+    private Long sessionId;
+    private Long expiresAtEpochMs;
 
     public VmCreateResponse(String status, String containerId, String message, LocalDateTime expiresAt) {
         this.status = status;
@@ -25,11 +27,16 @@ public class VmCreateResponse {
     }
 
     public static VmCreateResponse from(VmSession session, String message) {
-        return new VmCreateResponse("success", session.getContainerId(), message, session.getExpiresAt());
+        var response = new VmCreateResponse("success", session.getContainerId(), message, session.getExpiresAt());
+        response.sessionId = session.getId();
+        response.expiresAtEpochMs = session.getExpiresAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return response;
     }
 
     public String getStatus() { return status; }
     public String getContainerId() { return containerId; }
     public String getMessage() { return message; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
+    public Long getSessionId() { return sessionId; }
+    public Long getExpiresAtEpochMs() { return expiresAtEpochMs; }
 }

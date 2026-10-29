@@ -1,127 +1,147 @@
 package net.diveon.backend.domain.vm.service;
 
-import net.diveon.backend.domain.problem.entity.ProblemPractice;
+import java.time.*;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.service.ProblemAccessService;
-import net.diveon.backend.domain.vm.dto.request.VmCreateRequest;
-import net.diveon.backend.domain.vm.dto.request.VmStopRequest;
-import net.diveon.backend.domain.vm.dto.response.VmCreateResponse;
-import net.diveon.backend.domain.vm.dto.response.VmStatusResponse;
-import net.diveon.backend.domain.vm.dto.response.VmStopResponse;
+import net.diveon.backend.domain.vm.dto.request.*;
+import net.diveon.backend.domain.vm.dto.response.*;
 import net.diveon.backend.domain.vm.entity.VmSession;
 import net.diveon.backend.domain.vm.repository.VmSessionRepository;
-import net.diveon.backend.global.exception.ImageNotReadyException;
-import net.diveon.backend.global.exception.ProblemNotFoundException;
-import net.diveon.backend.global.exception.VmNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.diveon.backend.global.exception.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class VmService {
-
-    private static final Logger log = LoggerFactory.getLogger(VmService.class);
-
-    private final VmSessionRepository vmSessionRepository;
-    private final ProblemPracticeRepository problemPracticeRepository;
-    private final DockerService dockerService;
+    private final VmSessionRepository sessions;
+    private final ProblemPracticeRepository practices;
+    private final DockerService docker;
     private final ProblemAccessService access;
+    private final VmSessionStore store;
+    private final Clock clock;
 
-    public VmService(VmSessionRepository vmSessionRepository,
-                     ProblemPracticeRepository problemPracticeRepository,
-                     DockerService dockerService, ProblemAccessService access) {
-        this.vmSessionRepository = vmSessionRepository;
-        this.problemPracticeRepository = problemPracticeRepository;
-        this.dockerService = dockerService;
-        this.access = access;
+    @Autowired
+    public VmService(VmSessionRepository sessions, ProblemPracticeRepository practices, DockerService docker,
+            ProblemAccessService access, VmSessionStore store) {
+        this(sessions, practices, docker, access, store, Clock.systemDefaultZone());
     }
-
-    // VM 상태 조회
-    @Transactional(readOnly = true)
-    public VmStatusResponse getStatus(Long userId, Long probId) {
-        access.requireRead(userId, probId);
-        ProblemPractice practice = problemPracticeRepository.findById(probId)
-                .orElseThrow(() -> new ProblemNotFoundException("존재하지 않는 실습 문제입니다."));
-
-        if (!"READY".equals(practice.getImageStatus())) {
-            return VmStatusResponse.imageNotReady();
-        }
-
-        Optional<VmSession> session = vmSessionRepository.findFirstByUserIdAndProbIdAndStatus(userId, probId, "RUNNING");
-        if (session.isPresent()) {
-            return VmStatusResponse.running(session.get().getContainerId());
-        }
-
-        return VmStatusResponse.none();
+    VmService(VmSessionRepository sessions, ProblemPracticeRepository practices, DockerService docker,
+            ProblemAccessService access, VmSessionStore store, Clock clock) {
+        this.sessions = sessions; this.practices = practices; this.docker = docker;
+        this.access = access; this.store = store; this.clock = clock;
     }
-
-    // VM 생성
-    @Transactional
+    private LocalDateTime now() { return LocalDateTime.now(clock); }
+    private boolean expired(VmSession session) {
+        return session.getExpiresAt() == null || !session.getExpiresAt().isAfter(now());
+    }
+    private DockerService.Target target(VmSession s) {
+        if (s.getRuntimeVersion() != 1 && (s.getRuntimeVersion() != 0 || s.getContainerId() == null
+                || !s.getContainerId().matches("[a-f0-9]{64}"))) throw unavailable();
+        long expiry = s.getExpiresAt() == null ? 0 : s.getExpiresAt().atZone(clock.getZone()).toInstant().toEpochMilli();
+        return new DockerService.Target(s.getId(), s.getUserId(), s.getProbId(), expiry,
+                s.getRuntimeVersion() == 0 ? s.getContainerId() : null);
+    }
+    private String image(Long userId, Long problemId) {
+        access.requirePractice(userId, problemId);
+        var practice = practices.findById(problemId).orElseThrow(ProblemNotFoundException::new);
+        if (!"READY".equals(practice.getImageStatus())) throw new ImageNotReadyException("실습 이미지가 준비되지 않았습니다.");
+        return practice.getEcrImageUri();
+    }
     public VmCreateResponse createVm(Long userId, VmCreateRequest request) {
-        Long probId = request.getProbId();
-        access.requirePractice(userId, probId);
-
-        ProblemPractice practice = problemPracticeRepository.findById(probId)
-                .orElseThrow(() -> new ProblemNotFoundException("존재하지 않는 실습 문제입니다."));
-        
-        // image_status = READY 확인
-        if (!"READY".equals(practice.getImageStatus())) {
-            throw new ImageNotReadyException("이미지가 아직 준비 중입니다. (image_status: " + practice.getImageStatus() + ")");
-        }
-
-        // 이미 기존 생성된 VM이 있는지 확인 (유저당 VM 생성 1개 제한)
-        Optional<VmSession> existing = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING");
-        if (existing.isPresent()) {
-            VmSession existingSession = existing.get();
-
-            // 같은 문제의 VM이 이미 떠있으면 그대로 재사용
-            if (existingSession.getProbId().equals(probId)) {
-                return VmCreateResponse.from(existingSession, "기존 VM을 반환합니다.");
-            }
-
-            // 다른 문제의 VM이 떠있으면 종료하고 새로 생성 (컨테이너 정리 실패해도 새 VM 생성은 진행)
-            try {
-                dockerService.stopAndRemoveContainer(existingSession.getContainerId());
-            } catch (Exception e) {
-                log.warn("이전 VM 컨테이너 정리 실패 (containerId: {})", existingSession.getContainerId(), e);
-            }
-            existingSession.stop();
-        }
-
-        // 없으면 DockerService 호출해서 컨테이너 생성하고, DB에 세션 저장하고, 응답 반환
-        String containerId = dockerService.runContainer(practice.getEcrImageUri(), userId, probId);
-
-        LocalDateTime now = LocalDateTime.now();
-        VmSession session = new VmSession(userId, probId, containerId, now, now.plusHours(2)); // now = 생성시각, now.plusHour(2) = 2시간 후 만료 시각
-        vmSessionRepository.save(session);
-
-        return VmCreateResponse.from(session, "VM이 생성되었습니다.");
+        return create(userId, request.getProbId(), true);
     }
-
-    // VM 중지
-    @Transactional
+    private VmCreateResponse create(Long userId, Long problemId, boolean allowSwitch) {
+        String image = image(userId, problemId);
+        var reservation = store.reserve(userId, problemId, now()); // Commits before Docker.
+        if (!reservation.created()) {
+            var current = reservation.session();
+            if (!allowSwitch) throw VmSessionStore.busy(); // An old reset must never stop a newer session.
+            if (current.getProbId().equals(problemId) && !expired(current)) {
+                if (running(current)) {
+                    var fresh = store.exact(userId, problemId, current.getId());
+                    if (!"RUNNING".equals(fresh.getStatus()) || expired(fresh)) throw VmSessionStore.busy();
+                    return VmCreateResponse.from(fresh, "기존 VM을 반환합니다.");
+                }
+            }
+            stop(current);
+            reservation = store.reserve(userId, problemId, now());
+            if (!reservation.created()) throw VmSessionStore.busy();
+        }
+        var session = reservation.session();
+        try {
+            String container = docker.runContainer(image, target(session));
+            if (container == null || !container.matches("[a-f0-9]{64}")) throw unavailable();
+            var running = store.activate(userId, problemId, session.getId(), container, now());
+            return VmCreateResponse.from(running, "VM이 생성되었습니다.");
+        } catch (RuntimeException failure) {
+            // Even a lost run response has a committed reservation and deterministic remote identity.
+            try { stop(session); } catch (RuntimeException cleanupFailed) {
+                // CREATING/STOPPING remains durable; the recovery worker retries without a new create.
+            }
+            throw unavailable();
+        }
+    }
+    public VmStatusResponse getStatus(Long userId, Long problemId) {
+        access.requireRead(userId, problemId);
+        var practice = practices.findById(problemId).orElseThrow(ProblemNotFoundException::new);
+        if (!"READY".equals(practice.getImageStatus())) return VmStatusResponse.imageNotReady();
+        var active = sessions.findAllByUserIdAndStatusIn(userId, VmSessionStore.ACTIVE);
+        if (active.size() > 1) throw VmSessionStore.busy();
+        if (active.isEmpty() || !active.getFirst().getProbId().equals(problemId)) return VmStatusResponse.none();
+        var current = active.getFirst();
+        if (!"RUNNING".equals(current.getStatus())) return VmStatusResponse.from(current);
+        if (expired(current) || !running(current)) {
+            stop(current); return VmStatusResponse.none();
+        }
+        var fresh = store.exact(userId, problemId, current.getId());
+        return "RUNNING".equals(fresh.getStatus()) && !expired(fresh)
+                ? VmStatusResponse.from(fresh) : VmStatusResponse.none();
+    }
     public VmStopResponse stopVm(Long userId, VmStopRequest request) {
-        VmSession session = vmSessionRepository.findFirstByUserIdAndStatus(userId, "RUNNING")
-                .orElseThrow(() -> new VmNotFoundException("실행 중인 VM이 없습니다."));
-
-        dockerService.stopAndRemoveContainer(session.getContainerId()); // 컨테이너 중단 & 삭제
-        session.stop(); // DB에서 status = "STOPPED"로 변경
-
-        return new VmStopResponse("success", "VM이 종료되었습니다."); 
+        stop(store.exact(userId, request.getProbId(), request.getSessionId()));
+        return new VmStopResponse("success", "VM이 종료되었습니다.");
     }
-
-    // VM 리셋
-    @Transactional
     public VmCreateResponse resetVm(Long userId, VmStopRequest request) {
-        // Deny before stopping any existing container.
-        access.requirePractice(userId, request.getProbId());
-        stopVm(userId, request);
-        VmCreateRequest createRequest = new VmCreateRequest(); // 빈 객체 만들고
-        createRequest.setProbId(request.getProbId()); // prob_id만 복사
-        return createVm(userId, createRequest); // createVm에 넘김
-    }// 즉, VmStopRequest에서 prob_id만 꺼내서 VmCreateRequest에 담아줌
+        image(userId, request.getProbId()); // Deny before touching any current session.
+        var current = store.beginReset(userId, request.getProbId(), request.getSessionId());
+        remove(current);
+        return create(userId, request.getProbId(), false);
+    }
+    private void stop(VmSession session) {
+        var stopping = store.stopping(session.getUserId(), session.getProbId(), session.getId());
+        if (!"STOPPED".equals(stopping.getStatus())) remove(stopping);
+    }
+    private void remove(VmSession session) {
+        try { docker.stopAndRemoveContainer(target(session)); }
+        catch (RuntimeException e) { throw unavailable(); }
+        store.stopped(session.getUserId(), session.getProbId(), session.getId());
+    }
+    private DockerService.State inspect(VmSession session) {
+        try { return docker.inspect(target(session)); }
+        catch (RuntimeException e) { throw unavailable(); } // Unknown is not missing.
+    }
+    private boolean running(VmSession session) {
+        var actual = inspect(session);
+        if ("RUNNING".equals(actual.status()) && !java.util.Objects.equals(actual.containerId(), session.getContainerId()))
+            throw unavailable();
+        return "RUNNING".equals(actual.status());
+    }
+    public void reconcile(Long sessionId) {
+        var session = sessions.findById(sessionId).orElse(null);
+        if (session == null || !VmSessionStore.ACTIVE.contains(session.getStatus())) return;
+        if ("STOPPING".equals(session.getStatus())) { stop(session); return; }
+        if ("CREATING".equals(session.getStatus())) {
+            if (session.getCreatedAt().plusMinutes(2).isAfter(now())) return;
+            stop(session); return;
+        }
+        boolean denied = false;
+        try { access.requirePractice(session.getUserId(), session.getProbId()); }
+        catch (ProblemNotFoundException noAccess) { denied = true; }
+        if (denied || expired(session) || !running(session)) stop(session);
+    }
+    private static ResponseStatusException unavailable() {
+        return new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "VM 상태를 확정할 수 없습니다. 정리 후 다시 시도해주세요.");
+    }
 }

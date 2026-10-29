@@ -66,13 +66,14 @@ class ProblemAccessBoundaryTest {
         verifyNoInteractions(submissions, codingSubmissions, results, codingResults);
     }
     @Test void vmCreateResetAndStatusDenyBeforeDockerOrSessionMutation() {
-        var service = new VmService(sessions, practices, docker, access);
+        var store = mock(VmSessionStore.class);
+        var service = new VmService(sessions, practices, docker, access, store);
         var create = new VmCreateRequest(); create.setProbId(9L);
         var reset = new VmStopRequest(); ReflectionTestUtils.setField(reset, "probId", 9L);
         assertThrows(ProblemNotFoundException.class, () -> service.createVm(7L, create));
         assertThrows(ProblemNotFoundException.class, () -> service.resetVm(7L, reset));
         assertThrows(ProblemNotFoundException.class, () -> service.getStatus(7L, 9L));
-        verifyNoInteractions(docker, sessions, practices);
+        verifyNoInteractions(docker, sessions, practices, store);
     }
     @Test void oboAndRankingCannotBypassDetailAccess() {
         var obo = new ProblemOboService(problems, objectives, codings, access);
