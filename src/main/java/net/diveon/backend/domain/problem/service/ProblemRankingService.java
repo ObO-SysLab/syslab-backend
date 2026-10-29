@@ -23,18 +23,19 @@ public class ProblemRankingService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final ProblemRepository problemRepository;
+    private final ProblemAccessService access;
 
     public ProblemRankingService(SolveSubmissionRepository solveSubmissionRepository,
                                   SolveSubmissionCodingRepository solveSubmissionCodingRepository,
-                                  ProblemRepository problemRepository) {
+                                  ProblemRepository problemRepository, ProblemAccessService access) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.problemRepository = problemRepository;
+        this.access = access;
     }
 
-    public ProblemRankingResponse getRanking(long problemId, int page) {
-        Problem problem = problemRepository.findById(problemId)
-                .orElseThrow(ProblemNotFoundException::new);
+    public ProblemRankingResponse getRanking(long userId, long problemId, int page) {
+        Problem problem = access.requireRead(userId, problemId);
 
         Page<SolveSubmission> resultPage = solveSubmissionRepository
                 .findFirstCorrectByProblemId(problemId, PageRequest.of(page - 1, 20));

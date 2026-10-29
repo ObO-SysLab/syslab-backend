@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import net.diveon.backend.domain.vm.entity.VmSession;
 import net.diveon.backend.domain.vm.repository.VmSessionRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,13 +23,15 @@ class TerminalAccessServiceTest {
     VmSessionRepository sessions;
     TerminalGrantStore store;
     TerminalAccessService service;
+    ProblemAccessService access;
     VmSession session;
     Map<String, String> values;
     Clock clock = Clock.fixed(Instant.parse("2026-10-29T12:00:00Z"), ZoneId.of("Asia/Seoul"));
 
     @BeforeEach void setup() {
         sessions = mock(VmSessionRepository.class); store = mock(TerminalGrantStore.class);
-        service = new TerminalAccessService(sessions, store, KEY, clock);
+        access = mock(ProblemAccessService.class);
+        service = new TerminalAccessService(sessions, store, KEY, clock, access);
         session = new VmSession(7L, 9L, CID, LocalDateTime.now(clock), LocalDateTime.now(clock).plusHours(2));
         ReflectionTestUtils.setField(session, "id", 3L);
         when(sessions.findFirstByUserIdAndProbIdAndStatus(7L, 9L, "RUNNING")).thenReturn(Optional.of(session));
@@ -39,6 +43,16 @@ class TerminalAccessServiceTest {
         when(store.lease(anyString())).thenAnswer(call -> values.get("lease:" + call.getArgument(0)));
     }
     String issue() { return service.issue(7L, 9L, CID).ticket(); }
+
+    @Test void lostProblemAccessRejectsIssueConsumeAndActiveLease() {
+        String ticket = issue();
+        var connection = service.consume(KEY, ticket, CID);
+        String pending = issue();
+        when(access.requirePractice(7L, 9L)).thenThrow(new ProblemNotFoundException());
+        assertThrows(ProblemNotFoundException.class, this::issue);
+        assertThrows(ProblemNotFoundException.class, () -> service.consume(KEY, pending, CID));
+        assertThrows(ProblemNotFoundException.class, () -> service.check(KEY, connection.lease()));
+    }
 
     @Test void ownerConnectsAndRechecksWithSeparateLease() {
         var ticket = service.issue(7L, 9L, CID);
@@ -76,7 +90,7 @@ class TerminalAccessServiceTest {
         assertNotNull(service.consume(KEY, ticket, CID));
     }
     @Test void missingConfigurationFailsClosed() {
-        service = new TerminalAccessService(sessions, store, "", clock);
+        service = new TerminalAccessService(sessions, store, "", clock, access);
         assertEquals(503, assertThrows(ResponseStatusException.class, this::issue).getStatusCode().value());
     }
     @Test void wrongTargetBurnsTicketAndReplayIsDenied() {
@@ -93,7 +107,7 @@ class TerminalAccessServiceTest {
     }
     @Test void expiredTicketDeniedEvenIfRedisStillReturnsIt() {
         String ticket = issue();
-        service = new TerminalAccessService(sessions, store, KEY, Clock.offset(clock, Duration.ofSeconds(30)));
+        service = new TerminalAccessService(sessions, store, KEY, Clock.offset(clock, Duration.ofSeconds(30)), access);
         assertThrows(ResponseStatusException.class, () -> service.consume(KEY, ticket, CID));
     }
     @Test void stoppedAfterIssueDeniedBeforeConnection() {
@@ -114,7 +128,7 @@ class TerminalAccessServiceTest {
     }
     @Test void leaseExpiresEvenIfSessionIsExtended() {
         var grant = service.consume(KEY, issue(), CID);
-        service = new TerminalAccessService(sessions, store, KEY, Clock.offset(clock, Duration.ofHours(2)));
+        service = new TerminalAccessService(sessions, store, KEY, Clock.offset(clock, Duration.ofHours(2)), access);
         assertThrows(ResponseStatusException.class, () -> service.check(KEY, grant.lease()));
     }
     @Test void redisAndDatabaseOutagesDoNotIssueAccess() {

@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,6 +38,8 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepositor
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.grade.service.CodingGradeQueueService;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
@@ -46,6 +49,7 @@ import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
 import net.diveon.backend.global.exception.ContestProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.exception.InvalidSubmissionRequestException;
 import net.diveon.backend.global.response.ApiResponse;
 
 @Service
@@ -62,6 +66,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final CodingGradeQueueService codingGradeQueueService;
+    private final ProblemCodingRepository problemCodingRepository;
+    private final ProblemAccessService access;
 
     public ContestSubmitServiceImpl(
             ContestRepository contestRepository,
@@ -74,7 +80,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             StringRedisTemplate redisTemplate,
             SolveSubmissionRepository solveSubmissionRepository,
             SolveSubmissionCodingRepository solveSubmissionCodingRepository,
-            CodingGradeQueueService codingGradeQueueService) {
+            CodingGradeQueueService codingGradeQueueService,
+            ProblemCodingRepository problemCodingRepository, ProblemAccessService access) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
@@ -86,6 +93,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.codingGradeQueueService = codingGradeQueueService;
+        this.problemCodingRepository = problemCodingRepository;
+        this.access = access;
     }
 
     @Override
@@ -104,17 +113,20 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                 .findByContestIdAndUserId(contestId, userId)
                 .orElseThrow(ContestAccessDeniedException::new);
 
-        if (participant.getIsBanned()) {
+        if (!Boolean.FALSE.equals(participant.getIsBanned())) {
             throw new ContestAccessDeniedException();
         }
 
-        ContestProblem contestProblem = contestProblemRepository.findById(contestProblemId)
+        ContestProblem contestProblem = contestProblemRepository.findByIdAndContestId(contestProblemId, contestId)
                 .orElseThrow(ContestProblemNotFoundException::new);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         Problem problem = contestProblem.getProblem();
+        access.requireContestSubmission(userId, problem, contestId);
+
+        validateSubmission(problem, request);
 
         checkCooldown(contestId, userId, contestProblemId);
 
@@ -127,6 +139,25 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                 return handleCodingSubmission(contest, contestProblem, problem, user, request);
             default:
                 throw new IllegalArgumentException("잘못된 제출 유형입니다.");
+        }
+    }
+
+    private void validateSubmission(Problem problem, ContestSubmitRequest request) {
+        if (request == null || request.getSubmissionType() == null
+                || !request.getSubmissionType().name().toLowerCase(Locale.ROOT).equals(problem.getType())) {
+            throw new InvalidSubmissionRequestException("문제 유형과 제출 유형이 일치하지 않습니다.");
+        }
+        if (request.getSubmissionType() == ContestSubmitRequest.SubmissionType.CODING) {
+            String language = request.getLanguage();
+            if (request.getCode() == null || request.getCode().isBlank()
+                    || language == null || !List.of("python", "c", "cpp").contains(language)) {
+                throw new InvalidSubmissionRequestException("코드와 지원하는 언어를 입력해주세요.");
+            }
+            var coding = problemCodingRepository.findById(problem.getId())
+                    .orElseThrow(() -> new InvalidSubmissionRequestException("코딩형 문제가 없습니다."));
+            if (coding.getAllowedLanguages() == null || !coding.getAllowedLanguages().contains(language)) {
+                throw new InvalidSubmissionRequestException("이 문제에서 허용되지 않은 언어입니다.");
+            }
         }
     }
 

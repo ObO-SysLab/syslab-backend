@@ -30,6 +30,7 @@ public class ProblemDetailService {
     private final ProblemPracticeRepository problemPracticeRepository;
     private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
+    private final ProblemAccessService access;
 
     public ProblemDetailService(
         UserRepository userRepository,
@@ -37,7 +38,8 @@ public class ProblemDetailService {
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
         ProblemCodingRepository problemCodingRepository,
-        OboStepRepository oboStepRepository
+        OboStepRepository oboStepRepository,
+        ProblemAccessService access
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -45,21 +47,16 @@ public class ProblemDetailService {
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
         this.oboStepRepository = oboStepRepository;
+        this.access = access;
     }
 
     @Transactional(readOnly = true)
     public ProblemDetailResponse detailProblem(long userId, long probId) {
         userRepository.findById(userId).orElseThrow();
 
-        Problem problem = problemRepository.findById(probId)
-            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
+        Problem problem = access.requireRead(userId, probId);
 
         boolean isOwner = problem.getAuthor().getId().equals(userId);
-
-        // 비공개 문제는 출제자만 조회 가능 (존재 여부도 숨기기 위해 404 처리)
-        if ("private".equals(problem.getVisibility()) && !isOwner) {
-            throw new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다.");
-        }
 
         if (problem.getType().equals("objective")) {
             return detailProblemObjective(problem, probId, isOwner);

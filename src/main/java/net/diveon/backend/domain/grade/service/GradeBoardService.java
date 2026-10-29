@@ -14,6 +14,7 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.grade.repository.SolveResultCodingRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 public class GradeBoardService {
+    private final ProblemAccessService access;
 
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
@@ -37,17 +39,17 @@ public class GradeBoardService {
                              SolveSubmissionCodingRepository solveSubmissionCodingRepository,
                              SolveResultRepository solveResultRepository,
                              SolveResultCodingRepository solveResultCodingRepository,
-                             ProblemRepository problemRepository) {
+                             ProblemRepository problemRepository, ProblemAccessService access) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.solveResultRepository = solveResultRepository;
         this.solveResultCodingRepository = solveResultCodingRepository;
         this.problemRepository = problemRepository;
+        this.access = access;
     }
 
-    public GradeBoardResponse getBoard(Long probId, int page, int size, String result, String sort) {
-        Problem problem = problemRepository.findById(probId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 문제입니다."));
+    public GradeBoardResponse getBoard(Long userId, Long probId, int page, int size, String result, String sort) {
+        Problem problem = access.requireRead(userId, probId);
 
         Sort sortOption = sort.equals("oldest")
                 ? Sort.by("submittedAt").ascending()

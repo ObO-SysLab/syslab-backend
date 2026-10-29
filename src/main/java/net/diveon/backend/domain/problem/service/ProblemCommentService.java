@@ -26,23 +26,25 @@ public class ProblemCommentService {
     private final ProblemCommentRepository commentRepository;
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
+    private final ProblemAccessService access;
 
     public ProblemCommentService(
         ProblemCommentRepository commentRepository,
         ProblemRepository problemRepository,
-        UserRepository userRepository
+        UserRepository userRepository,
+        ProblemAccessService access
     ) {
         this.commentRepository = commentRepository;
         this.problemRepository = problemRepository;
         this.userRepository = userRepository;
+        this.access = access;
     }
 
     // 댓글 목록 조회
     // readOnly = true: DB 읽기만 하는 메서드. 변경 감지 안 해서 성능 최적화
     @Transactional(readOnly = true)
     public ProblemCommentResponse.CommentList getComments(long userId, long probId, int page, int size) {
-        problemRepository.findById(probId)
-            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
+        access.requireRead(userId, probId);
 
         // 최상위 댓글만 (parent = null) 페이지 단위로 가져옴. page-1인 이유: JPA는 페이지 0부터 시작
         Page<ProblemComment> commentPage = commentRepository.findByProblem_IdAndParentIsNull(probId, PageRequest.of(page - 1, size, Sort.by("createdAt").descending()));
@@ -64,8 +66,10 @@ public class ProblemCommentService {
     // 댓글 상세 조회
     @Transactional(readOnly = true)
     public ProblemCommentResponse.CommentItem getComment(long userId, long probId, long commentId) {
+        access.requireRead(userId, probId);
         ProblemComment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
+        if (!comment.getProblem().getId().equals(probId)) throw new CommentNotFoundException();
 
         List<ProblemCommentResponse.ReplyItem> replies = commentRepository
             .findByParent_IdInOrderByCreatedAtAsc(List.of(commentId))
@@ -80,13 +84,13 @@ public class ProblemCommentService {
     @Transactional
     public ProblemCommentResponse.CommentCreate createComment(long userId, long probId, ProblemCommentCreateRequest request) {
         User user = userRepository.findById(userId).orElseThrow();
-        Problem problem = problemRepository.findById(probId)
-            .orElseThrow(() -> new ProblemNotFoundException(probId + "번에 해당하는 문제가 존재하지 않습니다."));
+        Problem problem = access.requireRead(userId, probId);
 
         ProblemComment parent = null;
         if (request.getParentId() != null) {
             parent = commentRepository.findById(request.getParentId())
                 .orElseThrow(() -> new CommentNotFoundException(request.getParentId() + "번에 해당하는 댓글이 존재하지 않습니다."));
+            if (!parent.getProblem().getId().equals(probId)) throw new CommentNotFoundException();
         }
 
         ProblemComment comment = new ProblemComment(problem, user, parent, request.getContent(), request.getIsPrivate());
@@ -117,6 +121,7 @@ public class ProblemCommentService {
 
     // 댓글이 해당 문제의 것이고 요청자가 작성자인지 확인한 뒤 반환
     private ProblemComment findOwnedComment(long userId, long probId, long commentId) {
+        access.requireRead(userId, probId);
         ProblemComment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new CommentNotFoundException(commentId + "번에 해당하는 댓글이 존재하지 않습니다."));
 

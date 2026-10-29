@@ -25,9 +25,13 @@ import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
+import net.diveon.backend.global.exception.InvalidSubmissionRequestException;
+import net.diveon.backend.global.exception.ProblemNotFoundException;
 
 @Service
 public class SubmissionGradeStarterService {
+    private final ProblemAccessService access;
     private final SolveResultRepository solveResultRepository; 
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionObjectiveRepository solveSubmissionObjectiveRepository;
@@ -53,7 +57,8 @@ public class SubmissionGradeStarterService {
         ProblemRepository problemRepository,
         ProblemCodingRepository problemCodingRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
-        ProblemPracticeRepository problemPracticeRepository
+        ProblemPracticeRepository problemPracticeRepository,
+        ProblemAccessService access
     ){
         this.solveResultRepository = solveResultRepository;
         this.solveSubmissionRepository = solveSubmissionRepository;
@@ -67,6 +72,7 @@ public class SubmissionGradeStarterService {
         this.problemCodingRepository =problemCodingRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
+        this.access = access;
     }
 
     @Transactional
@@ -92,10 +98,12 @@ public class SubmissionGradeStarterService {
         long probId = request.getProdId();
         
         //TODO: exception logic must be improved
-        Problem problem = problemRepository.findById(probId).orElseThrow(() -> new RuntimeException("문제가 없습니다."));
+        Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+        access.requireNormalSubmission(userId, problem);
 
         // objective / coding / practice
         String problemType = problem.getType();
+        validateAnswer(problemType, probId, request);
 
         //new submission create
         //Create State - SubmissionState.PENDING, LocalDateTime.now()
@@ -123,21 +131,6 @@ public class SubmissionGradeStarterService {
             if (request.getAnswer() instanceof String) {
                 String answer = (String) request.getAnswer();
                 String language = request.getLanguage();
-
-                if (answer.isBlank()) {
-                    throw new RuntimeException("코딩형 정답 문자열이 비어 있습니다.");
-                }
-
-                if (language == null || language.isBlank()) {
-                    throw new RuntimeException("코딩형 문제는 언어 정보가 필요합니다.");
-                }
-
-                ProblemCoding problemCoding = problemCodingRepository.findById(probId)
-                    .orElseThrow(() -> new RuntimeException("코딩형 문제가 없습니다."));
-
-                if (!problemCoding.getAllowedLanguages().contains(language)) {
-                    throw new RuntimeException("허용되지 않은 언어입니다.");
-                }
 
                 SolveSubmissionCoding submissionCoding = new SolveSubmissionCoding(submission, answer, language);
                 solveSubmissionCodingRepository.save(submissionCoding);
@@ -185,5 +178,26 @@ public class SubmissionGradeStarterService {
         problemRepository.incrementSubmittedCount(probId);
         // 그냥 오류 방지용, 바꿔야함
         return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name(), problemType);
+    }
+
+    private void validateAnswer(String type, long problemId, SubmissionGradeReqeust request) {
+        if ("coding".equals(type)) {
+            String language = request.getLanguage();
+            if (!(request.getAnswer() instanceof String code) || code.isBlank() || language == null
+                    || !List.of("python", "c", "cpp").contains(language)) {
+                throw new InvalidSubmissionRequestException("코드와 지원하는 언어를 입력해주세요.");
+            }
+            ProblemCoding coding = problemCodingRepository.findById(problemId)
+                    .orElseThrow(() -> new InvalidSubmissionRequestException("코딩형 문제가 없습니다."));
+            if (coding.getAllowedLanguages() == null || !coding.getAllowedLanguages().contains(language)) {
+                throw new InvalidSubmissionRequestException("이 문제에서 허용되지 않은 언어입니다.");
+            }
+        } else if ("objective".equals(type)) {
+            if (!(request.getAnswer() instanceof List<?> answers) || answers.stream().anyMatch(a -> !(a instanceof Integer))) {
+                throw new InvalidSubmissionRequestException("객관식 답은 정수 목록이어야 합니다.");
+            }
+        } else if (!"practice".equals(type) || !(request.getAnswer() instanceof String)) {
+            throw new InvalidSubmissionRequestException("문제 유형과 제출 형식이 일치하지 않습니다.");
+        }
     }
 }

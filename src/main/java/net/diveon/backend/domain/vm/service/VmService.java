@@ -2,6 +2,7 @@ package net.diveon.backend.domain.vm.service;
 
 import net.diveon.backend.domain.problem.entity.ProblemPractice;
 import net.diveon.backend.domain.problem.repository.ProblemPracticeRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import net.diveon.backend.domain.vm.dto.request.VmCreateRequest;
 import net.diveon.backend.domain.vm.dto.request.VmStopRequest;
 import net.diveon.backend.domain.vm.dto.response.VmCreateResponse;
@@ -28,18 +29,21 @@ public class VmService {
     private final VmSessionRepository vmSessionRepository;
     private final ProblemPracticeRepository problemPracticeRepository;
     private final DockerService dockerService;
+    private final ProblemAccessService access;
 
     public VmService(VmSessionRepository vmSessionRepository,
                      ProblemPracticeRepository problemPracticeRepository,
-                     DockerService dockerService) {
+                     DockerService dockerService, ProblemAccessService access) {
         this.vmSessionRepository = vmSessionRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.dockerService = dockerService;
+        this.access = access;
     }
 
     // VM 상태 조회
     @Transactional(readOnly = true)
     public VmStatusResponse getStatus(Long userId, Long probId) {
+        access.requireRead(userId, probId);
         ProblemPractice practice = problemPracticeRepository.findById(probId)
                 .orElseThrow(() -> new ProblemNotFoundException("존재하지 않는 실습 문제입니다."));
 
@@ -59,6 +63,7 @@ public class VmService {
     @Transactional
     public VmCreateResponse createVm(Long userId, VmCreateRequest request) {
         Long probId = request.getProbId();
+        access.requirePractice(userId, probId);
 
         ProblemPractice practice = problemPracticeRepository.findById(probId)
                 .orElseThrow(() -> new ProblemNotFoundException("존재하지 않는 실습 문제입니다."));
@@ -112,6 +117,8 @@ public class VmService {
     // VM 리셋
     @Transactional
     public VmCreateResponse resetVm(Long userId, VmStopRequest request) {
+        // Deny before stopping any existing container.
+        access.requirePractice(userId, request.getProbId());
         stopVm(userId, request);
         VmCreateRequest createRequest = new VmCreateRequest(); // 빈 객체 만들고
         createRequest.setProbId(request.getProbId()); // prob_id만 복사
