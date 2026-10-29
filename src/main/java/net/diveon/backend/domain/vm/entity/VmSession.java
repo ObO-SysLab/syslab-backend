@@ -35,6 +35,9 @@ public class VmSession {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    @Column(name = "runtime_version", nullable = false)
+    private int runtimeVersion;
+
     public VmSession() {}
 
     public VmSession(Long userId, Long probId, String containerId,
@@ -54,6 +57,17 @@ public class VmSession {
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
+    public int getRuntimeVersion() { return runtimeVersion; }
+
+    public static VmSession creating(Long userId, Long probId, LocalDateTime now) {
+        VmSession session = new VmSession(userId, probId, null, now, now.plusHours(2));
+        session.status = "CREATING";
+        session.runtimeVersion = 1;
+        return session;
+    }
+
+    public void running(String containerId) { this.containerId = containerId; this.status = "RUNNING"; }
+    public void stopping() { this.status = "STOPPING"; }
 
     public void stop() { this.status = "STOPPED"; }
 }
