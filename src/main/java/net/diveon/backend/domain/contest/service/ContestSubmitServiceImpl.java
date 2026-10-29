@@ -4,7 +4,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +67,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private final CodingGradeQueueService codingGradeQueueService;
     private final ProblemCodingRepository problemCodingRepository;
     private final ProblemAccessService access;
+    private final net.diveon.backend.domain.problem.repository.ProblemRepository problems;
 
     public ContestSubmitServiceImpl(
             ContestRepository contestRepository,
@@ -81,7 +81,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             SolveSubmissionRepository solveSubmissionRepository,
             SolveSubmissionCodingRepository solveSubmissionCodingRepository,
             CodingGradeQueueService codingGradeQueueService,
-            ProblemCodingRepository problemCodingRepository, ProblemAccessService access) {
+            ProblemCodingRepository problemCodingRepository, ProblemAccessService access, net.diveon.backend.domain.problem.repository.ProblemRepository problems) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
@@ -95,6 +95,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         this.codingGradeQueueService = codingGradeQueueService;
         this.problemCodingRepository = problemCodingRepository;
         this.access = access;
+        this.problems = problems;
     }
 
     @Override
@@ -110,7 +111,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         }
 
         ContestParticipant participant = contestParticipantRepository
-                .findByContestIdAndUserId(contestId, userId)
+                .findForScoreUpdate(contestId, userId)
                 .orElseThrow(ContestAccessDeniedException::new);
 
         if (!Boolean.FALSE.equals(participant.getIsBanned())) {
@@ -203,15 +204,15 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = jdbcTemplate.queryForObject("SELECT clock_timestamp() AT TIME ZONE 'UTC'", LocalDateTime.class);
                 participant.addScore(contestProblem.getPoints(), now);
-                contestParticipantRepository.save(participant);
+                contestParticipantRepository.saveAndFlush(participant);
 
-                jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
+
             }
         }
 
+        if (isCorrect) problems.recordSolver(problem.getId(), user.getId());
         int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
 
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
@@ -254,15 +255,15 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = jdbcTemplate.queryForObject("SELECT clock_timestamp() AT TIME ZONE 'UTC'", LocalDateTime.class);
                 participant.addScore(contestProblem.getPoints(), now);
-                contestParticipantRepository.save(participant);
+                contestParticipantRepository.saveAndFlush(participant);
 
-                jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
+
             }
         }
 
+        if (isCorrect) problems.recordSolver(problem.getId(), user.getId());
         int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
 
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
@@ -322,23 +323,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     }
 
     private int getRank(Long contestId, Long userId, int score) {
-        try {
-            Long zeroBasedRank = redisTemplate.opsForZSet()
-                    .reverseRank("scoreboard:" + contestId, String.valueOf(userId));
-            if (zeroBasedRank != null) {
-                return zeroBasedRank.intValue() + 1;
-            }
-        } catch (Exception ignored) {}
-        Integer higherCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM contest_participant WHERE contest_id = ? AND score > ?",
-                Integer.class, contestId, score);
-        return (higherCount != null ? higherCount : 0) + 1;
-    }
-
-    private void updateScoreboard(Long contestId, Long userId, int newTotalScore, LocalDateTime solvedAt) {
-        long epochSecond = solvedAt.toEpochSecond(ZoneOffset.UTC);
-        double compositeScore = (double) newTotalScore * 1_000_000L - epochSecond;
-        redisTemplate.opsForZSet().add("scoreboard:" + contestId, String.valueOf(userId), compositeScore);
+        Integer rank = jdbcTemplate.queryForObject(ContestRankQuery.SQL, Integer.class, contestId, userId);
+        return rank == null ? 0 : rank;
     }
 
     private String hashFlag(String flag) {

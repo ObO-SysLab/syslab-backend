@@ -47,6 +47,7 @@ class ContestSubmitAccessTest {
     @Mock CodingGradeQueueService queue;
     @Mock ProblemCodingRepository codingProblems;
     @Mock ProblemAccessService access;
+    @Mock net.diveon.backend.domain.problem.repository.ProblemRepository problems;
     @InjectMocks ContestSubmitServiceImpl service;
     Contest contest;
     ContestParticipant participant;
@@ -72,7 +73,7 @@ class ContestSubmitAccessTest {
     }
 
     private void registered(String type) {
-        when(participants.findByContestIdAndUserId(1L, 7L)).thenReturn(Optional.of(participant));
+        when(participants.findForScoreUpdate(1L, 7L)).thenReturn(Optional.of(participant));
         problem = new Problem(user, type, "fixture", "OS", "easy", "public");
         ReflectionTestUtils.setField(problem, "id", 2L);
         var cp = new ContestProblem(contest, problem, 100);
@@ -86,7 +87,7 @@ class ContestSubmitAccessTest {
     }
 
     @Test void otherContestProblemIsRejectedBeforeSideEffects() {
-        when(participants.findByContestIdAndUserId(1L, 7L)).thenReturn(Optional.of(participant));
+        when(participants.findForScoreUpdate(1L, 7L)).thenReturn(Optional.of(participant));
         when(contestProblems.findByIdAndContestId(9L, 1L)).thenReturn(Optional.empty());
         assertThrows(ContestProblemNotFoundException.class,
                 () -> service.submitContestProblem(1L, 9L, 7L, request("python", "print(1)")));
@@ -102,7 +103,7 @@ class ContestSubmitAccessTest {
 
     @Test void bannedParticipantIsRejected() {
         participant.ban();
-        when(participants.findByContestIdAndUserId(1L, 7L)).thenReturn(Optional.of(participant));
+        when(participants.findForScoreUpdate(1L, 7L)).thenReturn(Optional.of(participant));
         assertThrows(ContestAccessDeniedException.class,
                 () -> service.submitContestProblem(1L, 9L, 7L, request("python", "print(1)")));
         verifyNoInteractions(contestProblems, users); noEffects();

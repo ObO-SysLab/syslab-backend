@@ -12,6 +12,9 @@ import org.springframework.data.repository.query.Param;
 import net.diveon.backend.domain.contest.entity.ContestParticipant;
 
 public interface ContestParticipantRepository extends JpaRepository<ContestParticipant, Long> {
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from ContestParticipant p where p.contest.id = :contestId and p.user.id = :userId")
+    Optional<ContestParticipant> findForScoreUpdate(@Param("contestId") Long contestId, @Param("userId") Long userId);
     Optional<ContestParticipant> findByContestIdAndUserId(Long contestId, Long userId);
     long countByContestId(Long contestId);
     long countByContestIdAndScoreGreaterThan(Long contestId, Integer score);
@@ -57,8 +60,8 @@ public interface ContestParticipantRepository extends JpaRepository<ContestParti
     @Query("""
             SELECT cp FROM ContestParticipant cp
             JOIN FETCH cp.user
-            WHERE cp.contest.id = :contestId
-            ORDER BY cp.score DESC, cp.lastSolvedAt ASC NULLS LAST
+            WHERE cp.contest.id = :contestId AND cp.isBanned = false
+            ORDER BY cp.score DESC, cp.lastSolvedAt ASC NULLS LAST, cp.user.id ASC
             """)
     List<ContestParticipant> findRankingsByContestId(@Param("contestId") Long contestId);
 
