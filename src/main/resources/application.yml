@@ -16,6 +16,14 @@ spring:
       hibernate:
         format_sql: true
 
+# Requires the manual ops migration and coordinated worker/Lambda rollout.
+grading:
+  recovery:
+    enabled: false
+    max-attempts: 3
+    grace-seconds: 900
+    poll-ms: 15000
+
 server:
   port: 8080
   servlet:

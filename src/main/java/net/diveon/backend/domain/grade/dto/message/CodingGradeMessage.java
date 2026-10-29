@@ -9,6 +9,7 @@ public class CodingGradeMessage {
     private Integer memoryLimit;
     private Integer testcaseCount;
     private ContestContext contestContext;
+    private Integer attemptNo;
 
     public CodingGradeMessage() {}
 
@@ -31,6 +32,8 @@ public class CodingGradeMessage {
     }
 
     public String getSubmissionId() { return submissionId; }
+    public Integer getAttemptNo() { return attemptNo; }
+    public void setAttemptNo(Integer attemptNo) { this.attemptNo = attemptNo; }
     public String getS3Key() { return s3Key; }
     public String getLanguage() { return language; }
     public String getProblemId() { return problemId; }

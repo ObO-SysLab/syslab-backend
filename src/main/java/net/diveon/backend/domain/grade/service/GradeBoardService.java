@@ -148,8 +148,8 @@ public class GradeBoardService {
 
     // 코딩형
     private GradeBoardCodingResponse buildCodingBoard(Long probId, Pageable pageable, String result) {
-        Page<SolveSubmission> submissionPage = solveSubmissionRepository.findCompletedByProbId(probId, pageable);
-        Long total = solveSubmissionRepository.countCompletedByProbId(probId);
+        Page<SolveSubmission> submissionPage = solveSubmissionRepository.findTerminalByProbId(probId, pageable);
+        Long total = submissionPage.getTotalElements();
 
         List<GradeBoardCodingResponse.SubmissionItem> items = submissionPage.getContent().stream()
                 .map(submission -> {
@@ -193,7 +193,8 @@ public class GradeBoardService {
                             memoryUsage,
                             codeSize,
                             submission.getSubmittedAt().toString(),
-                            judgedAt
+                            judgedAt,
+                            submission.getSubmissionState().name()
                     );
                 })
                 .filter(item -> item != null) // null 제거 후 리스트로

@@ -80,7 +80,7 @@ public class ContestSubmissionStatusService {
         return switch (status) {
             case "PENDING" -> 0;
             case "JUDGING" -> 50;
-            case "COMPLETED" -> 100;
+            case "COMPLETED", "FAILED" -> 100;
             default -> 0;
         };
     }

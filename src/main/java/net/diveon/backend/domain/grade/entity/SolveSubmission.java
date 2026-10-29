@@ -35,7 +35,8 @@ public class SolveSubmission {
     public static enum SubmissionState{
         PENDING,
         JUDGING,
-        COMPLETED
+        COMPLETED,
+        FAILED
     }
     
     @Id

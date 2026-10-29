@@ -32,6 +32,14 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final ProblemCodingRepository problemCodingRepository;
+    private final CodingGradeJobStore jobs;
+    private final jakarta.persistence.EntityManager entityManager;
+
+    @Value("${grading.recovery.enabled:false}")
+    private boolean recoveryEnabled;
+
+    @Value("${grading.recovery.grace-seconds:900}")
+    private long graceSeconds;
 
     @Value("${aws.sqs.url}")
     private String queueUrl;
@@ -45,7 +53,9 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         ObjectMapper objectMapper,
         SolveSubmissionRepository solveSubmissionRepository,
         SolveSubmissionCodingRepository solveSubmissionCodingRepository,
-        ProblemCodingRepository problemCodingRepository
+        ProblemCodingRepository problemCodingRepository,
+        CodingGradeJobStore jobs,
+        jakarta.persistence.EntityManager entityManager
     ) {
         this.s3Client = s3Client;
         this.sqsClient = sqsClient;
@@ -53,6 +63,8 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.problemCodingRepository = problemCodingRepository;
+        this.jobs = jobs;
+        this.entityManager = entityManager;
     }
 
     @Override
@@ -68,11 +80,9 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
 
-        uploadCode(s3Key, submissionCoding.getAnswer());
-
         CodingGradeMessage message = createMessage(submissionId, s3Key, language, probId, problemCoding);
         message.setContestContext(contestContext);
-        sendMessage(message);
+        enqueue(message, submissionCoding.getAnswer());
     }
 
     @Override
@@ -87,8 +97,31 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
 
-        uploadCode(s3Key, submissionCoding.getAnswer());
-        sendMessage(createMessage(submissionId, s3Key, language, probId, problemCoding));
+        enqueue(createMessage(submissionId, s3Key, language, probId, problemCoding), submissionCoding.getAnswer());
+    }
+
+    private void enqueue(CodingGradeMessage message, String code) {
+        if (!recoveryEnabled) {
+            dispatch(message, code);
+            return;
+        }
+        if (graceSeconds < 60 || message.getTimeLimit() <= 0 || message.getTestcaseCount() <= 0) {
+            throw new IllegalArgumentException("Invalid grading time budget or testcases");
+        }
+        long timeout = Math.addExact(graceSeconds,
+                Math.multiplyExact((long) message.getTimeLimit(), message.getTestcaseCount()));
+        try {
+            // The contest submission and its request become visible in the same commit.
+            entityManager.flush();
+            jobs.register(Long.parseLong(message.getSubmissionId()), objectMapper.writeValueAsString(message), timeout);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid grading message", e);
+        }
+    }
+
+    public void dispatch(CodingGradeMessage message, String code) {
+        uploadCode(message.getS3Key(), code);
+        sendMessage(message);
     }
 
     private void uploadCode(String s3Key, String code) {
