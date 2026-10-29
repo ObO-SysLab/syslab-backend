@@ -11,8 +11,10 @@ import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Real SQL and transaction boundaries, using a disposable loopback PostgreSQL, never application config. */
+@org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable(named = "DIVEON_GRADING_PG_TEST", matches = "approved")
 class CodingGradeJobStoreTest {
     static Path directory, pgBin;
+    static String suffix;
     static JdbcTemplate jdbc;
     static TransactionTemplate tx;
     static CodingGradeJobStore store;
@@ -25,13 +27,16 @@ class CodingGradeJobStoreTest {
     }
 
     @BeforeAll static void start() throws Exception {
-        pgBin = Path.of(System.getenv().getOrDefault("PG_BIN", "C:/Program Files/PostgreSQL/17/bin"));
+        String binaryPath = System.getenv("PG_BIN");
+        assertNotNull(binaryPath, "Set PG_BIN explicitly for the approved local PostgreSQL installation");
+        pgBin = Path.of(binaryPath);
+        suffix = System.getProperty("os.name").startsWith("Windows") ? ".exe" : "";
         directory = Files.createTempDirectory("syslab-recovery-pg-");
         int port;
         try (var socket = new ServerSocket(0)) { port = socket.getLocalPort(); }
-        command(pgBin.resolve("initdb.exe").toString(), "-D", directory.resolve("data").toString(),
+        command(pgBin.resolve("initdb" + suffix).toString(), "-D", directory.resolve("data").toString(),
                 "-U", "postgres", "-A", "trust", "--no-locale", "-E", "UTF8");
-        command(pgBin.resolve("pg_ctl.exe").toString(), "-D", directory.resolve("data").toString(),
+        command(pgBin.resolve("pg_ctl" + suffix).toString(), "-D", directory.resolve("data").toString(),
                 "-l", directory.resolve("server.log").toString(), "-o", "-h 127.0.0.1 -p " + port, "-w", "start");
         var ds = new DriverManagerDataSource("jdbc:postgresql://127.0.0.1:" + port + "/postgres", "postgres", "");
         jdbc = new JdbcTemplate(ds);
@@ -44,7 +49,7 @@ class CodingGradeJobStoreTest {
 
     @AfterAll static void stop() throws Exception {
         if (directory != null && Files.exists(directory.resolve("data/postmaster.pid"))) {
-            command(pgBin.resolve("pg_ctl.exe").toString(), "-D", directory.resolve("data").toString(), "-m", "immediate", "-w", "stop");
+            command(pgBin.resolve("pg_ctl" + suffix).toString(), "-D", directory.resolve("data").toString(), "-m", "immediate", "-w", "stop");
         }
         System.out.println("Disposable PostgreSQL stopped; logs: " + directory);
     }

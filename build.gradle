@@ -79,3 +79,19 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Production artifacts must never embed workstation or deployment secrets.
+tasks.named('bootJar') {
+    archiveFileName = 'diveon-backend.jar'
+    exclude '**/application-secret.*', '**/application-local.*', '**/*.pem', '**/*.key'
+}
+tasks.named('jar') { enabled = false }
+tasks.register('verifyRelease') {
+    dependsOn tasks.named('bootJar')
+    doLast {
+        def forbidden = zipTree(tasks.named('bootJar').get().archiveFile.get()).matching {
+            include '**/application-secret.*', '**/application-local.*', '**/*.pem', '**/*.key'
+        }
+        if (!forbidden.isEmpty()) throw new GradleException('Private configuration found in release JAR')
+    }
+}

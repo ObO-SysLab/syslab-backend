@@ -1,4 +1,4 @@
 FROM amazoncorretto:21-alpine
 WORKDIR /app
-COPY build/libs/*.jar app.jar
-ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+COPY build/libs/diveon-backend.jar app.jar
+ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
