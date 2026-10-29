@@ -162,7 +162,7 @@ public class SubmissionGradeAsyncService {
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
             if (!alreadySolved) {
-                problem.incrementSolvedCount();
+                problemRepository.incrementSolvedCount(probId);
                 userTierService.refreshTierScore(submitterId);
             }
         }else{
@@ -214,7 +214,7 @@ public class SubmissionGradeAsyncService {
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
             if (!alreadySolved) {
-                problem.incrementSolvedCount();
+                problemRepository.incrementSolvedCount(probId);
                 userTierService.refreshTierScore(submitterId);
             }
         }else{

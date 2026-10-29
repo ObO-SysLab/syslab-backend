@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
 import net.diveon.backend.domain.problem.entity.Problem;
@@ -13,6 +14,14 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long>, JpaSpecificationExecutor<Problem> {
+
+    @Modifying(flushAutomatically = true)
+    @Query(value = "UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = :problemId", nativeQuery = true)
+    int incrementSubmittedCount(@Param("problemId") long problemId);
+
+    @Modifying(flushAutomatically = true)
+    @Query(value = "UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = :problemId", nativeQuery = true)
+    int incrementSolvedCount(@Param("problemId") long problemId);
 
     @Query(value = """
             SELECT * FROM problem_summary p
