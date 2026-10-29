@@ -17,21 +17,23 @@ public class ProblemOboService {
     private final ProblemRepository problemRepository;
     private final ProblemObjectiveRepository problemObjectiveRepository;
     private final ProblemCodingRepository problemCodingRepository;
+    private final ProblemAccessService access;
 
     public ProblemOboService(
         ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
-        ProblemCodingRepository problemCodingRepository
+        ProblemCodingRepository problemCodingRepository,
+        ProblemAccessService access
     ) {
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemCodingRepository = problemCodingRepository;
+        this.access = access;
     }
 
     @Transactional(readOnly = true)
-    public JsonNode getOboJson(Long problemId) {
-        Problem problem = problemRepository.findById(problemId)
-            .orElseThrow(() -> new ProblemNotFoundException(problemId + "번에 해당하는 문제가 존재하지 않습니다."));
+    public JsonNode getOboJson(Long userId, Long problemId) {
+        Problem problem = access.requireRead(userId, problemId);
 
         if ("objective".equals(problem.getType())) {
             ProblemObjective problemObjective = problemObjectiveRepository.findById(problemId)

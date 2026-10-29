@@ -20,6 +20,7 @@ import net.diveon.backend.domain.contest.repository.ContestRepository;
 import net.diveon.backend.domain.contest.repository.ContestSubmissionRepository;
 import net.diveon.backend.domain.problem.entity.Problem;
 import net.diveon.backend.domain.problem.repository.ProblemRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
@@ -38,19 +39,21 @@ public class ContestProblemNormalService {
     private final ContestProblemRepository contestProblemRepository;
     private final ContestSubmissionRepository contestSubmissionRepository;
     private final ProblemRepository problemRepository;
+    private final ProblemAccessService access;
 
     public ContestProblemNormalService(ContestRepository contestRepository,
                                        UserRepository userRepository,
                                        ContestParticipantRepository contestParticipantRepository,
                                        ContestProblemRepository contestProblemRepository,
                                        ContestSubmissionRepository contestSubmissionRepository,
-                                       ProblemRepository problemRepository) {
+                                       ProblemRepository problemRepository, ProblemAccessService access) {
         this.contestRepository = contestRepository;
         this.userRepository = userRepository;
         this.contestParticipantRepository = contestParticipantRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestSubmissionRepository = contestSubmissionRepository;
         this.problemRepository = problemRepository;
+        this.access = access;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +82,11 @@ public class ContestProblemNormalService {
 
         List<ForDtoContestProblem> problems = new java.util.ArrayList<>();
         for (int i = 0; i < contestProblems.size(); i++) {
+            try {
+                access.requireReadInContest(userId, contestProblems.get(i).getProblem().getId(), contestId);
+            } catch (ProblemNotFoundException denied) {
+                continue;
+            }
             problems.add(toResponse(contestProblems.get(i), solvedContestProblemIds,
                     submittedCountMap, solvedCountMap, i + 1));
         }

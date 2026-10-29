@@ -10,6 +10,7 @@ import java.util.Base64;
 import java.util.Objects;
 import net.diveon.backend.domain.vm.entity.VmSession;
 import net.diveon.backend.domain.vm.repository.VmSessionRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -24,16 +25,19 @@ public class TerminalAccessService {
     private final TerminalGrantStore store;
     private final String serviceKey;
     private final Clock clock;
+    private final ProblemAccessService access;
     private final SecureRandom random = new SecureRandom();
 
     @Autowired
     public TerminalAccessService(VmSessionRepository sessions, TerminalGrantStore store,
-            @Value("${terminal.service-key:}") String serviceKey) {
-        this(sessions, store, serviceKey, Clock.systemDefaultZone());
+            @Value("${terminal.service-key:}") String serviceKey, ProblemAccessService access) {
+        this(sessions, store, serviceKey, Clock.systemDefaultZone(), access);
     }
 
-    TerminalAccessService(VmSessionRepository sessions, TerminalGrantStore store, String key, Clock clock) {
+    TerminalAccessService(VmSessionRepository sessions, TerminalGrantStore store, String key, Clock clock,
+            ProblemAccessService access) {
         this.sessions = sessions; this.store = store; this.serviceKey = key; this.clock = clock;
+        this.access = access;
     }
 
     public record Ticket(String ticket, long expiresAt) {}
@@ -89,6 +93,7 @@ public class TerminalAccessService {
         if (!Objects.equals(userId, session.getUserId()) || !Objects.equals(containerId, session.getContainerId())
                 || !"RUNNING".equals(session.getStatus()) || session.getExpiresAt() == null
                 || !session.getExpiresAt().isAfter(LocalDateTime.now(clock))) throw denied();
+        access.requirePractice(userId, session.getProbId());
     }
 
     private long expiry(VmSession session) {

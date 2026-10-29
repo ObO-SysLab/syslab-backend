@@ -24,6 +24,7 @@ import net.diveon.backend.domain.problem.entity.ProblemCoding;
 import net.diveon.backend.domain.problem.repository.*;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 
 @ExtendWith(MockitoExtension.class)
 class SubmissionGradeStarterServiceTest {
@@ -37,6 +38,7 @@ class SubmissionGradeStarterServiceTest {
     @Mock ProblemCodingRepository codingRepository;
     @Mock ProblemObjectiveRepository objectiveRepository;
     @Mock ProblemPracticeRepository practiceRepository;
+    @Mock ProblemAccessService access;
     @InjectMocks SubmissionGradeStarterService service;
 
     @BeforeEach
@@ -84,6 +86,23 @@ class SubmissionGradeStarterServiceTest {
         var request = request("coding", "  ");
         assertThrows(RuntimeException.class, () -> service.submissionGradeStart(7L, request));
         verify(problemRepository, never()).incrementSubmittedCount(anyLong());
+        verifyNoInteractions(submissionRepository, codingSubmissionRepository);
+    }
+
+    @Test void disallowedLanguageIsRejectedBeforeAnySubmissionSave() {
+        var request = request("coding", "print(1)");
+        ReflectionTestUtils.setField(request, "language", "cpp");
+        assertThrows(net.diveon.backend.global.exception.InvalidSubmissionRequestException.class,
+                () -> service.submissionGradeStart(7L, request));
+        verifyNoInteractions(submissionRepository, codingSubmissionRepository);
+        verify(problemRepository, never()).incrementSubmittedCount(anyLong());
+    }
+
+    @Test void objectiveWithNonintegerAnswersIsRejectedBeforeSave() {
+        var request = request("objective", List.of("1"));
+        assertThrows(net.diveon.backend.global.exception.InvalidSubmissionRequestException.class,
+                () -> service.submissionGradeStart(7L, request));
+        verifyNoInteractions(submissionRepository, objectiveSubmissionRepository);
     }
 
     @Test
