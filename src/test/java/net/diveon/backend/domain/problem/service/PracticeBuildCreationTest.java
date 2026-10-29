@@ -1,0 +1,59 @@
+package net.diveon.backend.domain.problem.service;
+
+import net.diveon.backend.domain.problem.entity.*;
+import net.diveon.backend.domain.problem.repository.*;
+import net.diveon.backend.domain.problem.dto.request.ProblemCreatePracticeRequest;
+import net.diveon.backend.domain.user.entity.User;
+import net.diveon.backend.domain.user.repository.UserRepository;
+import net.diveon.backend.domain.group.repository.*;
+import net.diveon.backend.domain.contest.repository.*;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.*;
+import java.util.Optional;
+import static net.diveon.backend.domain.problem.service.PracticeBuildStateTest.START;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class PracticeBuildCreationTest {
+    final ProblemPracticeRepository practices = mock(ProblemPracticeRepository.class);
+    final ProblemRepository problems = mock(ProblemRepository.class);
+    final UserRepository users = mock(UserRepository.class);
+    final S3Service s3 = mock(S3Service.class);
+    final PracticeBuildProperties props = new PracticeBuildProperties();
+    final ProblemCreateService service = new ProblemCreateService(mock(ProblemObjectiveRepository.class), practices,
+            mock(ProblemCodingRepository.class), problems, users, mock(OboStepRepository.class), s3,
+            mock(GroupRepository.class), mock(GroupProblemRepository.class), mock(ContestRepository.class),
+            mock(ContestProblemRepository.class), mock(ContestParticipantRepository.class), props, Clock.fixed(START, ZoneOffset.UTC));
+
+    @Test void disabledCreationHasNoDatabaseOrS3SideEffect() {
+        assertThatThrownBy(() -> service.createPractice(1, new ProblemCreatePracticeRequest())).isInstanceOf(ResponseStatusException.class);
+        verifyNoInteractions(problems, practices, users, s3);
+    }
+
+    @Test void requestAndTenMinuteDeadlineAreStoredBeforeExactSourceUpload() {
+        props.setEnabled(true);
+        when(users.findById(1L)).thenReturn(Optional.of(mock(User.class)));
+        when(problems.save(any())).thenAnswer(invocation -> {
+            Problem p = invocation.getArgument(0);
+            ReflectionTestUtils.setField(p, "id", 7L);
+            ReflectionTestUtils.setField(p, "createdAt", LocalDateTime.of(2026,10,30,0,0));
+            return p;
+        });
+        var request = new ProblemCreatePracticeRequest();
+        request.setFlag("flag"); request.setVisibility("public"); request.setTitle("practice");
+        request.setDockerfile(new MockMultipartFile("dockerfile", "source.zip", "application/zip", new byte[]{1}));
+        service.createPractice(1, request);
+        var saved = ArgumentCaptor.forClass(ProblemPractice.class);
+        var order = inOrder(practices, s3);
+        order.verify(practices).save(saved.capture());
+        var practice = saved.getValue();
+        order.verify(s3).uploadDockerfileZip(7L, practice.getBuildRequestId(), request.getDockerfile());
+        assertThat(practice.getBuildRequestedAt()).isEqualTo(START);
+        assertThat(practice.getBuildDeadlineAt()).isEqualTo(START.plusSeconds(600));
+        assertThat(PracticeBuildIdentity.fromKey(new PracticeBuildIdentity(7, practice.getBuildRequestId()).sourceKey()).problemId()).isEqualTo(7);
+    }
+}

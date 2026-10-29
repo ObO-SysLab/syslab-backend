@@ -135,14 +135,14 @@ public class ProblemDeleteService {
         problemRepository.deleteById(probId);
 
         try {
-            s3Service.deleteDockerfileZip(probId);
+            s3Service.deleteDockerfileZip(probId, practice == null ? null : practice.getBuildRequestId());
         } catch (Exception e) {
             log.warn("S3 Dockerfile zip 삭제 실패 - probId: {}", probId, e);
         }
 
         if (isReady) {
             try {
-                ecrService.deleteImage(probId);
+                ecrService.deleteImage(probId, practice.getCodeBuildId());
             } catch (Exception e) {
                 log.warn("ECR 이미지 삭제 실패 - probId: {}", probId, e);
             }

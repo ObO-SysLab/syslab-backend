@@ -32,3 +32,14 @@ server:
       force: true
   error:
     include-message: always
+
+# Enable only after the AUDIT-07 SQL, buildspec, events and IAM rollout.
+practice:
+  build:
+    enabled: false
+    recovery-enabled: false
+    deadline-minutes: 10
+    poll-ms: 30000
+    batch-size: 50
+    discovery-pages: 10
+    project: syslab-practice-build

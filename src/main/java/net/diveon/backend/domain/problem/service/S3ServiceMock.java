@@ -17,7 +17,7 @@ public class S3ServiceMock implements S3Service {
     private static final Logger log = LoggerFactory.getLogger(S3ServiceMock.class);
 
     @Override
-    public void uploadDockerfileZip(Long probId, MultipartFile file) {
+    public void uploadDockerfileZip(Long probId, String requestId, MultipartFile file) {
         log.info("[Mock] S3 업로드 생략 - probId: {}, 파일명: {}", probId, file.getOriginalFilename());
     }
 
@@ -29,8 +29,8 @@ public class S3ServiceMock implements S3Service {
     }
 
     @Override
-    public void deleteDockerfileZip(Long probId) {
-        log.info("[Mock] S3 Dockerfile zip 삭제 생략 - probId: {}, key: prob-{}/source.zip", probId, probId);
+    public void deleteDockerfileZip(Long probId, String requestId) {
+        log.info("[Mock] S3 Dockerfile zip 삭제 생략 - probId: {}, requestId: {}", probId, requestId);
     }
 
     @Override
