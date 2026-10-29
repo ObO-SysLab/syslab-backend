@@ -8,6 +8,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ecr.EcrClient;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.codebuild.CodeBuildClient;
+import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import java.time.Duration;
 
 
 // prod 환경에서만 SQS, S3 접속 객체 생성 (로컬에서는 Mock 사용)
@@ -17,6 +20,14 @@ public class AwsConfig {
 
     @Value("${aws.region}")
     private String region;
+
+    @Bean
+    public CodeBuildClient codeBuildClient() {
+        return CodeBuildClient.builder().region(Region.of(region))
+                .overrideConfiguration(ClientOverrideConfiguration.builder()
+                        .apiCallTimeout(Duration.ofSeconds(5))
+                        .apiCallAttemptTimeout(Duration.ofSeconds(2)).build()).build();
+    }
 
     @Bean
     public SqsClient sqsClient() {

@@ -5,8 +5,11 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.Type;
 
 import java.util.List;
+import java.time.Instant;
+import java.util.Objects;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 @Table(name = "problem_practice")
 public class ProblemPractice {
     // problem_practice 테이블의 prob_id는 PK이면서 동시에 problem_summary.id를 참조하는 FK임! Problem이 저장될 때 id가 자동으로 들어옴!
@@ -54,6 +57,17 @@ public class ProblemPractice {
     @Column(name = "image_status", length = 20)
     private String imageStatus = "PENDING";
 
+    @Column(name = "build_request_id", length = 36)
+    private String buildRequestId;
+    @Column(name = "code_build_id", length = 255)
+    private String codeBuildId;
+    @Column(name = "build_requested_at")
+    private Instant buildRequestedAt;
+    @Column(name = "build_deadline_at")
+    private Instant buildDeadlineAt;
+    @Column(name = "build_failure_reason", length = 40)
+    private String buildFailureReason;
+
     @Column(name = "is_draft")
     private Boolean isDraft = false;
 
@@ -92,6 +106,49 @@ public class ProblemPractice {
     public String getHint() { return hint; }
     public String getEcrImageUri() { return ecrImageUri; }
     public String getImageStatus() { return imageStatus; }
+    public String getBuildRequestId() { return buildRequestId; }
+    public String getCodeBuildId() { return codeBuildId; }
+    public Instant getBuildRequestedAt() { return buildRequestedAt; }
+    public Instant getBuildDeadlineAt() { return buildDeadlineAt; }
+    public String getBuildFailureReason() { return buildFailureReason; }
+
+    public void requestBuild(String requestId, Instant requestedAt, Instant deadlineAt) {
+        if (requestId == null || !java.util.UUID.fromString(requestId).toString().equals(requestId)
+                || requestedAt == null || deadlineAt == null || !deadlineAt.isAfter(requestedAt))
+            throw new IllegalArgumentException("Invalid build request");
+        buildRequestId = requestId;
+        buildRequestedAt = requestedAt;
+        buildDeadlineAt = deadlineAt;
+        codeBuildId = null;
+        buildFailureReason = null;
+        ecrImageUri = null;
+        imageStatus = "PENDING";
+    }
+
+    /** Called only under the repository row lock; terminal state never regresses. */
+    public boolean applyBuild(String requestId, String buildId, String status, String imageUri, Instant now) {
+        if (!"PENDING".equals(imageStatus) || !Objects.equals(buildRequestId, requestId)
+                || buildDeadlineAt == null) return false;
+        if (!now.isBefore(buildDeadlineAt)) {
+            imageStatus = "FAILED";
+            buildFailureReason = "DEADLINE_EXCEEDED";
+            return true;
+        }
+        if (codeBuildId != null && !codeBuildId.equals(buildId)) return false;
+        if (!java.util.Set.of("IN_PROGRESS", "SUCCEEDED", "FAILED", "FAULT", "STOPPED", "TIMED_OUT").contains(status))
+            throw new IllegalArgumentException("Unknown build status");
+        if ("SUCCEEDED".equals(status) && (imageUri == null || !imageUri.matches(".+@sha256:[0-9a-f]{64}")))
+            throw new IllegalArgumentException("Verified image digest required");
+        codeBuildId = Objects.requireNonNull(buildId);
+        if ("SUCCEEDED".equals(status)) {
+            imageStatus = "READY";
+            ecrImageUri = imageUri;
+        } else if (!"IN_PROGRESS".equals(status)) {
+            imageStatus = "FAILED";
+            buildFailureReason = status;
+        }
+        return true;
+    }
     public void updateImageStatus(String imageStatus, String ecrImageUri) {
         this.imageStatus = imageStatus;
         if (ecrImageUri != null) this.ecrImageUri = ecrImageUri;

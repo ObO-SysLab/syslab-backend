@@ -35,6 +35,12 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.UUID;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -55,6 +61,8 @@ public class ProblemCreateService {
     private final ContestRepository contestRepository;
     private final ContestProblemRepository contestProblemRepository;
     private final ContestParticipantRepository contestParticipantRepository;
+    private final PracticeBuildProperties practiceBuildProperties;
+    private final Clock practiceBuildClock;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
@@ -67,7 +75,9 @@ public class ProblemCreateService {
         GroupProblemRepository groupProblemRepository,
         ContestRepository contestRepository,
         ContestProblemRepository contestProblemRepository,
-        ContestParticipantRepository contestParticipantRepository){
+        ContestParticipantRepository contestParticipantRepository,
+        PracticeBuildProperties practiceBuildProperties,
+        @Qualifier("practiceBuildClock") Clock practiceBuildClock){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
@@ -80,6 +90,8 @@ public class ProblemCreateService {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
+        this.practiceBuildProperties = practiceBuildProperties;
+        this.practiceBuildClock = practiceBuildClock;
     }
 
 
@@ -148,6 +160,10 @@ public class ProblemCreateService {
     // 실습형
     @Transactional
     public ProblemCreatePracticeResponse createPractice(long userId, ProblemCreatePracticeRequest request){
+        if (!practiceBuildProperties.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "실습 이미지 빌드가 준비되지 않았습니다.");
+        }
+        var requestedAt = practiceBuildClock.instant();
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -172,13 +188,15 @@ public class ProblemCreateService {
                 hashFlag(request.getFlag().trim()),
                 null
         );
+        problemPractice.requestBuild(UUID.randomUUID().toString(), requestedAt,
+                requestedAt.plus(Duration.ofMinutes(practiceBuildProperties.getDeadlineMinutes())));
         problemPracticeRepository.save(problemPractice);
-
-        // DB 저장 후 S3에 Dockerfile zip 업로드 → EventBridge가 감지해서 CodeBuild 자동 트리거
-        s3Service.uploadDockerfileZip(savedProblem.getId(), request.getDockerfile());
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
+
+        // Validate links first. Only this request's object can trigger its CodeBuild result.
+        s3Service.uploadDockerfileZip(savedProblem.getId(), problemPractice.getBuildRequestId(), request.getDockerfile());
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),

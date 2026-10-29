@@ -45,6 +45,14 @@ class VmDockerProtocolTest {
             assertThrows(IllegalStateException.class, () -> docker.runContainer(image, target));
         verifyNoInteractions(remote);
     }
+    @Test void immutablePracticeImageReachesHelperWithoutRewriting() throws Exception {
+        String image = "registry/practice@sha256:" + "a".repeat(64);
+        when(remote.execute(any())).thenReturn(response("RUNNING"));
+        assertEquals(cid, docker.runContainer(image, target));
+        var capture = ArgumentCaptor.forClass(String.class);
+        verify(remote).execute(capture.capture());
+        assertEquals(image, mapper.readTree(capture.getValue()).path("image").asText());
+    }
     @Test void sshFailureDoesNotLeakDetails() {
         when(remote.execute(any())).thenThrow(new IllegalStateException("private host and secret"));
         assertEquals("VM operation could not be verified", assertThrows(IllegalStateException.class, () -> docker.inspect(target)).getMessage());

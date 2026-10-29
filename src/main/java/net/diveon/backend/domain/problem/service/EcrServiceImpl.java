@@ -21,12 +21,14 @@ public class EcrServiceImpl implements EcrService {
     }
 
     @Override
-    public void deleteImage(Long probId) {
-        ecrClient.batchDeleteImage(BatchDeleteImageRequest.builder()
+    public void deleteImage(Long probId, String buildId) {
+        // Delete this build's tag, not a digest that may be shared by another problem.
+        var response = ecrClient.batchDeleteImage(BatchDeleteImageRequest.builder()
                 .repositoryName(ecrRepository)
                 .imageIds(ImageIdentifier.builder()
-                        .imageTag("prob-" + probId)
+                        .imageTag(buildId == null ? "prob-" + probId : PracticeBuildIdentity.imageTag(buildId))
                         .build())
                 .build());
+        if (!response.failures().isEmpty()) throw new IllegalStateException("ECR image cleanup failed");
     }
 }

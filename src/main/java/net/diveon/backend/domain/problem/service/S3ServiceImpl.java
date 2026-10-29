@@ -34,9 +34,9 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public void uploadDockerfileZip(Long probId, MultipartFile file) {
+    public void uploadDockerfileZip(Long probId, String requestId, MultipartFile file) {
         try {
-            String key = "prob-" + probId + "/source.zip"; // EventBridge 감지 경로, 형식 변경 금지 (경로 바뀌면 CodeBuild 자동 트리거 불가)
+            String key = new PracticeBuildIdentity(probId, requestId).sourceKey();
 
             s3Client.putObject(
                     PutObjectRequest.builder()
@@ -72,10 +72,11 @@ public class S3ServiceImpl implements S3Service {
     }
 
     @Override
-    public void deleteDockerfileZip(Long probId) {
+    public void deleteDockerfileZip(Long probId, String requestId) {
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucket)
-                .key("prob-" + probId + "/source.zip")
+                .key(requestId == null ? "prob-" + probId + "/source.zip"
+                        : new PracticeBuildIdentity(probId, requestId).sourceKey())
                 .build());
     }
 

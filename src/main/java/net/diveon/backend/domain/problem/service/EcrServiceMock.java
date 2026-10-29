@@ -12,7 +12,7 @@ public class EcrServiceMock implements EcrService {
     private static final Logger log = LoggerFactory.getLogger(EcrServiceMock.class);
 
     @Override
-    public void deleteImage(Long probId) {
-        log.info("[Mock] ECR 이미지 삭제 생략 - probId: {}, tag: prob-{}", probId, probId);
+    public void deleteImage(Long probId, String buildId) {
+        log.info("[Mock] ECR 이미지 삭제 생략 - probId: {}, buildId: {}", probId, buildId);
     }
 }
