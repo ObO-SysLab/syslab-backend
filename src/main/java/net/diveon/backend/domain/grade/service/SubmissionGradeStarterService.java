@@ -93,7 +93,6 @@ public class SubmissionGradeStarterService {
         
         //TODO: exception logic must be improved
         Problem problem = problemRepository.findById(probId).orElseThrow(() -> new RuntimeException("문제가 없습니다."));
-        boolean alreadySolved = solveResultRepository.existsCorrectResultByUserIdAndProblemId(userId, probId);
 
         // objective / coding / practice
         String problemType = problem.getType();
@@ -181,10 +180,9 @@ public class SubmissionGradeStarterService {
 
 
         
-        if (!alreadySolved) {
-            problem.incrementSubmittedCount();
-            problemRepository.save(problem);
-        }
+        // 접수된 제출 한 건당 한 번 집계합니다. 이미 맞힌 문제의 재제출도 포함합니다.
+        // DB에서 직접 증가시켜 동시 요청이 서로의 카운트를 덮어쓰지 않게 합니다.
+        problemRepository.incrementSubmittedCount(probId);
         // 그냥 오류 방지용, 바꿔야함
         return new SubmissionGradeResponse(submission.getId(), probId, SubmissionState.PENDING.name(), problemType);
     }
