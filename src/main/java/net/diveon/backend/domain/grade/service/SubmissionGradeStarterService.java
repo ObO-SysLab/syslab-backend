@@ -192,6 +192,7 @@ public class SubmissionGradeStarterService {
             if (coding.getAllowedLanguages() == null || !coding.getAllowedLanguages().contains(language)) {
                 throw new InvalidSubmissionRequestException("이 문제에서 허용되지 않은 언어입니다.");
             }
+            CodingExecutionLimits.submission(coding, code);
         } else if ("objective".equals(type)) {
             if (!(request.getAnswer() instanceof List<?> answers) || answers.stream().anyMatch(a -> !(a instanceof Integer))) {
                 throw new InvalidSubmissionRequestException("객관식 답은 정수 목록이어야 합니다.");

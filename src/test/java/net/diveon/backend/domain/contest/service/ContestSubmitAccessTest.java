@@ -151,6 +151,8 @@ class ContestSubmitAccessTest {
     @Test void matchingCodingSubmissionKeepsBothIdsAndQueuesOnce() {
         registered("coding");
         var coding = new ProblemCoding(); coding.setAllowedLanguages(List.of("python"));
+        coding.setTimeLimitMs(1000); coding.setMemoryLimitMb(128);
+        coding.setTestcases(List.of(new net.diveon.backend.domain.problem.others.ForDtoTestCase(1, "", "1", true)));
         when(codingProblems.findById(2L)).thenReturn(Optional.of(coding));
         when(submissions.save(any())).thenAnswer(call -> {
             SolveSubmission saved = call.getArgument(0);
