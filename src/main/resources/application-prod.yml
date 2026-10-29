@@ -1,0 +1,6 @@
+# Database schema is changed only by reviewed ops SQL, never Hibernate startup.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
