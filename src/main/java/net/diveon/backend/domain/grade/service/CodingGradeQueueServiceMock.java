@@ -1,7 +1,6 @@
 package net.diveon.backend.domain.grade.service;
 
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -40,7 +39,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
     private final SolveResultCodingRepository solveResultCodingRepository;
     private final ContestSubmissionRepository contestSubmissionRepository;
     private final ContestParticipantRepository contestParticipantRepository;
-    private final StringRedisTemplate redisTemplate;
+    private final net.diveon.backend.domain.problem.repository.ProblemRepository problems;
 
     public CodingGradeQueueServiceMock(
         SolveSubmissionRepository solveSubmissionRepository,
@@ -49,7 +48,8 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
         SolveResultCodingRepository solveResultCodingRepository,
         ContestSubmissionRepository contestSubmissionRepository,
         ContestParticipantRepository contestParticipantRepository,
-        StringRedisTemplate redisTemplate
+        StringRedisTemplate redisTemplate,
+        net.diveon.backend.domain.problem.repository.ProblemRepository problems
     ) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
@@ -57,7 +57,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
         this.solveResultCodingRepository = solveResultCodingRepository;
         this.contestSubmissionRepository = contestSubmissionRepository;
         this.contestParticipantRepository = contestParticipantRepository;
-        this.redisTemplate = redisTemplate;
+        this.problems = problems;
     }
 
     @Override
@@ -70,6 +70,9 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
             "[Mock] 대회 코딩 채점 요청 생략 - probId: {}, submitterId: {}, submissionId: {}, contestId: {}",
             probId, submitterId, submissionId, contestContext.getContestId()
         );
+
+        var lockedParticipant = contestParticipantRepository.findForScoreUpdate(contestContext.getContestId(), submitterId)
+                .orElseThrow(() -> new IllegalStateException("Contest participant not found"));
 
         // ① 일반 채점 처리 (solve_submission + solve_result + solve_result_coding)
         sendGradeRequest(probId, submitterId, submissionId);
@@ -94,24 +97,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
 
         // ④ 첫 정답이면 점수 반영 + Redis 갱신
         if (isCorrect && !alreadySolved) {
-            contestParticipantRepository
-                .findByContestIdAndUserId(contestContext.getContestId(), submitterId)
-                .ifPresent(participant -> {
-                    LocalDateTime now = LocalDateTime.now();
-                    participant.addScore(contestContext.getPoints(), now);
-
-                    try {
-                        long epochSecond = now.toEpochSecond(ZoneOffset.UTC);
-                        double compositeScore = (double) participant.getScore() * 1_000_000L - epochSecond;
-                        redisTemplate.opsForZSet().add(
-                            "scoreboard:" + contestContext.getContestId(),
-                            String.valueOf(submitterId),
-                            compositeScore
-                        );
-                    } catch (Exception e) {
-                        log.warn("[Mock] Redis 스코어보드 갱신 실패: {}", e.getMessage());
-                    }
-                });
+            lockedParticipant.addScore(contestContext.getPoints(), LocalDateTime.now(java.time.ZoneOffset.UTC));
         }
     }
 
@@ -128,6 +114,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
         );
 
         SolveResultState resultState = getMockResultState(submissionCoding.getLanguage());
+        if (submission.getSubmissionState() == SubmissionState.COMPLETED || submission.getSubmissionState() == SubmissionState.FAILED) return;
         SolveResult result = new SolveResult(submission, resultState);
         solveResultRepository.save(result);
 
@@ -140,6 +127,7 @@ public class CodingGradeQueueServiceMock implements CodingGradeQueueService {
         );
         solveResultCodingRepository.save(resultCoding);
 
+        if (resultState == SolveResultState.CORRECT) problems.recordSolver(probId, submitterId);
         submission.setSubmissionState(SubmissionState.COMPLETED);
     }
 

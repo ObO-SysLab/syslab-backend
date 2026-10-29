@@ -161,8 +161,8 @@ public class SubmissionGradeAsyncService {
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
+            problemRepository.recordSolver(probId, submitterId);
             if (!alreadySolved) {
-                problemRepository.incrementSolvedCount(probId);
                 userTierService.refreshTierScore(submitterId);
             }
         }else{
@@ -213,8 +213,8 @@ public class SubmissionGradeAsyncService {
             SolveResult result = new SolveResult(submission, SolveResultState.CORRECT);
             solveResultRepository.save(result);
             submission.setSubmissionState(SubmissionState.COMPLETED);
+            problemRepository.recordSolver(probId, submitterId);
             if (!alreadySolved) {
-                problemRepository.incrementSolvedCount(probId);
                 userTierService.refreshTierScore(submitterId);
             }
         }else{

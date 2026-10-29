@@ -58,7 +58,7 @@ class SubmissionGradeAsyncServiceTest {
                     Optional.of(new SolveSubmissionPractice(submission, "flag")));
             service.gradeProblemPractice(2L, 7L, 101L);
         }
-        verify(problems).incrementSolvedCount(2L);
+        verify(problems).recordSolver(2L, 7L);
         verify(problem, never()).incrementSolvedCount();
         verify(problems, never()).save(any());
         verify(tiers).refreshTierScore(7L);
