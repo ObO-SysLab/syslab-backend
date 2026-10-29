@@ -209,6 +209,12 @@ public class ProblemCreateService {
     // 코딩형
     @Transactional
     public ProblemCreateCodingResponse createCoding(long userId, ProblemCreateCodingRequest request) {
+        if (request == null || request.getConstraints() == null) {
+            throw new net.diveon.backend.global.exception.InvalidSubmissionRequestException("코딩 실행 제한이 필요합니다.");
+        }
+        var limits = request.getConstraints();
+        net.diveon.backend.domain.grade.service.CodingExecutionLimits.problem(limits.getTimeLimitMs(),
+                limits.getMemoryLimitMb(), limits.getAllowedLanguages(), request.getTestcases());
         User author = userRepository.findById(userId)
                 .orElseThrow();
 

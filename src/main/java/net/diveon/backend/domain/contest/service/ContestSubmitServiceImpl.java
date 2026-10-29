@@ -159,6 +159,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             if (coding.getAllowedLanguages() == null || !coding.getAllowedLanguages().contains(language)) {
                 throw new InvalidSubmissionRequestException("이 문제에서 허용되지 않은 언어입니다.");
             }
+            net.diveon.backend.domain.grade.service.CodingExecutionLimits.submission(coding, request.getCode());
         }
     }
 

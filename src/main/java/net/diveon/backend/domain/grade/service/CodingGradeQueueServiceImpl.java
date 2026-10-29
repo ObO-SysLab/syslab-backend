@@ -80,6 +80,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
 
+        CodingExecutionLimits.submission(problemCoding, submissionCoding.getAnswer());
         CodingGradeMessage message = createMessage(submissionId, s3Key, language, probId, problemCoding);
         message.setContestContext(contestContext);
         enqueue(message, submissionCoding.getAnswer());
@@ -97,6 +98,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
 
+        CodingExecutionLimits.submission(problemCoding, submissionCoding.getAnswer());
         enqueue(createMessage(submissionId, s3Key, language, probId, problemCoding), submissionCoding.getAnswer());
     }
 
@@ -159,14 +161,10 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
             s3Key,
             language,
             String.valueOf(probId),
-            convertTimeLimitToSeconds(problemCoding.getTimeLimitMs()),
+            CodingExecutionLimits.seconds(problemCoding.getTimeLimitMs()),
             problemCoding.getMemoryLimitMb(),
             problemCoding.getTestcases().size()
         );
-    }
-
-    private int convertTimeLimitToSeconds(Integer timeLimitMs) {
-        return (timeLimitMs + 999) / 1000;
     }
 
     private String getFileName(String language) {

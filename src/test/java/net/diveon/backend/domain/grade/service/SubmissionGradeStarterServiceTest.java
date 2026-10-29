@@ -52,6 +52,9 @@ class SubmissionGradeStarterServiceTest {
         if ("coding".equals(type) && answer instanceof String code && !code.isBlank()) {
             ProblemCoding coding = mock(ProblemCoding.class);
             when(coding.getAllowedLanguages()).thenReturn(List.of("python"));
+            lenient().when(coding.getTimeLimitMs()).thenReturn(1000);
+            lenient().when(coding.getMemoryLimitMb()).thenReturn(128);
+            lenient().when(coding.getTestcases()).thenReturn(List.of(new net.diveon.backend.domain.problem.others.ForDtoTestCase(1, "", "1", true)));
             when(codingRepository.findById(2L)).thenReturn(Optional.of(coding));
         }
         SubmissionGradeReqeust request = new SubmissionGradeReqeust();
@@ -103,6 +106,14 @@ class SubmissionGradeStarterServiceTest {
         assertThrows(net.diveon.backend.global.exception.InvalidSubmissionRequestException.class,
                 () -> service.submissionGradeStart(7L, request));
         verifyNoInteractions(submissionRepository, objectiveSubmissionRepository);
+    }
+
+    @Test void oversizedUtf8SourceDoesNotSaveOrCount() {
+        var request = request("coding", "가".repeat(350000));
+        assertThrows(net.diveon.backend.global.exception.InvalidSubmissionRequestException.class,
+                () -> service.submissionGradeStart(7L, request));
+        verifyNoInteractions(submissionRepository, codingSubmissionRepository);
+        verify(problemRepository, never()).incrementSubmittedCount(anyLong());
     }
 
     @Test
