@@ -9,3 +9,11 @@
 - 복구안: 신규 접수 중단, 직전 호환 이미지/config로 복귀. 기존 데이터/스키마/복구용 이미지는 보존한다. 격리 없는 채점 경로는 재개하지 않는다.
 - 전체 운영 적용 순서와 세 저장소 릴리스 묶음 계약: syslab-infra/ops/RELEASE.md.
 - 검증 상태: 로컬 전체 Java 209개 통과, 별도 승인 DB/context 15개 skip, bootJar/verifyRelease 통과. 실제 GitHub 실행·Docker 빌드·DB/서버/배포는 이 작업에서 실행하지 않는다.
+
+## 승인 후 실제 DB 검증 결과
+
+사용자가 통합 임시 PostgreSQL 검증을 승인하여 CodingGradeJobStoreTest 8개와 VmSessionPostgresTest 6개, 총 14개가 실패/skip 없이 통과했다. Java 기본 209개와 별도 실행이며 실제 앱 context 1개는 미실행이다.
+
+각 테스트가 만든 loopback 임시 DB(syslab-recovery-pg-16657709796079659041, diveon-vm-pg-1046252307594310528)는 PID 파일 부재·pg_ctl status 3·정상 종료 로그로 중지 확인했다. 기존 postgres 프로세스는 보존했다. 운영 DB/AWS·Docker·서비스 서버·배포·push는 실행하지 않았다.
+
+연계 infra 실제 DB 38개도 통과: Java/Python 해결자 SQL 경쟁·ledger migration·DB 순위·실습 빌드 migration 제약/재실행 포함. 이 결과는 운영 스키마나 실제 Spring 대회/실습 서비스 전체 JPA 연동을 입증하지 않는다. 전체 근거는 워크스페이스 산출물/근거/2026-10-30_남은AUDIT_통합검증.json.
