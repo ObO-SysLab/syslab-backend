@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/posts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contests/*/rankings").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/contests/*/problems/*/board").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
