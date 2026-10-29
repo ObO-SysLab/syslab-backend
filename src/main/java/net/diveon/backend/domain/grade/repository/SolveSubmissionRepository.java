@@ -12,6 +12,9 @@ import net.diveon.backend.domain.grade.entity.SolveSubmission;
 
 public interface SolveSubmissionRepository extends JpaRepository<SolveSubmission, Long>{
 
+    @Query("SELECT s FROM SolveSubmission s WHERE s.problem.id = :probId AND s.submissionState IN ('COMPLETED', 'FAILED')")
+    Page<SolveSubmission> findTerminalByProbId(@Param("probId") Long probId, Pageable pageable);
+
     @Query("SELECT s FROM SolveSubmission s WHERE s.problem.id = :probId AND s.submissionState = 'COMPLETED'")
     Page<SolveSubmission> findCompletedByProbId(@Param("probId") Long probId, Pageable pageable);
 

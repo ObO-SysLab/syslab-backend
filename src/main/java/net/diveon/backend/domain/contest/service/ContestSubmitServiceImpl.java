@@ -273,7 +273,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
         ContestSubmitAsyncResponse response = new ContestSubmitAsyncResponse(
-                savedContestSubmission.getId(), "PENDING");
+                savedContestSubmission.getId(), "PENDING", savedSolveSubmission.getId());
         return ResponseEntity.status(202).body(
                 ApiResponse.success("채점 요청이 접수되었습니다.", response));
     }
