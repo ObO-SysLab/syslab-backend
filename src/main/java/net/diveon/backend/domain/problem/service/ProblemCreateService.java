@@ -125,7 +125,7 @@ public class ProblemCreateService {
                 request.getDescription(),
                 request.getChoices(),
                 request.getAnswer(),
-                OboDocumentValidator.simulation(request.getOboJson()) == null ? request.getIsSeqeuntialAnswer() : false,
+                OboDocumentValidator.simulation(request.getOboJson()) == null && Boolean.TRUE.equals(request.getIsSeqeuntialAnswer()),
                 oboEnabled
         );
         applyOboJson(problemObjective, request.getOboJson());

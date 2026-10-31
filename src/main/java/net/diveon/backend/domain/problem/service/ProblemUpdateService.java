@@ -77,6 +77,7 @@ public class ProblemUpdateService {
             checkOwner(problem, userId);
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
+            ProblemEditVersion.requireMatch(request.getExpectedEditVersion(),ProblemEditVersion.token(problem,problemObjective,null));
             revisions.capture(problem);
 
             problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
@@ -99,6 +100,7 @@ public class ProblemUpdateService {
         Problem problem = problemRepository.findForRevision(probId).orElseThrow(ProblemNotFoundException::new);
         checkOwner(problem, userId);
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
+        ProblemEditVersion.requireMatch(request.getExpectedEditVersion(),ProblemEditVersion.token(problem,null,problemCoding));
         revisions.capture(problem);
 
         problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);

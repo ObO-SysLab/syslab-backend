@@ -52,3 +52,10 @@
 /src/test/java/net/diveon/backend/domain/problem/service/ProblemAccessBoundaryTest.java text eol=lf
 /src/test/java/net/diveon/backend/domain/problem/service/ProblemOboDisclosureTest.java text eol=lf
 /src/test/resources/obo/browser-coding-request.json text eol=lf
+
+# D35: preserve verified integration bytes, including mixed line endings.
+/obo-runtime/freeDiagram.mjs -text
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemEditVersion.java -text
+/src/test/java/net/diveon/backend/domain/problem/service/OboLocalHttpTest.java -text
+/src/test/resources/obo/integration-diagrams.json -text
+/.gitattributes -text

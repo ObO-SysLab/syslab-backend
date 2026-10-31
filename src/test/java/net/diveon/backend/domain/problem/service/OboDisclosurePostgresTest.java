@@ -190,14 +190,18 @@ class OboDisclosurePostgresTest {
                 repositories.getRepository(ContestParticipantRepository.class));
             var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repositories.getRepository(ContestSubmissionRepository.class));
             assertEquals(request.getOboJson(),obo.getAuthorOboJson(f.user().getId(),problem.getId()));
+            String editVersion=(String)obo.getAuthorSettings(f.user().getId(),problem.getId()).get("editVersion");
             var update=new ProblemUpdateService(problems,objectives,mock(ProblemPracticeRepository.class),codings,
                 mock(OboStepRepository.class),users,s3,validator,revisions);
             var keep=new ProblemUpdateCodingRequest();
             keep.setTitle(problem.getTitle());keep.setSummary(request.getSummary());keep.setDescription(request.getDescription());keep.setDifficulty(problem.getDifficulty());
+            keep.setExpectedEditVersion(editVersion);
             update.updateProblemCoding(f.user().getId(),problem.getId(),keep);
             assertEquals(revision.getId(),revisions.capture(problem).getId());
             keep.setOboAction("remove");update.updateProblemCoding(f.user().getId(),problem.getId(),keep);em.flush();em.clear();
             assertNull(obo.getAuthorOboJson(f.user().getId(),problem.getId()));
+            assertThrows(ProblemEditVersion.EditConflict.class,()->update.updateProblemCoding(f.user().getId(),problem.getId(),keep));
+            assertNull(obo.getAuthorOboJson(f.user().getId(),problem.getId()),"stale edit cannot restore removed content");
             var released=obo.getSubmissionObo(f.user().getId(),bound.getId());
             assertEquals(revision.getId(),released.revisionId());
             assertEquals("simulation",released.obo().path("mode").asText());
@@ -255,6 +259,26 @@ class OboDisclosurePostgresTest {
             long problemId=mapper.readTree(created.getResponse().getContentAsString()).path("data").path("probId").asLong();
             assertTrue(problemId>0);
             final long id=problemId;
+            // Real MVC + PostgreSQL roundtrip of every currently authored free-diagram template.
+            var diagrams=mapper.readTree(getClass().getResourceAsStream("/obo/integration-diagrams.json"));
+            for(var diagram:diagrams.path("fixtures")){
+                var freeBody=body.deepCopy();
+                var free=mapper.createObjectNode().put("mode","per_choice");
+                free.putObject("perChoice").set("choice_1",diagram.path("blob").deepCopy());
+                freeBody.set("oboJson",free);
+                var saved=mvc.perform(post("/api/problems/objective").contentType("application/json").content(freeBody.toString()))
+                    .andExpect(status().isCreated()).andReturn();
+                long freeId=mapper.readTree(saved.getResponse().getContentAsString()).path("data").path("probId").asLong();
+                em.flush();em.clear();
+                assertEquals(free,objectives.findById(freeId).orElseThrow().getOboJsonData(),diagram.path("id").asText());
+                long count=problems.count();
+                var invalid=freeBody.deepCopy();
+                ((com.fasterxml.jackson.databind.node.ObjectNode)invalid.path("oboJson").path("perChoice").path("choice_1"))
+                    .putArray("edges").addObject().put("id","bad").put("source","missing").put("target","missing");
+                mvc.perform(post("/api/problems/objective").contentType("application/json").content(invalid.toString()))
+                    .andExpect(status().isBadRequest());
+                assertEquals(count,problems.count(),"invalid creation must not persist a partial problem");
+            }
             authenticate(student.getId());
             mvc.perform(get("/api/challenges/obo/author/settings").param("id",String.valueOf(id))).andExpect(status().isNotFound());
             mvc.perform(get("/api/challenges/obo").param("id",String.valueOf(id))).andExpect(status().isNotFound());

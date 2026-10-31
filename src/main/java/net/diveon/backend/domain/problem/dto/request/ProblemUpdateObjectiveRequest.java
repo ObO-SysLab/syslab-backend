@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ProblemUpdateObjectiveRequest {
 
     private String title;
+    private String expectedEditVersion;
+    public String getExpectedEditVersion(){return expectedEditVersion;}
+    public void setExpectedEditVersion(String value){expectedEditVersion=value;}
     private String summary;
     private String description;
     private String difficulty;
