@@ -22,6 +22,20 @@ import net.diveon.backend.domain.user.entity.User;
 @Table(name = "contest_submission")
 public class ContestSubmission {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "problem_revision_id", updatable = false)
+    private net.diveon.backend.domain.problem.entity.ProblemRevision problemRevision;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "objective_answer", columnDefinition = "jsonb", updatable = false)
+    private com.fasterxml.jackson.databind.JsonNode objectiveAnswer;
+    public net.diveon.backend.domain.problem.entity.ProblemRevision getProblemRevision(){return problemRevision;}
+    public com.fasterxml.jackson.databind.JsonNode getObjectiveAnswer(){return objectiveAnswer==null?null:objectiveAnswer.deepCopy();}
+    public void bindRevision(net.diveon.backend.domain.problem.entity.ProblemRevision revision,com.fasterxml.jackson.databind.JsonNode answer){
+        if(id!=null||problemRevision!=null)throw new IllegalStateException("Contest submission revision must be bound before persistence");
+        if(revision!=null&&!revision.getProblemId().equals(contestProblem.getProblem().getId()))throw new IllegalArgumentException("Revision problem mismatch");
+        problemRevision=revision;objectiveAnswer=answer==null?null:answer.deepCopy();
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

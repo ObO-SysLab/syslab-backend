@@ -36,7 +36,8 @@ class ContestScoreConsistencyTest {
     final ContestSubmitServiceImpl service = new ContestSubmitServiceImpl(contests, contestProblems, participants,
             submissions, users, jdbc, new ObjectMapper(), redis, mock(SolveSubmissionRepository.class),
             mock(SolveSubmissionCodingRepository.class), mock(CodingGradeQueueService.class),
-            mock(ProblemCodingRepository.class), mock(ProblemAccessService.class), problems);
+            mock(ProblemCodingRepository.class), mock(ProblemAccessService.class), problems,
+            mock(net.diveon.backend.domain.problem.service.ProblemRevisionService.class));
     final LocalDateTime solvedAt = LocalDateTime.of(2026, 10, 30, 0, 0);
     ContestParticipant participant;
 
@@ -47,6 +48,7 @@ class ContestScoreConsistencyTest {
         participant = new ContestParticipant(contest, user, ContestParticipant.ContestRole.PARTICIPANT);
         var problem = new Problem(user, type, "fixture", "OS", "easy", "public");
         ReflectionTestUtils.setField(problem, "id", 2L);
+        when(problems.findForRevision(2L)).thenReturn(Optional.of(problem));
         var cp = new ContestProblem(contest, problem, 100); ReflectionTestUtils.setField(cp, "id", 9L);
         when(contests.findById(1L)).thenReturn(Optional.of(contest));
         when(participants.findForScoreUpdate(1L, 7L)).thenReturn(Optional.of(participant));

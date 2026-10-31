@@ -147,12 +147,19 @@ public class SubmissionGradeAsyncService {
 
         //Seqeunce 2 -  grading - start
         List<Integer> correctAnswer = problemObjective.getAnswer();
+        Boolean ordered = problemObjective.getIsSeqeuntialAnswer();
+        if (submission.getProblemRevision() != null) {
+            var snapshot = submission.getProblemRevision().getSnapshot();
+            correctAnswer = new java.util.ArrayList<>();
+            for (var answer : snapshot.path("answer")) correctAnswer.add(answer.intValue());
+            ordered = snapshot.path("ordered").asBoolean(false);
+        }
         List<Integer> submittedAnswer = submissionObjective.getAnswer();
 
         boolean correctness = isCorrectObjectiveAnswer(
             correctAnswer,
             submittedAnswer,
-            problemObjective.getIsSeqeuntialAnswer()
+            ordered
         );
 
         if(correctness){

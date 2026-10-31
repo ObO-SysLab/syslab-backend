@@ -42,11 +42,12 @@ class ProblemAccessBoundaryTest {
         Problem problem = new Problem(owner, "practice", "hidden", "OS", "easy", "private");
         ReflectionTestUtils.setField(problem, "id", 9L);
         when(problems.findById(9L)).thenReturn(Optional.of(problem));
+        when(problems.findForRevision(9L)).thenReturn(Optional.of(problem));
         when(users.findById(7L)).thenReturn(Optional.of(new User()));
     }
     @Test void detailDeniesBeforeLoadingSubtypeOrObo() {
         var obo = mock(OboStepRepository.class);
-        var service = new ProblemDetailService(users, problems, objectives, practices, codings, obo, access);
+        var service = new ProblemDetailService(users, problems, objectives, practices, codings, obo, access, mock(OboDisclosureService.class));
         assertThrows(ProblemNotFoundException.class, () -> service.detailProblem(7, 9));
         verifyNoInteractions(practices, objectives, codings, obo);
     }
@@ -54,7 +55,7 @@ class ProblemAccessBoundaryTest {
         var objectiveSubmissions = mock(SolveSubmissionObjectiveRepository.class);
         var practiceSubmissions = mock(SolveSubmissionPracticeRepository.class);
         var service = new SubmissionGradeStarterService(results, submissions, objectiveSubmissions, codingSubmissions,
-                practiceSubmissions, users, problems, codings, objectives, practices, access);
+                practiceSubmissions, users, problems, codings, objectives, practices, access, mock(ProblemRevisionService.class));
         var request = new SubmissionGradeReqeust(); ReflectionTestUtils.setField(request, "prodId", 9L);
         assertThrows(ProblemNotFoundException.class, () -> service.submissionGradeStart(7, request));
         verifyNoInteractions(submissions, objectiveSubmissions, codingSubmissions, practiceSubmissions, practices);
@@ -76,7 +77,7 @@ class ProblemAccessBoundaryTest {
         verifyNoInteractions(docker, sessions, practices, store);
     }
     @Test void oboAndRankingCannotBypassDetailAccess() {
-        var obo = new ProblemOboService(problems, objectives, codings, access);
+        var obo = new ProblemOboService(problems, objectives, codings, access, mock(OboDisclosureService.class), submissions, mock(ContestSubmissionRepository.class));
         var ranking = new ProblemRankingService(submissions, codingSubmissions, problems, access);
         assertThrows(ProblemNotFoundException.class, () -> obo.getOboJson(7L, 9L));
         assertThrows(ProblemNotFoundException.class, () -> ranking.getRanking(7, 9, 1));

@@ -63,6 +63,8 @@ public class ProblemCreateService {
     private final ContestParticipantRepository contestParticipantRepository;
     private final PracticeBuildProperties practiceBuildProperties;
     private final Clock practiceBuildClock;
+    private final OboDocumentValidator oboValidator;
+    private final ProblemRevisionService revisions;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
@@ -77,7 +79,8 @@ public class ProblemCreateService {
         ContestProblemRepository contestProblemRepository,
         ContestParticipantRepository contestParticipantRepository,
         PracticeBuildProperties practiceBuildProperties,
-        @Qualifier("practiceBuildClock") Clock practiceBuildClock){
+        @Qualifier("practiceBuildClock") Clock practiceBuildClock,
+        OboDocumentValidator oboValidator, ProblemRevisionService revisions){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
@@ -92,12 +95,16 @@ public class ProblemCreateService {
         this.contestParticipantRepository = contestParticipantRepository;
         this.practiceBuildProperties = practiceBuildProperties;
         this.practiceBuildClock = practiceBuildClock;
+        this.oboValidator = oboValidator;
+        this.revisions = revisions;
     }
 
 
     // 객관식형
     @Transactional
     public ProblemCreateObjectiveResponse createObjective(long userId, ProblemCreateObjectiveRequest request){
+        oboValidator.validateQuestion(request.getOboJson(), "objective", request.getAnswer());
+        oboValidator.validateChoices(request.getOboJson(), request.getChoices());
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -118,10 +125,11 @@ public class ProblemCreateService {
                 request.getDescription(),
                 request.getChoices(),
                 request.getAnswer(),
-                request.getIsSeqeuntialAnswer(),
+                OboDocumentValidator.simulation(request.getOboJson()) == null ? request.getIsSeqeuntialAnswer() : false,
                 oboEnabled
         );
         applyOboJson(problemObjective, request.getOboJson());
+        ObjectiveAnswerRules.validate(problemObjective, request.getAnswer());
         problemObjectiveRepository.save(problemObjective);
         //TODO : 이 로직이 왜 이런건지 확인하기
         // 지금 구조가 request.getObo().getSteps() 이런식이라 
@@ -148,6 +156,7 @@ public class ProblemCreateService {
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
+        revisions.capture(savedProblem);
 
         return new ProblemCreateObjectiveResponse(
                 savedProblem.getId(),
@@ -213,8 +222,10 @@ public class ProblemCreateService {
             throw new net.diveon.backend.global.exception.InvalidSubmissionRequestException("코딩 실행 제한이 필요합니다.");
         }
         var limits = request.getConstraints();
+        oboValidator.validateQuestion(request.getOboJson(), "coding", null);
         net.diveon.backend.domain.grade.service.CodingExecutionLimits.problem(limits.getTimeLimitMs(),
                 limits.getMemoryLimitMb(), limits.getAllowedLanguages(), request.getTestcases());
+        oboValidator.validateCodingCases(request.getOboJson(), request.getTestcases());
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -248,6 +259,7 @@ public class ProblemCreateService {
         applyOboJson(problemCoding, request.getOboJson());
         problemCodingRepository.save(problemCoding);
         s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
+        revisions.capture(savedProblem);
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);

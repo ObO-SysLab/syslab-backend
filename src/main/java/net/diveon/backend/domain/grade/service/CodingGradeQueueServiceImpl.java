@@ -76,6 +76,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
             .orElseThrow(() -> new RuntimeException("코딩형 제출 정보가 없습니다."));
         ProblemCoding problemCoding = problemCodingRepository.findById(probId)
             .orElseThrow(() -> new RuntimeException("코딩형 문제가 없습니다."));
+        problemCoding = forSubmission(submission, problemCoding);
 
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
@@ -94,6 +95,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
             .orElseThrow(() -> new RuntimeException("코딩형 제출 정보가 없습니다."));
         ProblemCoding problemCoding = problemCodingRepository.findById(probId)
             .orElseThrow(() -> new RuntimeException("코딩형 문제가 없습니다."));
+        problemCoding = forSubmission(submission, problemCoding);
 
         String language = submissionCoding.getLanguage();
         String s3Key = "submissions/" + submissionId + "/" + getFileName(language);
@@ -165,6 +167,19 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
             problemCoding.getMemoryLimitMb(),
             problemCoding.getTestcases().size()
         );
+    }
+
+    private ProblemCoding forSubmission(SolveSubmission submission, ProblemCoding current) {
+        if (submission.getProblemRevision() == null) return current;
+        var snapshot = submission.getProblemRevision().getSnapshot();
+        var frozen = new ProblemCoding();
+        frozen.setTimeLimitMs(snapshot.path("timeLimitMs").intValue());
+        frozen.setMemoryLimitMb(snapshot.path("memoryLimitMb").intValue());
+        frozen.setAllowedLanguages(objectMapper.convertValue(snapshot.path("allowedLanguages"),
+            new com.fasterxml.jackson.core.type.TypeReference<java.util.List<String>>() {}));
+        frozen.setTestcases(objectMapper.convertValue(snapshot.path("testcases"),
+            new com.fasterxml.jackson.core.type.TypeReference<java.util.List<net.diveon.backend.domain.problem.others.ForDtoTestCase>>() {}));
+        return frozen;
     }
 
     private String getFileName(String language) {

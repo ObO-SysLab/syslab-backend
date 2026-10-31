@@ -15,6 +15,10 @@ import java.util.Optional;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long>, JpaSpecificationExecutor<Problem> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Problem p WHERE p.id = :id")
+    Optional<Problem> findForRevision(@Param("id") Long id);
+
     @Modifying(flushAutomatically = true)
     @Query(value = """
             WITH added AS (

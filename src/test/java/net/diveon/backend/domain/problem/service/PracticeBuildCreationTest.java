@@ -27,7 +27,8 @@ class PracticeBuildCreationTest {
     final ProblemCreateService service = new ProblemCreateService(mock(ProblemObjectiveRepository.class), practices,
             mock(ProblemCodingRepository.class), problems, users, mock(OboStepRepository.class), s3,
             mock(GroupRepository.class), mock(GroupProblemRepository.class), mock(ContestRepository.class),
-            mock(ContestProblemRepository.class), mock(ContestParticipantRepository.class), props, Clock.fixed(START, ZoneOffset.UTC));
+            mock(ContestProblemRepository.class), mock(ContestParticipantRepository.class), props, Clock.fixed(START, ZoneOffset.UTC),
+            mock(OboDocumentValidator.class), mock(ProblemRevisionService.class));
 
     @Test void disabledCreationHasNoDatabaseOrS3SideEffect() {
         assertThatThrownBy(() -> service.createPractice(1, new ProblemCreatePracticeRequest())).isInstanceOf(ResponseStatusException.class);

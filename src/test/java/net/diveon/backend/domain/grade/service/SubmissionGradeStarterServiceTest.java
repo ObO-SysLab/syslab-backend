@@ -39,6 +39,7 @@ class SubmissionGradeStarterServiceTest {
     @Mock ProblemObjectiveRepository objectiveRepository;
     @Mock ProblemPracticeRepository practiceRepository;
     @Mock ProblemAccessService access;
+    @Mock net.diveon.backend.domain.problem.service.ProblemRevisionService revisions;
     @InjectMocks SubmissionGradeStarterService service;
 
     @BeforeEach
@@ -48,7 +49,12 @@ class SubmissionGradeStarterServiceTest {
 
     private SubmissionGradeReqeust request(String type, Object answer) {
         Problem problem = new Problem(new User(), type, "test", "OS", "easy", "public");
-        when(problemRepository.findById(2L)).thenReturn(Optional.of(problem));
+        when(problemRepository.findForRevision(2L)).thenReturn(Optional.of(problem));
+        if ("objective".equals(type)) {
+            var objective = new net.diveon.backend.domain.problem.entity.ProblemObjective(problem,"summary","description",
+                List.of(new net.diveon.backend.domain.problem.others.ForDtoChoice(1,"A",null)),List.of(1),false,false);
+            lenient().when(objectiveRepository.findById(2L)).thenReturn(Optional.of(objective));
+        }
         if ("coding".equals(type) && answer instanceof String code && !code.isBlank()) {
             ProblemCoding coding = mock(ProblemCoding.class);
             when(coding.getAllowedLanguages()).thenReturn(List.of("python"));

@@ -31,6 +31,21 @@ import org.hibernate.annotations.OnDeleteAction;
 @Entity
 public class SolveSubmission {
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "problem_revision_id", updatable = false)
+    private net.diveon.backend.domain.problem.entity.ProblemRevision problemRevision;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name="obo_public_records",columnDefinition="jsonb")
+    private com.fasterxml.jackson.databind.JsonNode publicOboRecords;
+    public com.fasterxml.jackson.databind.JsonNode getPublicOboRecords(){return publicOboRecords==null?null:publicOboRecords.deepCopy();}
+
+    public net.diveon.backend.domain.problem.entity.ProblemRevision getProblemRevision(){return problemRevision;}
+    public void bindRevision(net.diveon.backend.domain.problem.entity.ProblemRevision revision){
+        if(id!=0||problemRevision!=null)throw new IllegalStateException("Submission revision must be bound before persistence");
+        if(revision!=null&&!revision.getProblemId().equals(problem.getId()))throw new IllegalArgumentException("Revision problem mismatch");
+        problemRevision=revision;
+    }
+
     //문자열 줄때는 .name() 으로 줄 것
     public static enum SubmissionState{
         PENDING,
