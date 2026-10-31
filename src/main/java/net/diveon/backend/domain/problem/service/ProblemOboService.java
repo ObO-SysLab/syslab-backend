@@ -104,7 +104,7 @@ public class ProblemOboService {
                 int index=record.path("caseIndex").asInt(0)-1;
                 if(index>=0&&index<cases.size()&&cases.get(index).path("isSample").isBoolean()&&cases.get(index).path("isSample").booleanValue()){
                     var publicRecord=com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
-                    for(String field:java.util.List.of("caseIndex","scenarioId","input","reference","reported","correct","traceValid","message","omitted"))
+                    for(String field:java.util.List.of("caseIndex","scenarioId","input","reference","reported","correct","traceValid","message","omitted","kind","stdout"))
                         if(record.has(field))publicRecord.set(field,record.get(field).deepCopy());
                     publicCases.add(publicRecord);
                 }
@@ -137,16 +137,23 @@ public class ProblemOboService {
         return readDocument(problem, problemId);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public java.util.Map<String,Object> getAuthorSettings(Long userId,Long problemId) {
         var problem=access.requireRead(userId,problemId);disclosure.requireAuthor(userId,problem);
+        problem=problemRepository.findForRevision(problemId).orElseThrow(ProblemNotFoundException::new);
         var result=new java.util.HashMap<String,Object>();result.put("oboJson",readDocument(problem,problemId));
+        result.put("title",problem.getTitle());result.put("category",problem.getCategory());
+        result.put("difficulty",problem.getDifficulty());result.put("visibility",problem.getVisibility());
         if("objective".equals(problem.getType())){
             var objective=problemObjectiveRepository.findById(problemId).orElseThrow(ProblemNotFoundException::new);
+            result.put("editVersion",ProblemEditVersion.token(problem,objective,null));
+            result.put("summary",objective.getSummary());result.put("description",objective.getDescription());
             result.put("answer",objective.getAnswer());result.put("choices",objective.getChoices());
             result.put("isSeqeuntialAnswer",objective.getIsSeqeuntialAnswer());
         }else if("coding".equals(problem.getType())){
             var coding=problemCodingRepository.findById(problemId).orElseThrow(ProblemNotFoundException::new);
+            result.put("editVersion",ProblemEditVersion.token(problem,null,coding));
+            result.put("summary",coding.getSummary());result.put("description",coding.getDescription());
             result.put("testcases",coding.getTestcases());result.put("inputDescription",coding.getInputDescription());result.put("outputDescription",coding.getOutputDescription());
             result.put("constraints",new net.diveon.backend.domain.problem.dto.response.ProblemDetailCodingResponse.Constraints(
                 coding.getTimeLimitMs(),coding.getMemoryLimitMb(),coding.getAllowedLanguages()));

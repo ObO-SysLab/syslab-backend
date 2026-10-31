@@ -29,7 +29,13 @@ public class OboDocumentValidator {
         if(document==null||document.isNull())return;
         if(!document.isObject()||document.toString().getBytes(StandardCharsets.UTF_8).length>1048576)
             throw invalid("OBO 문서는 1MiB 이하의 객체여야 합니다.");
-        if(!"simulation".equals(document.path("mode").asText())&&!document.has("schemaVersion"))return;
+        if(!"simulation".equals(document.path("mode").asText())&&!document.has("schemaVersion")){
+            var request=mapper.createObjectNode().put("operation","validateFreeDiagram");
+            request.set("document",document);
+            var result=invoke(request);
+            if(!result.path("ok").asBoolean(false))throw invalid(result.path("message").asText("그림 자료를 확인하세요."));
+            return;
+        }
         if(document.path("schemaVersion").asInt()!=2||!"simulation".equals(document.path("mode").asText())
                 ||document.size()!=3||!document.path("simulation").isObject())throw invalid("지원하지 않는 OBO 문서 형식입니다.");
         var request=mapper.createObjectNode().put("operation","validateDocument");
@@ -89,6 +95,13 @@ public class OboDocumentValidator {
             choice.setId(choice.getId());
         }
         var simulation=simulation(document);
+        if(document!=null&&"per_choice".equals(document.path("mode").asText())){
+            var keys=new java.util.HashSet<String>();
+            choices.forEach(choice->keys.add("choice_"+choice.getIndex()));
+            document.path("perChoice").fieldNames().forEachRemaining(key->{
+                if(!keys.contains(key))throw invalid("해설이 삭제된 보기를 참조합니다: "+key);
+            });
+        }
         if(simulation!=null)simulation.path("explanations").path("choices").fieldNames().forEachRemaining(id->{
             if(!ids.contains(id))throw invalid("해설이 삭제된 보기를 참조합니다.");
         });
