@@ -68,6 +68,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private final ProblemCodingRepository problemCodingRepository;
     private final ProblemAccessService access;
     private final net.diveon.backend.domain.problem.repository.ProblemRepository problems;
+    private final net.diveon.backend.domain.problem.service.ProblemRevisionService revisions;
 
     public ContestSubmitServiceImpl(
             ContestRepository contestRepository,
@@ -81,7 +82,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             SolveSubmissionRepository solveSubmissionRepository,
             SolveSubmissionCodingRepository solveSubmissionCodingRepository,
             CodingGradeQueueService codingGradeQueueService,
-            ProblemCodingRepository problemCodingRepository, ProblemAccessService access, net.diveon.backend.domain.problem.repository.ProblemRepository problems) {
+            ProblemCodingRepository problemCodingRepository, ProblemAccessService access, net.diveon.backend.domain.problem.repository.ProblemRepository problems,
+            net.diveon.backend.domain.problem.service.ProblemRevisionService revisions) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
@@ -96,6 +98,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         this.problemCodingRepository = problemCodingRepository;
         this.access = access;
         this.problems = problems;
+        this.revisions = revisions;
     }
 
     @Override
@@ -126,6 +129,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         Problem problem = contestProblem.getProblem();
         access.requireContestSubmission(userId, problem, contestId);
+        if (!"practice".equals(problem.getType())) problem = problems.findForRevision(problem.getId())
+            .orElseThrow(net.diveon.backend.global.exception.ProblemNotFoundException::new);
 
         validateSubmission(problem, request);
 
@@ -167,6 +172,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private ResponseEntity<ApiResponse<?>> handleObjectiveSubmission(
             Contest contest, ContestProblem contestProblem, Problem problem, User user, ContestSubmitRequest request) {
 
+        var revision = revisions.capture(problem);
+
         Map<String, Object> objectiveProblem = jdbcTemplate.queryForMap(
                 "SELECT answer::text AS answer, is_seqeuntial AS is_seqeuntial FROM problem_objective WHERE prob_id = ?",
                 problem.getId());
@@ -195,6 +202,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         } catch (Exception e) {
             throw new IllegalArgumentException("유효한 숫자 또는 숫자 배열을 입력해주세요.");
         }
+        if (revision != null) net.diveon.backend.domain.problem.service.ObjectiveAnswerRules.validateSnapshot(revision.getSnapshot(), submittedAnswers);
         boolean isCorrect = isCorrectObjectiveAnswer(correctAnswers, submittedAnswers, isSeqeuntialAnswer);
 
         ContestParticipant participant = contestParticipantRepository
@@ -218,6 +226,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
         submission.updateResult(isCorrect);
+        submission.bindRevision(revision, objectMapper.valueToTree(submittedAnswers));
         ContestSubmission savedSubmission = contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
@@ -285,6 +294,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         // solve_submission + solve_submission_coding 생성 (그레이더가 이 ID로 채점)
         SolveSubmission solveSubmission = new SolveSubmission(problem, user);
+        solveSubmission.bindRevision(revisions.capture(problem));
         SolveSubmission savedSolveSubmission = solveSubmissionRepository.save(solveSubmission);
 
         SolveSubmissionCoding coding = new SolveSubmissionCoding(savedSolveSubmission, request.getCode(), request.getLanguage());
@@ -293,6 +303,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         // contest_submission 생성 (solve_submission 연결)
         ContestSubmission contestSubmission = new ContestSubmission(
                 contest, contestProblem, user, savedSolveSubmission, "PENDING");
+        contestSubmission.bindRevision(savedSolveSubmission.getProblemRevision(), null);
         ContestSubmission savedContestSubmission = contestSubmissionRepository.save(contestSubmission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());

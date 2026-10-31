@@ -31,6 +31,7 @@ public class ProblemDetailService {
     private final ProblemCodingRepository problemCodingRepository;
     private final OboStepRepository oboStepRepository;
     private final ProblemAccessService access;
+    private final OboDisclosureService disclosure;
 
     public ProblemDetailService(
         UserRepository userRepository,
@@ -39,7 +40,8 @@ public class ProblemDetailService {
         ProblemPracticeRepository problemPracticeRepository,
         ProblemCodingRepository problemCodingRepository,
         OboStepRepository oboStepRepository,
-        ProblemAccessService access
+        ProblemAccessService access,
+        OboDisclosureService disclosure
     ) {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
@@ -48,6 +50,7 @@ public class ProblemDetailService {
         this.problemCodingRepository = problemCodingRepository;
         this.oboStepRepository = oboStepRepository;
         this.access = access;
+        this.disclosure = disclosure;
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +62,7 @@ public class ProblemDetailService {
         boolean isOwner = problem.getAuthor().getId().equals(userId);
 
         if (problem.getType().equals("objective")) {
-            return detailProblemObjective(problem, probId, isOwner);
+            return detailProblemObjective(problem, probId, isOwner, userId);
         } else if (problem.getType().equals("practice")) {
             return detailProblemPractice(problem, probId, isOwner);
         } else if (problem.getType().equals("coding")) {
@@ -77,9 +80,11 @@ public class ProblemDetailService {
         return ProblemDetailPracticeResponse.of(problem, problemPractice, isOwner);
     }
 
-    private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId, boolean isOwner) {
+    private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId, boolean isOwner, long userId) {
         ProblemObjective problemObjective = problemObjectiveRepository.findById(probId).orElseThrow();
-        List<OboStep> oboSteps = oboStepRepository.findByProblem_IdOrderByStepAsc(probId);
+        // Legacy step explanations obey the same policy as the JSON OBO endpoint.
+        List<OboStep> oboSteps = Boolean.TRUE.equals(problemObjective.getOboEnabled()) && disclosure.canReadExplanation(userId, probId)
+            ? oboStepRepository.findByProblem_IdOrderByStepAsc(probId) : List.of();
 
         return ProblemDetailObjectiveResponse.of(problem, problemObjective, oboSteps, isOwner);
     }

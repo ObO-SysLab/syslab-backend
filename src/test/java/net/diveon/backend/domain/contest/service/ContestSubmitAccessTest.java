@@ -48,6 +48,7 @@ class ContestSubmitAccessTest {
     @Mock ProblemCodingRepository codingProblems;
     @Mock ProblemAccessService access;
     @Mock net.diveon.backend.domain.problem.repository.ProblemRepository problems;
+    @Mock net.diveon.backend.domain.problem.service.ProblemRevisionService revisions;
     @InjectMocks ContestSubmitServiceImpl service;
     Contest contest;
     ContestParticipant participant;
@@ -76,6 +77,7 @@ class ContestSubmitAccessTest {
         when(participants.findForScoreUpdate(1L, 7L)).thenReturn(Optional.of(participant));
         problem = new Problem(user, type, "fixture", "OS", "easy", "public");
         ReflectionTestUtils.setField(problem, "id", 2L);
+        lenient().when(problems.findForRevision(2L)).thenReturn(Optional.of(problem));
         var cp = new ContestProblem(contest, problem, 100);
         ReflectionTestUtils.setField(cp, "id", 9L);
         when(contestProblems.findByIdAndContestId(9L, 1L)).thenReturn(Optional.of(cp));

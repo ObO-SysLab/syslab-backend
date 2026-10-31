@@ -128,7 +128,7 @@ public class ProblemCoding {
     public void setFileUrl(String fileUrl) { this.fileUrl = fileUrl; }
     public void setOboEnabled(Boolean oboEnabled) { this.oboEnabled = oboEnabled; }
     public void setOboInitialImageUrl(String oboInitialImageUrl) { this.oboInitialImageUrl = oboInitialImageUrl; }
-    public void setOboJsonData(JsonNode oboJsonData) { this.oboJsonData = oboJsonData; }
+    public void setOboJsonData(JsonNode oboJsonData) { this.oboJsonData = oboJsonData; this.oboEnabled = oboJsonData != null && !oboJsonData.isNull(); }
 
     // 5. 비즈니스 로직
     public void updateProblemCoding(String summary, String description) {

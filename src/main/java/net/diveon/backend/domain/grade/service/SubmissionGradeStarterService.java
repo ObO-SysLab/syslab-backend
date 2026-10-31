@@ -32,6 +32,7 @@ import net.diveon.backend.global.exception.ProblemNotFoundException;
 @Service
 public class SubmissionGradeStarterService {
     private final ProblemAccessService access;
+    private final net.diveon.backend.domain.problem.service.ProblemRevisionService revisions;
     private final SolveResultRepository solveResultRepository; 
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionObjectiveRepository solveSubmissionObjectiveRepository;
@@ -58,7 +59,8 @@ public class SubmissionGradeStarterService {
         ProblemCodingRepository problemCodingRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
-        ProblemAccessService access
+        ProblemAccessService access,
+        net.diveon.backend.domain.problem.service.ProblemRevisionService revisions
     ){
         this.solveResultRepository = solveResultRepository;
         this.solveSubmissionRepository = solveSubmissionRepository;
@@ -73,6 +75,7 @@ public class SubmissionGradeStarterService {
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.access = access;
+        this.revisions = revisions;
     }
 
     @Transactional
@@ -98,7 +101,7 @@ public class SubmissionGradeStarterService {
         long probId = request.getProdId();
         
         //TODO: exception logic must be improved
-        Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+        Problem problem = problemRepository.findForRevision(probId).orElseThrow(ProblemNotFoundException::new);
         access.requireNormalSubmission(userId, problem);
 
         // objective / coding / practice
@@ -108,6 +111,7 @@ public class SubmissionGradeStarterService {
         //new submission create
         //Create State - SubmissionState.PENDING, LocalDateTime.now()
         SolveSubmission submission = new SolveSubmission(problem, submittUser);
+        submission.bindRevision(revisions.capture(problem));
 
         //save submission
         solveSubmissionRepository.save(submission);
@@ -197,6 +201,8 @@ public class SubmissionGradeStarterService {
             if (!(request.getAnswer() instanceof List<?> answers) || answers.stream().anyMatch(a -> !(a instanceof Integer))) {
                 throw new InvalidSubmissionRequestException("객관식 답은 정수 목록이어야 합니다.");
             }
+            var objective = problemObjectiveRepository.findById(problemId).orElseThrow(ProblemNotFoundException::new);
+            net.diveon.backend.domain.problem.service.ObjectiveAnswerRules.validate(objective, (List<?>) request.getAnswer());
         } else if (!"practice".equals(type) || !(request.getAnswer() instanceof String)) {
             throw new InvalidSubmissionRequestException("문제 유형과 제출 형식이 일치하지 않습니다.");
         }

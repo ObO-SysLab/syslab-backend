@@ -91,7 +91,7 @@ public class ProblemObjective {
 
     public JsonNode getOboJsonData() { return oboJsonData; }
 
-    public void setOboJsonData(JsonNode oboJsonData) { this.oboJsonData = oboJsonData; }
+    public void setOboJsonData(JsonNode oboJsonData) { this.oboJsonData = oboJsonData; this.oboEnabled = oboJsonData != null && !oboJsonData.isNull(); }
 
     /**
      * <pre>
@@ -110,5 +110,10 @@ public class ProblemObjective {
     public void updateProblemObjective(String summary, String description) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
+    }
+    public void updateAssessment(List<ForDtoChoice> choices,List<Integer> answer,boolean unordered){
+        if(choices!=null)this.choices=new java.util.ArrayList<>(choices);
+        if(answer!=null)this.answer=new java.util.ArrayList<>(answer);
+        if(unordered)this.isSeqeuntialAnswer=false;
     }
 }

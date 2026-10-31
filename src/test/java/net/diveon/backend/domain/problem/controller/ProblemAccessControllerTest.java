@@ -3,6 +3,7 @@ package net.diveon.backend.domain.problem.controller;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import net.diveon.backend.domain.grade.controller.GradeBoardController;
 import net.diveon.backend.domain.grade.service.GradeBoardService;
@@ -56,5 +57,13 @@ class ProblemAccessControllerTest {
         mvc.perform(get("/api/challenges/obo?id=9&userId=1").header("Authorization", "Bearer login"))
                 .andExpect(status().isNotFound());
         verify(obo).getOboJson(7L, 9L);
+    }
+    @Test void explanationAndAuthorResponsesCannotBeCached() throws Exception {
+        login();
+        mvc.perform(get("/api/challenges/obo?id=9").header("Authorization", "Bearer login"))
+            .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"));
+        mvc.perform(get("/api/challenges/obo/author?id=9&userId=1").header("Authorization", "Bearer login"))
+            .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"));
+        verify(obo).getAuthorOboJson(7L,9L);
     }
 }

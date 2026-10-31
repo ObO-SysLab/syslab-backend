@@ -82,6 +82,7 @@ public class ProblemController {
             problemDetailService.detailProblem(Long.parseLong(userId), probId);
 
         return ResponseEntity.status(200)
+            .cacheControl(org.springframework.http.CacheControl.noStore())
             .body(ApiResponse.success("문제 상세 조회에 성공하였습니다.", responseData));
     }
 

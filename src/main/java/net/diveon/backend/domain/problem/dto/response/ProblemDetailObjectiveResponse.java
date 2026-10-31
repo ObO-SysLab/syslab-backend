@@ -60,6 +60,8 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
     private String summary;
     private String description;
     private List<ForDtoChoice> choices;
+    private String selectionMode = "multiple";
+    public String getSelectionMode(){return selectionMode;}
 
     @JsonProperty("isSeqeuntialAnswer")
     private Boolean isSeqeuntialAnswer;
@@ -155,7 +157,7 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
             ))
             .toList();
 
-        return new ProblemDetailObjectiveResponse(
+        var response = new ProblemDetailObjectiveResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
             isOwner,
@@ -175,6 +177,9 @@ public class ProblemDetailObjectiveResponse implements ProblemDetailResponse {
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
+        var simulation = net.diveon.backend.domain.problem.service.OboDocumentValidator.simulation(problemObjective.getOboJsonData());
+        if (simulation != null) response.selectionMode = simulation.path("question").path("selectionMode").asText("multiple");
+        return response;
     }
 
     public Long getProbId() {

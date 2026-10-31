@@ -75,6 +75,8 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
     private String outputDescription;
 
     private List<ForDtoTestCase> testcases;
+    private com.fasterxml.jackson.databind.JsonNode oboContract;
+    public com.fasterxml.jackson.databind.JsonNode getOboContract(){return oboContract;}
 
     @JsonProperty("fileUrl")
     private String fileUrl;
@@ -147,7 +149,7 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
             problemCoding.getAllowedLanguages()
         );
 
-        return new ProblemDetailCodingResponse(
+        var response = new ProblemDetailCodingResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
             isOwner,
@@ -161,13 +163,16 @@ public class ProblemDetailCodingResponse implements ProblemDetailResponse {
             constraints,
             problemCoding.getInputDescription(),
             problemCoding.getOutputDescription(),
-            problemCoding.getTestcases(),
+            problemCoding.getTestcases() == null ? List.of() : problemCoding.getTestcases().stream()
+                .filter(testcase -> Boolean.TRUE.equals(testcase.getIsSample())).toList(),
             problemCoding.getFileUrl(),
             problem.getSolvedCount(),
             problem.getSubmittedCount(),
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
+        response.oboContract=net.diveon.backend.domain.problem.service.OboPublicContract.describe(problemCoding.getOboJsonData());
+        return response;
     }
 
     // Getters
