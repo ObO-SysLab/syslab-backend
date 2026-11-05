@@ -11,12 +11,16 @@ exec 9>/var/lock/diveon-backend-deploy.lock
 flock -n 9
 config=/etc/diveon/application-secret.yml
 runtime_env=/etc/diveon/backend.env
+vm_known_hosts=/etc/diveon/vm_known_hosts
 protected_file() {
   [[ -s "$1" && ! -L "$1" ]]
   test "$(stat -c %u "$1")" = 0
   [[ "$(stat -c %a "$1")" == 600 || "$(stat -c %a "$1")" == 400 ]]
 }
 protected_file "$config"
+[[ -s "$vm_known_hosts" && ! -L "$vm_known_hosts" ]]
+test "$(stat -c %u "$vm_known_hosts")" = 0
+[[ "$(stat -c %a "$vm_known_hosts")" == 644 || "$(stat -c %a "$vm_known_hosts")" == 600 ]]
 env_args=()
 if [[ -e "$runtime_env" ]]; then
   protected_file "$runtime_env"
@@ -69,6 +73,7 @@ docker run -d --name syslab-backend --restart always --network host \
   --env SPRING_JPA_HIBERNATE_DDL_AUTO=validate \
   --env SPRING_CONFIG_ADDITIONAL_LOCATION=file:/run/diveon/ \
   --mount "type=bind,src=$config,dst=/run/diveon/application-secret.yml,readonly" \
+  --mount "type=bind,src=$vm_known_hosts,dst=/run/diveon/vm_known_hosts,readonly" \
   --mount type=bind,src=/home/ec2-user/syslab-key.pem,dst=/app/syslab-key.pem,readonly \
   "$image" > "$release_dir/container-id"
 healthy=false
