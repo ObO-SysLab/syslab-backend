@@ -19,6 +19,8 @@ public class SubmissionResultPracticeResponse implements SubmissionResultRespons
     @JsonProperty("isCorrect")
     private final boolean isCorrect;
 
+    private final String resultStatus;
+
     @JsonProperty("submittedAt")
     private final LocalDateTime submittedAt;
 
@@ -29,12 +31,14 @@ public class SubmissionResultPracticeResponse implements SubmissionResultRespons
         long submissionId,
         long probId,
         boolean isCorrect,
+        String resultStatus,
         LocalDateTime submittedAt,
         LocalDateTime judgedAt
     ) {
         this.submissionId = submissionId;
         this.probId = probId;
         this.isCorrect = isCorrect;
+        this.resultStatus = resultStatus;
         this.submittedAt = submittedAt;
         this.judgedAt = judgedAt;
     }
@@ -45,6 +49,7 @@ public class SubmissionResultPracticeResponse implements SubmissionResultRespons
     public long getProbId() { return probId; }
     @JsonIgnore
     public boolean isCorrect() { return isCorrect; }
+    public String getResultStatus() { return resultStatus; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public LocalDateTime getJudgedAt() { return judgedAt; }
 }

@@ -62,6 +62,7 @@ class ContestSubmissionBoardTest {
                 var board = service.getBoard(7L, 1L, 9L, 1, 50); var item = board.submissions().getFirst();
                 assertEquals(17L, item.submissionId()); assertNull(item.solveSubmissionId());
                 assertEquals("COMPLETED", item.submissionStatus()); assertEquals(verdict, item.isCorrect());
+                assertEquals(verdict ? "CORRECT" : "WRONG", item.resultStatus());
                 assertEquals(100, board.currentTotalScore()); assertEquals(1, board.total());
                 assertEquals(8, item.userTier()); assertFalse(item.hasObo());
             }
@@ -85,6 +86,24 @@ class ContestSubmissionBoardTest {
         assertEquals("python", item.language()); assertEquals(42, item.runtime()); assertEquals(16, item.memoryUsage());
         assertEquals(8, item.userTier()); assertFalse(item.hasObo());
         assertFalse(item.toString().contains("private source")); verify(results, never()).findBySubmissionId(17L);
+    }
+    @ParameterizedTest @org.junit.jupiter.params.provider.EnumSource(SolveResult.SolveResultState.class)
+    void originalCodingVerdictIsSerializedWithoutAnAdditionalBoardLookup(SolveResult.SolveResultState verdict) {
+        var solve = coding(); solve.setSubmissionState(SolveSubmission.SubmissionState.COMPLETED);
+        row.updateResultAndStatus(false, "COMPLETED");
+        var result = new SolveResult(solve, verdict); ReflectionTestUtils.setField(result, "id", 52L);
+        when(results.findBySubmissionId(92L)).thenReturn(Optional.of(result));
+        var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules().valueToTree(item);
+        assertEquals(verdict.name(), json.path("resultStatus").textValue()); assertFalse(item.isCorrect());
+        verify(results, times(1)).findBySubmissionId(92L);
+    }
+    @Test void absentCodingResultIsExplicitNullDespiteContestFalse() {
+        var solve = coding(); solve.setSubmissionState(SolveSubmission.SubmissionState.COMPLETED);
+        row.updateResultAndStatus(false, "COMPLETED");
+        var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules().valueToTree(item);
+        assertTrue(json.has("resultStatus")); assertTrue(json.get("resultStatus").isNull());
     }
     @Test void linkedJudgingStateIsVisibleBeforeContestCompletion() {
         coding().setSubmissionState(SolveSubmission.SubmissionState.JUDGING);
@@ -112,7 +131,7 @@ class ContestSubmissionBoardTest {
     @Test void failedCodingIsTerminalWithoutFakeWrongAnswerOrMetrics() {
         coding().setSubmissionState(SolveSubmission.SubmissionState.FAILED); row.updateStatus("FAILED");
         var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
-        assertEquals("FAILED", item.submissionStatus()); assertNull(item.isCorrect()); assertNull(item.runtime()); verifyNoInteractions(results);
+        assertEquals("FAILED", item.submissionStatus()); assertNull(item.isCorrect()); assertNull(item.resultStatus()); assertNull(item.runtime()); verifyNoInteractions(results);
     }
     @Test void mismatchedCodingLinkIsRejectedBeforeReadingSourceOrMetrics() {
         var solve = coding(); var other = new User(); ReflectionTestUtils.setField(other, "id", 8L);

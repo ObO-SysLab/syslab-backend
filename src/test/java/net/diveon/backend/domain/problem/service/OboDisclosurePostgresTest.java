@@ -188,7 +188,7 @@ class OboDisclosurePostgresTest {
             var access=new ProblemAccessService(problems,mock(net.diveon.backend.domain.group.repository.GroupProblemRepository.class),
                 mock(net.diveon.backend.domain.group.repository.GroupUserRepository.class),repositories.getRepository(ContestProblemRepository.class),
                 repositories.getRepository(ContestParticipantRepository.class));
-            var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repositories.getRepository(ContestSubmissionRepository.class));
+            var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repositories.getRepository(ContestSubmissionRepository.class),repositories.getRepository(SolveResultRepository.class));
             assertEquals(request.getOboJson(),obo.getAuthorOboJson(f.user().getId(),problem.getId()));
             String editVersion=(String)obo.getAuthorSettings(f.user().getId(),problem.getId()).get("editVersion");
             var update=new ProblemUpdateService(problems,objectives,mock(ProblemPracticeRepository.class),codings,
@@ -239,10 +239,10 @@ class OboDisclosurePostgresTest {
                 results,mock(CodingGradeQueueService.class),mock(net.diveon.backend.domain.user.service.UserTierService.class));
             var submit=new SubmissionGradeService(starter,grader,new JpaTransactionManager(factory.getObject()),true);
             var resultService=new SubmissionResultService(submissions,results,objectiveSubs,codingSubs,repo.getRepository(SolveResultCodingRepository.class));
-            var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repo.getRepository(ContestSubmissionRepository.class));
+            var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repo.getRepository(ContestSubmissionRepository.class),results);
             var mvc=org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup(
                 new net.diveon.backend.domain.problem.controller.ProblemCreateController(create,mock(ProblemDeleteService.class)),
-                new net.diveon.backend.domain.grade.controller.SubmissionGradeController(submit,new SubmissionStatusService(submissions),resultService),
+                new net.diveon.backend.domain.grade.controller.SubmissionGradeController(submit,new SubmissionStatusService(submissions,results),resultService),
                 new net.diveon.backend.domain.problem.controller.ProblemOboController(obo))
                 .setControllerAdvice(new net.diveon.backend.global.exception.GlobalExceptionHandler())
                 .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(mapper))

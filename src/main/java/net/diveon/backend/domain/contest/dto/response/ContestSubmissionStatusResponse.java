@@ -18,6 +18,9 @@ public class ContestSubmissionStatusResponse {
     @JsonProperty("isCorrect")
     private Boolean isCorrect;
 
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String resultStatus;
+
     @JsonProperty("score")
     private Integer score;
 
@@ -34,12 +37,13 @@ public class ContestSubmissionStatusResponse {
         return r;
     }
 
-    public static ContestSubmissionStatusResponse completed(Long submissionId, boolean isCorrect, int score, int rank) {
+    public static ContestSubmissionStatusResponse completed(Long submissionId, boolean isCorrect, String resultStatus, int score, int rank) {
         ContestSubmissionStatusResponse r = new ContestSubmissionStatusResponse();
         r.submissionId = submissionId;
         r.submissionStatus = "COMPLETED";
         r.progress = 100;
         r.isCorrect = isCorrect;
+        r.resultStatus = resultStatus;
         r.score = score;
         r.rank = rank;
         return r;
@@ -49,6 +53,7 @@ public class ContestSubmissionStatusResponse {
     public String getSubmissionStatus() { return submissionStatus; }
     public Integer getProgress() { return progress; }
     public Boolean getIsCorrect() { return isCorrect; }
+    public String getResultStatus() { return resultStatus; }
     public Integer getScore() { return score; }
     public Integer getRank() { return rank; }
 }

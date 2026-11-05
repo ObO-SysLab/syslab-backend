@@ -20,6 +20,8 @@ public class SubmissionResultObjectiveResponse implements SubmissionResultRespon
     @JsonProperty("isCorrect")
     private final boolean isCorrect;
 
+    private final String resultStatus;
+
     @JsonProperty("selectedAnswers")
     private final List<Integer> selectedAnswers;
 
@@ -33,6 +35,7 @@ public class SubmissionResultObjectiveResponse implements SubmissionResultRespon
         long submissionId,
         long probId,
         boolean isCorrect,
+        String resultStatus,
         List<Integer> selectedAnswers,
         LocalDateTime submittedAt,
         LocalDateTime judgedAt
@@ -40,6 +43,7 @@ public class SubmissionResultObjectiveResponse implements SubmissionResultRespon
         this.submissionId = submissionId;
         this.probId = probId;
         this.isCorrect = isCorrect;
+        this.resultStatus = resultStatus;
         this.selectedAnswers = selectedAnswers;
         this.submittedAt = submittedAt;
         this.judgedAt = judgedAt;
@@ -51,6 +55,7 @@ public class SubmissionResultObjectiveResponse implements SubmissionResultRespon
     public long getProbId() { return probId; }
     @JsonIgnore
     public boolean isCorrect() { return isCorrect; }
+    public String getResultStatus() { return resultStatus; }
     public List<Integer> getSelectedAnswers() { return selectedAnswers; }
     public LocalDateTime getSubmittedAt() { return submittedAt; }
     public LocalDateTime getJudgedAt() { return judgedAt; }

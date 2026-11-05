@@ -40,6 +40,7 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
 
         @JsonProperty("isCorrect")
         private Boolean isCorrect;
+        private String resultStatus;
 
         private Short score;
 
@@ -57,7 +58,7 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
         @JsonProperty("judgedAt")
         private String judgedAt;
 
-        public SubmissionItem(Long submissionId, String nickname, String language, Boolean isCorrect,
+        public SubmissionItem(Long submissionId, String nickname, String language, Boolean isCorrect, String resultStatus,
                               Short score, Integer runtime, Integer memoryUsage, Integer codeSize,
                               String submittedAt, String judgedAt, String submissionStatus,
                               Integer userTier, boolean hasObo) {
@@ -68,6 +69,7 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
             this.hasObo = hasObo;
             this.language = language;
             this.isCorrect = isCorrect;
+            this.resultStatus = resultStatus;
             this.score = score;
             this.runtime = runtime;
             this.memoryUsage = memoryUsage;
@@ -82,6 +84,7 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
         public boolean getHasObo() { return hasObo; }
         public String getLanguage() { return language; }
         public Boolean getIsCorrect() { return isCorrect; }
+        public String getResultStatus() { return resultStatus; }
         public Short getScore() { return score; }
         public Integer getRuntime() { return runtime; }
         public Integer getMemoryUsage() { return memoryUsage; }
