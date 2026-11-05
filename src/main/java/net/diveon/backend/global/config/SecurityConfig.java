@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        // The controller authenticates these two machine-only POST routes.
+                        .requestMatchers(HttpMethod.POST, "/internal/terminal/connect", "/internal/terminal/check").permitAll()
                         .requestMatchers("/local/google-login-test.html", "/api/local/auth/google/login", "/api/auth/google/login", "/api/auth/login", "/api/auth/signup", "/api/auth/refresh", "/api/auth/check-loginId", "/api/auth/check-nickname", "/api/auth/email/send", "/api/auth/email/verify", "/api/auth/email/find-id", "/api/auth/email/send-reset", "/api/auth/email/password/reset", "/api/ad/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
@@ -47,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/posts/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contests/*/rankings").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/contests/*/problems/*/board").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )

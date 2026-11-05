@@ -1,0 +1,164 @@
+{
+  "title": "OBO local fixture",
+  "summary": "OBO local fixture",
+  "description": "프로세스 상태 전이를 계산하세요.",
+  "category": "kernel",
+  "difficulty": "1",
+  "visibility": "public",
+  "constraints": {
+    "timeLimitMs": 1000,
+    "memoryLimitMb": 256,
+    "allowedLanguages": [
+      "c",
+      "cpp",
+      "python"
+    ]
+  },
+  "inputDescription": "입력 설명",
+  "outputDescription": "출력 설명",
+  "testcases": [
+    {
+      "index": 1,
+      "input": "{\n  \"processes\": {\n    \"P\": \"New\"\n  },\n  \"actions\": [\n    {\n      \"id\": \"P\",\n      \"event\": \"create\"\n    }\n  ]\n}",
+      "output": "{\n  \"v\": 1,\n  \"result\": {\n    \"states\": {\n      \"P\": \"Ready\"\n    }\n  }\n}",
+      "isSample": true
+    }
+  ],
+  "obo": {
+    "enabled": false,
+    "initialImageUrl": null
+  },
+  "oboJson": {
+    "schemaVersion": 2,
+    "mode": "simulation",
+    "simulation": {
+      "schemaVersion": 2,
+      "instances": [
+        {
+          "id": "sim_28d81d9c02d348b0",
+          "scenarioId": "ST2",
+          "modelVersion": 1,
+          "name": "프로세스 상태 전이",
+          "input": {
+            "processes": {
+              "P": "New"
+            },
+            "actions": [
+              {
+                "id": "P",
+                "event": "create"
+              }
+            ]
+          },
+          "views": [
+            {
+              "id": "view_648c7f9850984815",
+              "role": "actor",
+              "target": null,
+              "x": 40,
+              "y": 40,
+              "width": 270,
+              "height": 180,
+              "label": "실행 주체",
+              "color": "#4f46e5",
+              "hidden": false,
+              "text": "",
+              "when": {
+                "kind": null,
+                "actor": null
+              },
+              "fields": []
+            },
+            {
+              "id": "view_45f14bbfcdd140d7",
+              "role": "relation",
+              "target": null,
+              "x": 340,
+              "y": 40,
+              "width": 270,
+              "height": 180,
+              "label": "관계",
+              "color": "#4f46e5",
+              "hidden": false,
+              "text": "",
+              "when": {
+                "kind": null,
+                "actor": null
+              },
+              "fields": []
+            },
+            {
+              "id": "view_f0f0443214064158",
+              "role": "annotation",
+              "target": null,
+              "x": 640,
+              "y": 40,
+              "width": 270,
+              "height": 180,
+              "label": "설명",
+              "color": "#4f46e5",
+              "hidden": false,
+              "text": "",
+              "when": {
+                "kind": null,
+                "actor": null
+              },
+              "fields": []
+            },
+            {
+              "id": "view_49364061006c4435",
+              "role": "processor",
+              "target": null,
+              "x": 40,
+              "y": 260,
+              "width": 270,
+              "height": 180,
+              "label": "처리 장치",
+              "color": "#4f46e5",
+              "hidden": false,
+              "text": "",
+              "when": {
+                "kind": null,
+                "actor": null
+              },
+              "fields": []
+            },
+            {
+              "id": "view_501c066e48854cc6",
+              "role": "queue",
+              "target": null,
+              "x": 340,
+              "y": 260,
+              "width": 270,
+              "height": 180,
+              "label": "큐·버퍼",
+              "color": "#4f46e5",
+              "hidden": false,
+              "text": "",
+              "when": {
+                "kind": null,
+                "actor": null
+              },
+              "fields": []
+            }
+          ],
+          "decorations": [],
+          "labels": {}
+        }
+      ],
+      "question": {
+        "selectionMode": "single",
+        "judgeProfile": "obo-v1",
+        "assessmentMode": "result",
+        "gradingInstanceId": "sim_28d81d9c02d348b0"
+      },
+      "explanations": {
+        "common": [
+          "sim_28d81d9c02d348b0"
+        ],
+        "choices": {}
+      }
+    }
+  },
+  "isDraft": false
+}

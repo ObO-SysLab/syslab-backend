@@ -16,7 +16,6 @@ import net.diveon.backend.global.exception.SubmissionNotFoundException;
 public class ContestSubmissionStatusService {
 
     private final ContestSubmissionRepository contestSubmissionRepository;
-    private final StringRedisTemplate redisTemplate;
     private final JdbcTemplate jdbcTemplate;
 
     public ContestSubmissionStatusService(
@@ -24,11 +23,10 @@ public class ContestSubmissionStatusService {
             StringRedisTemplate redisTemplate,
             JdbcTemplate jdbcTemplate) {
         this.contestSubmissionRepository = contestSubmissionRepository;
-        this.redisTemplate = redisTemplate;
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public ContestSubmissionStatusResponse getStatus(Long contestId, Long submissionId, Long userId) {
         ContestSubmission submission = contestSubmissionRepository.findById(submissionId)
                 .orElseThrow(SubmissionNotFoundException::new);
@@ -63,24 +61,15 @@ public class ContestSubmissionStatusService {
     }
 
     private int getRank(Long contestId, Long userId, int score) {
-        try {
-            Long zeroBasedRank = redisTemplate.opsForZSet()
-                    .reverseRank("scoreboard:" + contestId, String.valueOf(userId));
-            if (zeroBasedRank != null) {
-                return zeroBasedRank.intValue() + 1;
-            }
-        } catch (Exception ignored) {}
-        Integer higherCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM contest_participant WHERE contest_id = ? AND score > ?",
-                Integer.class, contestId, score);
-        return (higherCount != null ? higherCount : 0) + 1;
+        Integer rank = jdbcTemplate.queryForObject(ContestRankQuery.SQL, Integer.class, contestId, userId);
+        return rank == null ? 0 : rank;
     }
 
     private int calculateProgress(String status) {
         return switch (status) {
             case "PENDING" -> 0;
             case "JUDGING" -> 50;
-            case "COMPLETED" -> 100;
+            case "COMPLETED", "FAILED" -> 100;
             default -> 0;
         };
     }

@@ -4,10 +4,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -37,6 +37,8 @@ import net.diveon.backend.domain.grade.repository.SolveSubmissionCodingRepositor
 import net.diveon.backend.domain.grade.repository.SolveSubmissionRepository;
 import net.diveon.backend.domain.grade.service.CodingGradeQueueService;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
+import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
@@ -46,6 +48,7 @@ import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
 import net.diveon.backend.global.exception.ContestProblemNotFoundException;
 import net.diveon.backend.global.exception.UserNotFoundException;
+import net.diveon.backend.global.exception.InvalidSubmissionRequestException;
 import net.diveon.backend.global.response.ApiResponse;
 
 @Service
@@ -62,6 +65,10 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
     private final CodingGradeQueueService codingGradeQueueService;
+    private final ProblemCodingRepository problemCodingRepository;
+    private final ProblemAccessService access;
+    private final net.diveon.backend.domain.problem.repository.ProblemRepository problems;
+    private final net.diveon.backend.domain.problem.service.ProblemRevisionService revisions;
 
     public ContestSubmitServiceImpl(
             ContestRepository contestRepository,
@@ -74,7 +81,9 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
             StringRedisTemplate redisTemplate,
             SolveSubmissionRepository solveSubmissionRepository,
             SolveSubmissionCodingRepository solveSubmissionCodingRepository,
-            CodingGradeQueueService codingGradeQueueService) {
+            CodingGradeQueueService codingGradeQueueService,
+            ProblemCodingRepository problemCodingRepository, ProblemAccessService access, net.diveon.backend.domain.problem.repository.ProblemRepository problems,
+            net.diveon.backend.domain.problem.service.ProblemRevisionService revisions) {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
@@ -86,6 +95,10 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.codingGradeQueueService = codingGradeQueueService;
+        this.problemCodingRepository = problemCodingRepository;
+        this.access = access;
+        this.problems = problems;
+        this.revisions = revisions;
     }
 
     @Override
@@ -101,20 +114,25 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         }
 
         ContestParticipant participant = contestParticipantRepository
-                .findByContestIdAndUserId(contestId, userId)
+                .findForScoreUpdate(contestId, userId)
                 .orElseThrow(ContestAccessDeniedException::new);
 
-        if (participant.getIsBanned()) {
+        if (!Boolean.FALSE.equals(participant.getIsBanned())) {
             throw new ContestAccessDeniedException();
         }
 
-        ContestProblem contestProblem = contestProblemRepository.findById(contestProblemId)
+        ContestProblem contestProblem = contestProblemRepository.findByIdAndContestId(contestProblemId, contestId)
                 .orElseThrow(ContestProblemNotFoundException::new);
 
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         Problem problem = contestProblem.getProblem();
+        access.requireContestSubmission(userId, problem, contestId);
+        if (!"practice".equals(problem.getType())) problem = problems.findForRevision(problem.getId())
+            .orElseThrow(net.diveon.backend.global.exception.ProblemNotFoundException::new);
+
+        validateSubmission(problem, request);
 
         checkCooldown(contestId, userId, contestProblemId);
 
@@ -130,9 +148,31 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         }
     }
 
+    private void validateSubmission(Problem problem, ContestSubmitRequest request) {
+        if (request == null || request.getSubmissionType() == null
+                || !request.getSubmissionType().name().toLowerCase(Locale.ROOT).equals(problem.getType())) {
+            throw new InvalidSubmissionRequestException("문제 유형과 제출 유형이 일치하지 않습니다.");
+        }
+        if (request.getSubmissionType() == ContestSubmitRequest.SubmissionType.CODING) {
+            String language = request.getLanguage();
+            if (request.getCode() == null || request.getCode().isBlank()
+                    || language == null || !List.of("python", "c", "cpp").contains(language)) {
+                throw new InvalidSubmissionRequestException("코드와 지원하는 언어를 입력해주세요.");
+            }
+            var coding = problemCodingRepository.findById(problem.getId())
+                    .orElseThrow(() -> new InvalidSubmissionRequestException("코딩형 문제가 없습니다."));
+            if (coding.getAllowedLanguages() == null || !coding.getAllowedLanguages().contains(language)) {
+                throw new InvalidSubmissionRequestException("이 문제에서 허용되지 않은 언어입니다.");
+            }
+            net.diveon.backend.domain.grade.service.CodingExecutionLimits.submission(coding, request.getCode());
+        }
+    }
+
     @Transactional
     private ResponseEntity<ApiResponse<?>> handleObjectiveSubmission(
             Contest contest, ContestProblem contestProblem, Problem problem, User user, ContestSubmitRequest request) {
+
+        var revision = revisions.capture(problem);
 
         Map<String, Object> objectiveProblem = jdbcTemplate.queryForMap(
                 "SELECT answer::text AS answer, is_seqeuntial AS is_seqeuntial FROM problem_objective WHERE prob_id = ?",
@@ -162,6 +202,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         } catch (Exception e) {
             throw new IllegalArgumentException("유효한 숫자 또는 숫자 배열을 입력해주세요.");
         }
+        if (revision != null) net.diveon.backend.domain.problem.service.ObjectiveAnswerRules.validateSnapshot(revision.getSnapshot(), submittedAnswers);
         boolean isCorrect = isCorrectObjectiveAnswer(correctAnswers, submittedAnswers, isSeqeuntialAnswer);
 
         ContestParticipant participant = contestParticipantRepository
@@ -172,19 +213,20 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = jdbcTemplate.queryForObject("SELECT clock_timestamp() AT TIME ZONE 'UTC'", LocalDateTime.class);
                 participant.addScore(contestProblem.getPoints(), now);
-                contestParticipantRepository.save(participant);
+                contestParticipantRepository.saveAndFlush(participant);
 
-                jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
+
             }
         }
 
+        if (isCorrect) problems.recordSolver(problem.getId(), user.getId());
         int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
 
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
         submission.updateResult(isCorrect);
+        submission.bindRevision(revision, objectMapper.valueToTree(submittedAnswers));
         ContestSubmission savedSubmission = contestSubmissionRepository.save(submission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
@@ -223,15 +265,15 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
                     .findSolvedContestProblemIds(contest.getId(), user.getId());
 
             if (!solvedProblems.contains(contestProblem.getId())) {
-                LocalDateTime now = LocalDateTime.now();
+                LocalDateTime now = jdbcTemplate.queryForObject("SELECT clock_timestamp() AT TIME ZONE 'UTC'", LocalDateTime.class);
                 participant.addScore(contestProblem.getPoints(), now);
-                contestParticipantRepository.save(participant);
+                contestParticipantRepository.saveAndFlush(participant);
 
-                jdbcTemplate.update("UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = ?", problem.getId());
-                updateScoreboard(contest.getId(), user.getId(), participant.getScore(), now);
+
             }
         }
 
+        if (isCorrect) problems.recordSolver(problem.getId(), user.getId());
         int currentRank = getRank(contest.getId(), user.getId(), participant.getScore());
 
         ContestSubmission submission = new ContestSubmission(contest, contestProblem, user);
@@ -252,6 +294,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
 
         // solve_submission + solve_submission_coding 생성 (그레이더가 이 ID로 채점)
         SolveSubmission solveSubmission = new SolveSubmission(problem, user);
+        solveSubmission.bindRevision(revisions.capture(problem));
         SolveSubmission savedSolveSubmission = solveSubmissionRepository.save(solveSubmission);
 
         SolveSubmissionCoding coding = new SolveSubmissionCoding(savedSolveSubmission, request.getCode(), request.getLanguage());
@@ -260,6 +303,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         // contest_submission 생성 (solve_submission 연결)
         ContestSubmission contestSubmission = new ContestSubmission(
                 contest, contestProblem, user, savedSolveSubmission, "PENDING");
+        contestSubmission.bindRevision(savedSolveSubmission.getProblemRevision(), null);
         ContestSubmission savedContestSubmission = contestSubmissionRepository.save(contestSubmission);
 
         jdbcTemplate.update("UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = ?", problem.getId());
@@ -273,7 +317,7 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
         setCooldown(contest.getId(), user.getId(), contestProblem.getId());
 
         ContestSubmitAsyncResponse response = new ContestSubmitAsyncResponse(
-                savedContestSubmission.getId(), "PENDING");
+                savedContestSubmission.getId(), "PENDING", savedSolveSubmission.getId());
         return ResponseEntity.status(202).body(
                 ApiResponse.success("채점 요청이 접수되었습니다.", response));
     }
@@ -291,23 +335,8 @@ public class ContestSubmitServiceImpl implements ContestSubmitService {
     }
 
     private int getRank(Long contestId, Long userId, int score) {
-        try {
-            Long zeroBasedRank = redisTemplate.opsForZSet()
-                    .reverseRank("scoreboard:" + contestId, String.valueOf(userId));
-            if (zeroBasedRank != null) {
-                return zeroBasedRank.intValue() + 1;
-            }
-        } catch (Exception ignored) {}
-        Integer higherCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM contest_participant WHERE contest_id = ? AND score > ?",
-                Integer.class, contestId, score);
-        return (higherCount != null ? higherCount : 0) + 1;
-    }
-
-    private void updateScoreboard(Long contestId, Long userId, int newTotalScore, LocalDateTime solvedAt) {
-        long epochSecond = solvedAt.toEpochSecond(ZoneOffset.UTC);
-        double compositeScore = (double) newTotalScore * 1_000_000L - epochSecond;
-        redisTemplate.opsForZSet().add("scoreboard:" + contestId, String.valueOf(userId), compositeScore);
+        Integer rank = jdbcTemplate.queryForObject(ContestRankQuery.SQL, Integer.class, contestId, userId);
+        return rank == null ? 0 : rank;
     }
 
     private String hashFlag(String flag) {

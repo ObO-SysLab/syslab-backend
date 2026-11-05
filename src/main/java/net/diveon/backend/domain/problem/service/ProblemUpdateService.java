@@ -42,6 +42,8 @@ public class ProblemUpdateService {
     private final OboStepRepository oboStepRepository;
     private final UserRepository userRepository;
     private final S3Service s3Service;
+    private final OboDocumentValidator oboValidator;
+    private final ProblemRevisionService revisions;
 
     public ProblemUpdateService(ProblemRepository problemRepository,
         ProblemObjectiveRepository problemObjectiveRepository,
@@ -49,7 +51,7 @@ public class ProblemUpdateService {
         ProblemCodingRepository problemCodingRepository,
         OboStepRepository oboStepRepository,
         UserRepository userRepository,
-        S3Service s3Service){
+        S3Service s3Service, OboDocumentValidator oboValidator, ProblemRevisionService revisions){
             this.problemObjectiveRepository = problemObjectiveRepository;
             this.problemPracticeRepository = problemPracticeRepository;
             this.problemCodingRepository = problemCodingRepository;
@@ -57,6 +59,8 @@ public class ProblemUpdateService {
             this.oboStepRepository = oboStepRepository;
             this.userRepository = userRepository;
             this.s3Service = s3Service;
+            this.oboValidator = oboValidator;
+            this.revisions = revisions;
         }
 
     // 객관식형
@@ -69,14 +73,22 @@ public class ProblemUpdateService {
     @Transactional
     public ProblemUpdateObjectiveResponse updateProblemObjective(long userId, long prodId,
         ProblemUpdateObjectiveRequest request){
-            Problem problem = problemRepository.findById(prodId).orElseThrow(ProblemNotFoundException::new);
+            Problem problem = problemRepository.findForRevision(prodId).orElseThrow(ProblemNotFoundException::new);
             checkOwner(problem, userId);
 
             ProblemObjective problemObjective = problemObjectiveRepository.findById(prodId).orElseThrow();
+            ProblemEditVersion.requireMatch(request.getExpectedEditVersion(),ProblemEditVersion.token(problem,problemObjective,null));
+            revisions.capture(problem);
 
             problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
             problemObjective.updateProblemObjective(request.getSummary(), request.getDescription());
-            applyOboJson(problemObjective, request.getOboJson());
+            JsonNode next = mutateObo(request.getOboAction(), request.getOboJson(), problemObjective.getOboJsonData());
+            problemObjective.updateAssessment(request.getChoices(),request.getAnswer(),OboDocumentValidator.simulation(next)!=null);
+            oboValidator.validateQuestion(next, "objective", problemObjective.getAnswer());
+            oboValidator.validateChoices(next, problemObjective.getChoices());
+            if (request.getOboAction() != null && !"keep".equals(request.getOboAction())) problemObjective.setOboJsonData(next);
+            ObjectiveAnswerRules.validate(problemObjective,problemObjective.getAnswer());
+            revisions.capture(problem);
 
             return new ProblemUpdateObjectiveResponse(prodId, problem.getCategory(), problem.getTitle(), problem.getUpatedAt().toString());
     }
@@ -85,13 +97,28 @@ public class ProblemUpdateService {
     @Transactional
     public ProblemUpdateCodingResponse updateProblemCoding(long userId, long probId,
         ProblemUpdateCodingRequest request) {
-        Problem problem = problemRepository.findById(probId).orElseThrow(ProblemNotFoundException::new);
+        Problem problem = problemRepository.findForRevision(probId).orElseThrow(ProblemNotFoundException::new);
         checkOwner(problem, userId);
         ProblemCoding problemCoding = problemCodingRepository.findById(probId).orElseThrow();
+        ProblemEditVersion.requireMatch(request.getExpectedEditVersion(),ProblemEditVersion.token(problem,null,problemCoding));
+        revisions.capture(problem);
 
         problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
         problemCoding.updateProblemCoding(request.getSummary(), request.getDescription());
-        applyOboJson(problemCoding, request.getOboJson());
+        JsonNode next = mutateObo(request.getOboAction(), request.getOboJson(), problemCoding.getOboJsonData());
+        if(request.getConstraints()!=null){
+            var limits=request.getConstraints();problemCoding.setTimeLimitMs(limits.getTimeLimitMs());
+            problemCoding.setMemoryLimitMb(limits.getMemoryLimitMb());problemCoding.setAllowedLanguages(limits.getAllowedLanguages());
+        }
+        if(request.getTestcases()!=null)problemCoding.setTestcases(request.getTestcases());
+        if(request.getInputDescription()!=null)problemCoding.setInputDescription(request.getInputDescription());
+        if(request.getOutputDescription()!=null)problemCoding.setOutputDescription(request.getOutputDescription());
+        net.diveon.backend.domain.grade.service.CodingExecutionLimits.problem(problemCoding.getTimeLimitMs(),problemCoding.getMemoryLimitMb(),
+            problemCoding.getAllowedLanguages(),problemCoding.getTestcases());
+        oboValidator.validateQuestion(next, "coding", null);
+        oboValidator.validateCodingCases(next, problemCoding.getTestcases());
+        if (request.getOboAction() != null && !"keep".equals(request.getOboAction())) problemCoding.setOboJsonData(next);
+        revisions.capture(problem);
 
         return new ProblemUpdateCodingResponse(probId, problem.getType(), problem.getTitle(), problem.getUpatedAt().toString());
     }
@@ -125,17 +152,11 @@ public class ProblemUpdateService {
         return new OboStep(problem, step.getStep(), step.getDescription(), step.getImageUrl());
     }
 
-    private void applyOboJson(ProblemObjective problemObjective, JsonNode oboJson) {
-        if (oboJson == null) {
-            return;
-        }
-        problemObjective.setOboJsonData(oboJson);
-    }
-
-    private void applyOboJson(ProblemCoding problemCoding, JsonNode oboJson) {
-        if (oboJson == null) {
-            return;
-        }
-        problemCoding.setOboJsonData(oboJson);
+    static JsonNode mutateObo(String action, JsonNode supplied, JsonNode current) {
+        if (action == null || "keep".equals(action)) return current;
+        if ("remove".equals(action)) return null;
+        if (!"replace".equals(action) || supplied == null || supplied.isNull())
+            throw new net.diveon.backend.global.exception.InvalidSubmissionRequestException("OBO 변경은 keep, replace, remove 중 선택하고 replace에는 자료를 제공하세요.");
+        return supplied.deepCopy();
     }
 }

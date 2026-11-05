@@ -19,10 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicUpdate;
 
 
 @Entity
 @Table(name = "problem_summary")
+@DynamicUpdate
 public class Problem {
 
     @Id

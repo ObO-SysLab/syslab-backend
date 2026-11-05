@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.repository.query.Param;
 
 import net.diveon.backend.domain.problem.entity.Problem;
@@ -13,6 +14,29 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProblemRepository extends JpaRepository<Problem, Long>, JpaSpecificationExecutor<Problem> {
+
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Problem p WHERE p.id = :id")
+    Optional<Problem> findForRevision(@Param("id") Long id);
+
+    @Modifying(flushAutomatically = true)
+    @Query(value = """
+            WITH added AS (
+                INSERT INTO problem_solver(prob_id, user_id) VALUES (:problemId, :userId)
+                ON CONFLICT (prob_id, user_id) DO NOTHING RETURNING prob_id
+            )
+            UPDATE problem_summary SET solved_count = solved_count + 1
+            WHERE id = :problemId AND EXISTS (SELECT 1 FROM added)
+            """, nativeQuery = true)
+    int recordSolver(@Param("problemId") Long problemId, @Param("userId") Long userId);
+
+    @Modifying(flushAutomatically = true)
+    @Query(value = "UPDATE problem_summary SET submitted_count = submitted_count + 1 WHERE id = :problemId", nativeQuery = true)
+    int incrementSubmittedCount(@Param("problemId") long problemId);
+
+    @Modifying(flushAutomatically = true)
+    @Query(value = "UPDATE problem_summary SET solved_count = solved_count + 1 WHERE id = :problemId", nativeQuery = true)
+    int incrementSolvedCount(@Param("problemId") long problemId);
 
     @Query(value = """
             SELECT * FROM problem_summary p

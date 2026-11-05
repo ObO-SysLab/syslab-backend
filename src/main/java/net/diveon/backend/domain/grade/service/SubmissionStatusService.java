@@ -42,7 +42,7 @@ public class SubmissionStatusService {
         return switch (status) {
             case "PENDING" -> 0;
             case "JUDGING" -> 60;
-            case "COMPLETED" -> 100;
+            case "COMPLETED", "FAILED" -> 100;
             default -> 0;
         };
     }

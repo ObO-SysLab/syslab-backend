@@ -30,7 +30,7 @@ public class GradeBoardController {
             @RequestParam(defaultValue = "all") String result,
             @RequestParam(defaultValue = "latest") String sort
     ) {
-        GradeBoardResponse response = gradeBoardService.getBoard(probId, page, size, result, sort);
+        GradeBoardResponse response = gradeBoardService.getBoard(Long.parseLong(userId), probId, page, size, result, sort);
         return ResponseEntity.ok(ApiResponse.success("채점 보드 조회에 성공하였습니다.", response));
     }
 }

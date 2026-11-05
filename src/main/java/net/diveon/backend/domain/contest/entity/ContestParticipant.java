@@ -20,6 +20,7 @@ import jakarta.persistence.UniqueConstraint;
 import net.diveon.backend.domain.user.entity.User;
 
 @Entity
+@org.hibernate.annotations.DynamicUpdate
 @Table(
     name = "contest_participant",
     uniqueConstraints = {

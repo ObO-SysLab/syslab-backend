@@ -16,6 +16,14 @@ spring:
       hibernate:
         format_sql: true
 
+# Requires the manual ops migration and coordinated worker/Lambda rollout.
+grading:
+  recovery:
+    enabled: false
+    max-attempts: 3
+    grace-seconds: 900
+    poll-ms: 15000
+
 server:
   port: 8080
   servlet:
@@ -24,3 +32,14 @@ server:
       force: true
   error:
     include-message: always
+
+# Enable only after the AUDIT-07 SQL, buildspec, events and IAM rollout.
+practice:
+  build:
+    enabled: false
+    recovery-enabled: false
+    deadline-minutes: 10
+    poll-ms: 30000
+    batch-size: 50
+    discovery-pages: 10
+    project: syslab-practice-build

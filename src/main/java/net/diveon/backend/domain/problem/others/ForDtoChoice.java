@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ForDtoChoice {
 
     private Integer index;
+    private String id;
+    public String getId(){return id == null ? "choice_" + index : id;}
+    public void setId(String id){this.id=id;}
     private String content;
 
     @JsonProperty("imageUrl")

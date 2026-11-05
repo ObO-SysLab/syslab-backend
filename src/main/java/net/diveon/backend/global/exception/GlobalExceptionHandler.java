@@ -136,6 +136,14 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
         }
 
+        @ExceptionHandler(InvalidSubmissionRequestException.class)
+        public ResponseEntity<ErrorResponse> handleInvalidSubmissionRequest(
+                InvalidSubmissionRequestException ex, HttpServletRequest request) {
+                return ResponseEntity.badRequest().body(new ErrorResponse(
+                        "https://diveon.net/problems/invalid-submission", "Bad Request", 400,
+                        ex.getMessage(), request.getRequestURI()));
+        }
+
         // 유효하지 않은 문제 유형 → 400
         @ExceptionHandler(InvalidProblemTypeException.class)
         public ResponseEntity<ErrorResponse> handleInvalidProblemType(

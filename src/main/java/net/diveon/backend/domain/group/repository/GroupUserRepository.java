@@ -14,6 +14,7 @@ import java.util.List;
 
 public interface GroupUserRepository extends JpaRepository<GroupUser, Long> {
     long countByGroupId(Long groupId);
+    boolean existsByGroupIdAndUserId(Long groupId, Long userId);
     Optional<GroupUser> findByGroupIdAndUserId(Long groupId, Long userId);
 
     @Query("""
