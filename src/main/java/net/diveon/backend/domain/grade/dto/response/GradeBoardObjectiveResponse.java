@@ -30,6 +30,8 @@ public class GradeBoardObjectiveResponse implements GradeBoardResponse {
         private Long submissionId;
 
         private String nickname;
+        private Integer userTier;
+        private boolean hasObo;
 
         @JsonProperty("isCorrect")
         private Boolean isCorrect;
@@ -41,9 +43,11 @@ public class GradeBoardObjectiveResponse implements GradeBoardResponse {
         private String judgedAt;
 
         public SubmissionItem(Long submissionId, String nickname, Boolean isCorrect,
-                              String submittedAt, String judgedAt) {
+                              String submittedAt, String judgedAt, Integer userTier, boolean hasObo) {
             this.submissionId = submissionId;
             this.nickname = nickname;
+            this.userTier = userTier;
+            this.hasObo = hasObo;
             this.isCorrect = isCorrect;
             this.submittedAt = submittedAt;
             this.judgedAt = judgedAt;
@@ -51,6 +55,8 @@ public class GradeBoardObjectiveResponse implements GradeBoardResponse {
 
         public Long getSubmissionId() { return submissionId; }
         public String getNickname() { return nickname; }
+        public Integer getUserTier() { return userTier; }
+        public boolean getHasObo() { return hasObo; }
         public Boolean getIsCorrect() { return isCorrect; }
         public String getSubmittedAt() { return submittedAt; }
         public String getJudgedAt() { return judgedAt; }

@@ -30,6 +30,8 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
         private Long submissionId;
 
         private String nickname;
+        private Integer userTier;
+        private boolean hasObo;
 
         private String language;
         private String submissionStatus;
@@ -57,10 +59,13 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
 
         public SubmissionItem(Long submissionId, String nickname, String language, Boolean isCorrect,
                               Short score, Integer runtime, Integer memoryUsage, Integer codeSize,
-                              String submittedAt, String judgedAt, String submissionStatus) {
+                              String submittedAt, String judgedAt, String submissionStatus,
+                              Integer userTier, boolean hasObo) {
             this.submissionStatus = submissionStatus;
             this.submissionId = submissionId;
             this.nickname = nickname;
+            this.userTier = userTier;
+            this.hasObo = hasObo;
             this.language = language;
             this.isCorrect = isCorrect;
             this.score = score;
@@ -73,6 +78,8 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
 
         public Long getSubmissionId() { return submissionId; }
         public String getNickname() { return nickname; }
+        public Integer getUserTier() { return userTier; }
+        public boolean getHasObo() { return hasObo; }
         public String getLanguage() { return language; }
         public Boolean getIsCorrect() { return isCorrect; }
         public Short getScore() { return score; }

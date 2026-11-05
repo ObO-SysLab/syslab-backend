@@ -62,7 +62,8 @@ class ProblemAccessBoundaryTest {
         verify(problems, never()).incrementSubmittedCount(9L);
     }
     @Test void boardDeniesBeforeReadingOtherSubmissions() {
-        var service = new GradeBoardService(submissions, codingSubmissions, results, codingResults, problems, access);
+        var service = new GradeBoardService(submissions, codingSubmissions, results, codingResults, problems, access,
+                new SubmissionOboPresence(codings, objectives));
         assertThrows(ProblemNotFoundException.class, () -> service.getBoard(7L, 9L, 1, 20, "all", "latest"));
         verifyNoInteractions(submissions, codingSubmissions, results, codingResults);
     }
