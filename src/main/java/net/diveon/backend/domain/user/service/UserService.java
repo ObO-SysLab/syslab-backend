@@ -58,10 +58,15 @@ public class UserService {
     }
 
     public String refreshAccessToken(String refreshToken) {
-        if (!jwtProvider.validateToken(refreshToken)) {
+        if (!jwtProvider.validateRefreshToken(refreshToken)) {
             throw new InvalidTokenException();
         }
-        String userId = jwtProvider.getUserId(refreshToken);
+        String userId;
+        try {
+            userId = jwtProvider.getRefreshUserId(refreshToken);
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException e) {
+            throw new InvalidTokenException();
+        }
         String stored = redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
         if (!refreshToken.equals(stored)) {
             throw new InvalidTokenException();

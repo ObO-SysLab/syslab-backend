@@ -1,6 +1,7 @@
 package net.diveon.backend.global.security;
 
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +34,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(userId)
                 .issuer(issuer)
+                .claim("token_use", "access")
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTokenValidityMs))
                 .signWith(key)
@@ -45,16 +47,25 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(userId)
                 .issuer(issuer)
+                .claim("token_use", "refresh")
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + REFRESH_TOKEN_VALIDITY_MS))
                 .signWith(key)
                 .compact();
     }
 
-    // 토큰 유효성 검증 (서명 + 만료 체크)
+    // General API callers accept access tokens only. Legacy tokens require a new login.
     public boolean validateToken(String token) {
+        return valid(token, "access");
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return valid(token, "refresh");
+    }
+
+    private boolean valid(String token, String purpose) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            claims(token, purpose);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
@@ -63,9 +74,21 @@ public class JwtProvider {
 
     // 토큰에서 userId 추출
     public String getUserId(String token) {
-        return Jwts.parser().verifyWith(key).build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        return claims(token, "access").getSubject();
+    }
+
+    public String getRefreshUserId(String token) {
+        return claims(token, "refresh").getSubject();
+    }
+
+    private Claims claims(String token, String purpose) {
+        Claims claims = Jwts.parser().verifyWith(key).requireIssuer(issuer)
+                .require("token_use", purpose).build().parseSignedClaims(token).getPayload();
+        String subject = claims.getSubject();
+        if (claims.getExpiration() == null || subject == null || !subject.matches("[1-9][0-9]{0,18}")) {
+            throw new IllegalArgumentException("Invalid token claims");
+        }
+        Long.parseLong(subject);
+        return claims;
     }
 }
