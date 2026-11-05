@@ -21,6 +21,7 @@ public class ProblemOboService {
     private final OboDisclosureService disclosure;
     private final net.diveon.backend.domain.grade.repository.SolveSubmissionRepository submissions;
     private final net.diveon.backend.domain.contest.repository.ContestSubmissionRepository contestSubmissions;
+    private final net.diveon.backend.domain.grade.repository.SolveResultRepository results;
 
     public ProblemOboService(
         ProblemRepository problemRepository,
@@ -29,7 +30,8 @@ public class ProblemOboService {
         ProblemAccessService access,
         OboDisclosureService disclosure,
         net.diveon.backend.domain.grade.repository.SolveSubmissionRepository submissions,
-        net.diveon.backend.domain.contest.repository.ContestSubmissionRepository contestSubmissions
+        net.diveon.backend.domain.contest.repository.ContestSubmissionRepository contestSubmissions,
+        net.diveon.backend.domain.grade.repository.SolveResultRepository results
     ) {
         this.problemRepository = problemRepository;
         this.problemObjectiveRepository = problemObjectiveRepository;
@@ -38,6 +40,7 @@ public class ProblemOboService {
         this.disclosure = disclosure;
         this.submissions = submissions;
         this.contestSubmissions = contestSubmissions;
+        this.results = results;
     }
 
     @Transactional(readOnly = true)
@@ -57,7 +60,7 @@ public class ProblemOboService {
         }
     }
 
-    public record ContestObo(Long probId, Boolean isCorrect, JsonNode selectedAnswers, SubmissionObo explanation) {}
+    public record ContestObo(Long probId, Boolean isCorrect, String resultStatus, JsonNode selectedAnswers, SubmissionObo explanation) {}
 
     @Transactional(readOnly = true)
     public ContestObo getContestSubmissionObo(Long userId, Long submissionId) {
@@ -70,7 +73,7 @@ public class ProblemOboService {
         if(!status.allowed())result=new SubmissionObo(null,false,null,null,status.reason(),status.availableAt());
         else {
             try {disclosure.requireContestEnded(submission.getContest());}
-            catch(ProblemNotFoundException locked){return new ContestObo(problem.getId(),submission.getIsCorrect(),null,
+            catch(ProblemNotFoundException locked){return new ContestObo(problem.getId(),submission.getIsCorrect(),null,null,
                 new SubmissionObo(null,false,null,null,"contest",submission.getContest().getEndTime()));}
             if(submission.getSolveSubmission()!=null)result=getSubmissionObo(userId,submission.getSolveSubmission().getId());
             else {
@@ -80,7 +83,13 @@ public class ProblemOboService {
                     com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode(),null,null,revision==null?null:revision.getSnapshot().get("choices"));
             }
         }
-        return new ContestObo(problem.getId(),submission.getIsCorrect(),submission.getObjectiveAnswer(),result);
+        var solve = submission.getSolveSubmission();
+        var verdict = result.lockedReason() == null && solve != null
+                && solve.getSubmissionState() == net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState.COMPLETED
+                ? results.findBySubmissionId(solve.getId()).orElse(null) : null;
+        String resultStatus = result.lockedReason() == null
+                ? net.diveon.backend.domain.grade.service.SubmissionResultStatus.fromContest(submission, verdict) : null;
+        return new ContestObo(problem.getId(),submission.getIsCorrect(),resultStatus,submission.getObjectiveAnswer(),result);
     }
 
     @Transactional(readOnly = true)

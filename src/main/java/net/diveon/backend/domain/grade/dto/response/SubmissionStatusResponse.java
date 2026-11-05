@@ -19,18 +19,22 @@ public class SubmissionStatusResponse {
     @JsonProperty("progress")
     private final int progress;
 
+    private final String resultStatus;
+
     public SubmissionStatusResponse(
         String submissionId,
         long probId,
         String problemType,
         String submissionStatus,
-        int progress
+        int progress,
+        String resultStatus
     ) {
         this.submissionId = submissionId;
         this.probId = probId;
         this.problemType = problemType;
         this.submissionStatus = submissionStatus;
         this.progress = progress;
+        this.resultStatus = resultStatus;
     }
 
     public String getSubmissionId() {
@@ -48,6 +52,8 @@ public class SubmissionStatusResponse {
     public String getSubmissionStatus() {
         return submissionStatus;
     }
+
+    public String getResultStatus() { return resultStatus; }
 
     public int getProgress() {
         return progress;

@@ -104,6 +104,7 @@ public class GradeBoardService {
                             submission.getId(),
                             submission.getUser().getNickname(),
                             isCorrect,
+                            SubmissionResultStatus.from(submission, solveResult),
                             submission.getSubmittedAt().toString(),
                             judgedAt,
                             submission.getUser().getTier(),
@@ -143,6 +144,7 @@ public class GradeBoardService {
                             submission.getId(),
                             submission.getUser().getNickname(),
                             isCorrect,
+                            SubmissionResultStatus.from(submission, solveResult),
                             submission.getSubmittedAt().toString(),
                             judgedAt,
                             submission.getUser().getTier()
@@ -196,6 +198,7 @@ public class GradeBoardService {
                             submission.getUser().getNickname(),
                             language,
                             isCorrect,
+                            SubmissionResultStatus.from(submission, solveResult),
                             score,
                             runtime,
                             memoryUsage,

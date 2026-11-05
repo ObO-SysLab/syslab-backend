@@ -78,7 +78,7 @@ class ProblemAccessBoundaryTest {
         verifyNoInteractions(docker, sessions, practices, store);
     }
     @Test void oboAndRankingCannotBypassDetailAccess() {
-        var obo = new ProblemOboService(problems, objectives, codings, access, mock(OboDisclosureService.class), submissions, mock(ContestSubmissionRepository.class));
+        var obo = new ProblemOboService(problems, objectives, codings, access, mock(OboDisclosureService.class), submissions, mock(ContestSubmissionRepository.class), mock(net.diveon.backend.domain.grade.repository.SolveResultRepository.class));
         var ranking = new ProblemRankingService(submissions, codingSubmissions, problems, access);
         assertThrows(ProblemNotFoundException.class, () -> obo.getOboJson(7L, 9L));
         assertThrows(ProblemNotFoundException.class, () -> ranking.getRanking(7, 9, 1));

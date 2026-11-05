@@ -14,9 +14,12 @@ import net.diveon.backend.global.exception.SubmissionNotFoundException;
 public class SubmissionStatusService {
 
     private final SolveSubmissionRepository solveSubmissionRepository;
+    private final net.diveon.backend.domain.grade.repository.SolveResultRepository results;
 
-    public SubmissionStatusService(SolveSubmissionRepository solveSubmissionRepository) {
+    public SubmissionStatusService(SolveSubmissionRepository solveSubmissionRepository,
+            net.diveon.backend.domain.grade.repository.SolveResultRepository results) {
         this.solveSubmissionRepository = solveSubmissionRepository;
+        this.results = results;
     }
 
     @Transactional(readOnly = true)
@@ -29,12 +32,14 @@ public class SubmissionStatusService {
         }
 
         SubmissionState state = submission.getSubmissionState();
+        var result = state == SubmissionState.COMPLETED ? results.findBySubmissionId(submissionId).orElse(null) : null;
         return new SubmissionStatusResponse(
             String.valueOf(submission.getId()),
             submission.getProblem().getId(),
             submission.getProblem().getType(),
             state.name(),
-            calculateProgress(state.name())
+            calculateProgress(state.name()),
+            SubmissionResultStatus.from(submission, result)
         );
     }
 
