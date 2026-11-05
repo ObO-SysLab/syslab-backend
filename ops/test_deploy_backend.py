@@ -89,6 +89,9 @@ class DeploymentBoundaryTest(unittest.TestCase):
         self.config = self.root / 'etc/diveon/application-secret.yml'
         self.config.write_text('synthetic: true\n')
         self.config.chmod(0o600)
+        self.vm_known_hosts = self.root / 'etc/diveon/vm_known_hosts'
+        self.vm_known_hosts.write_text('10.0.3.30 ssh-ed25519 synthetic-public-pin\n')
+        self.vm_known_hosts.chmod(0o644)
         (self.root / 'home/ec2-user/syslab-key.pem').write_text('synthetic-test-key')
         script = (HERE / 'deploy-backend.sh').read_text()
         for prefix in ['/var/lock/', '/etc/diveon/', '/home/ec2-user/', '/var/lib/diveon/', '/run/diveon-docker-login.']:
@@ -123,6 +126,12 @@ class DeploymentBoundaryTest(unittest.TestCase):
         self.assertIn('SPRING_JPA_HIBERNATE_DDL_AUTO=validate', run)
         self.assertIn('SPRING_PROFILES_ACTIVE=prod', run)
         self.assertTrue(any('dst=/run/diveon/application-secret.yml,readonly' in v for v in run))
+        self.assertTrue(any('dst=/run/diveon/vm_known_hosts,readonly' in v for v in run))
+
+    def test_missing_vm_host_pin_refuses_before_stopping_old(self):
+        self.vm_known_hosts.unlink()
+        self.assertNotEqual(self.run_deploy().returncode, 0)
+        self.assertEqual(self.state(), self.initial)
 
     def test_unhealthy_candidate_is_stopped_without_restarting_old(self):
         result = self.run_deploy(FAKE_HEALTH='503')
