@@ -98,15 +98,17 @@ public class ProblemListService {
                 predicates.add(root.get("id").in(solvedIds).not());
             }
 
-            // practice 문제는 image_status = READY 인 것만 노출
-            var readySubquery = query.subquery(Long.class);
-            var ppRoot = readySubquery.from(ProblemPractice.class);
-            readySubquery.select(ppRoot.get("probId"))
-                    .where(cb.equal(ppRoot.get("imageStatus"), "READY"));
-            predicates.add(cb.or(
-                    cb.notEqual(root.get("type"), "practice"),
-                    root.get("id").in(readySubquery)
-            ));
+            // Authors can reopen their private builds; public lists still contain READY images only.
+            if (!onlyMine) {
+                var readySubquery = query.subquery(Long.class);
+                var ppRoot = readySubquery.from(ProblemPractice.class);
+                readySubquery.select(ppRoot.get("probId"))
+                        .where(cb.equal(ppRoot.get("imageStatus"), "READY"));
+                predicates.add(cb.or(
+                        cb.notEqual(root.get("type"), "practice"),
+                        root.get("id").in(readySubquery)
+                ));
+            }
 
             return cb.and(predicates.toArray(new Predicate[0]));
         };

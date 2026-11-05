@@ -64,7 +64,7 @@ public class ProblemDetailService {
         if (problem.getType().equals("objective")) {
             return detailProblemObjective(problem, probId, isOwner, userId);
         } else if (problem.getType().equals("practice")) {
-            return detailProblemPractice(problem, probId, isOwner);
+            return detailProblemPractice(problem, probId, isOwner, userId);
         } else if (problem.getType().equals("coding")) {
             return detailProblemCoding(problem, probId, isOwner);
         } else {
@@ -72,12 +72,21 @@ public class ProblemDetailService {
         }
     }
 
-    private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId, boolean isOwner) {
+    private ProblemDetailPracticeResponse detailProblemPractice(Problem problem, long probId, boolean isOwner, long userId) {
         ProblemPractice problemPractice = problemPracticeRepository.findById(probId).orElseThrow();
-        if (!"READY".equals(problemPractice.getImageStatus())) {
+        if (!isOwner && !"READY".equals(problemPractice.getImageStatus())) {
             throw new ProblemNotFoundException(probId + "번 문제는 아직 준비 중입니다.");
         }
-        return ProblemDetailPracticeResponse.of(problem, problemPractice, isOwner);
+        boolean canExecute = false;
+        if ("READY".equals(problemPractice.getImageStatus())) {
+            try {
+                access.requirePractice(userId, probId);
+                canExecute = true;
+            } catch (ProblemNotFoundException denied) {
+                // Reading one's group/contest problem does not grant execution membership.
+            }
+        }
+        return ProblemDetailPracticeResponse.of(problem, problemPractice, isOwner, canExecute);
     }
 
     private ProblemDetailObjectiveResponse detailProblemObjective(Problem problem, long probId, boolean isOwner, long userId) {

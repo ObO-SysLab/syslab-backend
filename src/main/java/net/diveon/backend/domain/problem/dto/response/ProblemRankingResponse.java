@@ -27,15 +27,17 @@ public class ProblemRankingResponse {
         private final Long userId;
         private final String nickname;
         private final String profileImgUrl;
+        private final Integer userTier;
         private final LocalDateTime firstSolvedAt;
         private final String language;
 
         public RankingEntry(Integer rank, Long userId, String nickname, String profileImgUrl,
-                            LocalDateTime firstSolvedAt, String language) {
+                            LocalDateTime firstSolvedAt, String language, Integer userTier) {
             this.rank = rank;
             this.userId = userId;
             this.nickname = nickname;
             this.profileImgUrl = profileImgUrl;
+            this.userTier = userTier;
             this.firstSolvedAt = firstSolvedAt;
             this.language = language;
         }
@@ -44,6 +46,7 @@ public class ProblemRankingResponse {
         public Long getUserId() { return userId; }
         public String getNickname() { return nickname; }
         public String getProfileImgUrl() { return profileImgUrl; }
+        public Integer getUserTier() { return userTier; }
         public LocalDateTime getFirstSolvedAt() { return firstSolvedAt; }
         public String getLanguage() { return language; }
     }
