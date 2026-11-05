@@ -116,6 +116,13 @@ public class OboDocumentValidator {
         if(scenarioId==null||cases==null||cases.isEmpty())throw invalid("의미 채점 모델과 테스트케이스가 필요합니다.");
         for(var testcase:cases){
             if(testcase==null||testcase.getInput()==null)throw invalid("테스트케이스 입력이 필요합니다.");
+            if("rr-segments-v1".equals(simulation.path("question").path("ioFormat").asText())){
+                if(!"RR".equals(scenarioId)||testcase.getOutput()==null)throw invalid("RR 모델과 공개 출력 형식이 필요합니다.");
+                var request=mapper.createObjectNode().put("operation","rrGrade").put("input",testcase.getInput()).put("stdout",testcase.getOutput());
+                var result=invoke(request);
+                if(!result.path("ok").asBoolean()||!result.path("correct").asBoolean())throw invalid("테스트케이스 "+testcase.getIndex()+": "+result.path("message").asText("RR 입력·기대 출력을 확인하세요."));
+                continue;
+            }
             try{
                 var input=mapper.reader().with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION).readTree(testcase.getInput());
                 var request=mapper.createObjectNode().put("operation","reference").put("scenarioId",scenarioId);request.set("input",input);

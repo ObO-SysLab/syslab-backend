@@ -59,3 +59,7 @@
 /src/test/java/net/diveon/backend/domain/problem/service/OboLocalHttpTest.java -text
 /src/test/resources/obo/integration-diagrams.json -text
 /.gitattributes -text
+
+# Preserve public-contract bytes and reviewed new-source evidence.
+/obo-runtime/diagram-contract.json -text
+/src/test/java/net/diveon/backend/domain/problem/service/OboPublicContractTest.java -text

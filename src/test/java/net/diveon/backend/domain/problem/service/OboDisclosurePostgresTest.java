@@ -44,7 +44,7 @@ class OboDisclosurePostgresTest {
     static void command(String... args) throws Exception {
         var process=new ProcessBuilder(args).redirectErrorStream(true)
             .redirectOutput(ProcessBuilder.Redirect.appendTo(directory.resolve("process.log").toFile())).start();
-        if(!process.waitFor(45,TimeUnit.SECONDS)){process.destroyForcibly();fail("Local PostgreSQL timed out: "+directory);}
+        if(!process.waitFor(180,TimeUnit.SECONDS)){process.destroyForcibly();fail("Local PostgreSQL timed out: "+directory);}
         assertEquals(0,process.exitValue(),"Inspect "+directory.resolve("process.log"));
     }
     @BeforeAll static void start() throws Exception {
@@ -73,7 +73,7 @@ class OboDisclosurePostgresTest {
             disclosure=new OboDisclosureService(repositories.getRepository(ContestProblemRepository.class),
                 repositories.getRepository(ContestParticipantRepository.class),submissions,
                 Clock.fixed(now.toInstant(ZoneOffset.UTC),ZoneOffset.UTC));
-        }catch(Throwable error){stop();throw error;}
+        }catch(Throwable error){try{stop();}catch(Throwable cleanup){error.addSuppressed(cleanup);}throw error;}
     }
     @AfterAll static void stop() throws Exception {
         if(factory!=null){factory.destroy();factory=null;}
