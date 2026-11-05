@@ -28,6 +28,8 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     @JsonProperty("vmInfo")
     private VmInfo vmInfo;
 
+    private PracticeBuildStatusResponse practiceBuild;
+
     @JsonProperty("solvedCount")
     private Integer solvedCount;
 
@@ -77,13 +79,13 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
         this.updatedAt = updatedAt;
     }
 
-    public static ProblemDetailPracticeResponse of(Problem problem, ProblemPractice problemPractice, boolean isOwner) {
+    public static ProblemDetailPracticeResponse of(Problem problem, ProblemPractice problemPractice, boolean isOwner, boolean canExecute) {
         VmInfo vmInfo = new VmInfo(
             problemPractice.getOsImage(),
             problemPractice.getAllowedCommands()
         );
 
-        return new ProblemDetailPracticeResponse(
+        ProblemDetailPracticeResponse response = new ProblemDetailPracticeResponse(
             problem.getId(),
             problem.getAuthor().getNickname(),
             isOwner,
@@ -100,6 +102,8 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
+        response.practiceBuild = PracticeBuildStatusResponse.of(problemPractice, canExecute);
+        return response;
     }
 
     public Long getProbId() { return probId; }
@@ -113,6 +117,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     public String getSummary() { return summary; }
     public String getDescription() { return description; }
     public VmInfo getVmInfo() { return vmInfo; }
+    public PracticeBuildStatusResponse getPracticeBuild() { return practiceBuild; }
     public Integer getSolvedCount() { return solvedCount; }
     public Integer getSubmittedCount() { return submittedCount; }
     public String getCreatedAt() { return createdAt; }
