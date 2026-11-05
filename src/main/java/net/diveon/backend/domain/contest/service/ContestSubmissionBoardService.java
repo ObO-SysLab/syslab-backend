@@ -7,6 +7,7 @@ import net.diveon.backend.domain.contest.dto.response.ContestSubmissionBoardResp
 import net.diveon.backend.domain.contest.entity.*;
 import net.diveon.backend.domain.contest.repository.*;
 import net.diveon.backend.domain.grade.repository.*;
+import net.diveon.backend.domain.grade.service.SubmissionOboPresence;
 import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -26,20 +27,23 @@ public class ContestSubmissionBoardService {
     private final SolveResultRepository results;
     private final SolveResultCodingRepository codingResults;
     private final ProblemAccessService access;
+    private final SubmissionOboPresence oboPresence;
     private final Clock clock;
 
     @Autowired
     public ContestSubmissionBoardService(ContestProblemRepository problems, ContestParticipantRepository participants,
             ContestSubmissionRepository submissions, SolveSubmissionCodingRepository codingSubmissions,
-            SolveResultRepository results, SolveResultCodingRepository codingResults, ProblemAccessService access) {
-        this(problems, participants, submissions, codingSubmissions, results, codingResults, access, Clock.systemDefaultZone());
+            SolveResultRepository results, SolveResultCodingRepository codingResults, ProblemAccessService access,
+            SubmissionOboPresence oboPresence) {
+        this(problems, participants, submissions, codingSubmissions, results, codingResults, access, oboPresence, Clock.systemDefaultZone());
     }
     ContestSubmissionBoardService(ContestProblemRepository problems, ContestParticipantRepository participants,
             ContestSubmissionRepository submissions, SolveSubmissionCodingRepository codingSubmissions,
-            SolveResultRepository results, SolveResultCodingRepository codingResults, ProblemAccessService access, Clock clock) {
+            SolveResultRepository results, SolveResultCodingRepository codingResults, ProblemAccessService access,
+            SubmissionOboPresence oboPresence, Clock clock) {
         this.problems = problems; this.participants = participants; this.submissions = submissions;
         this.codingSubmissions = codingSubmissions; this.results = results; this.codingResults = codingResults;
-        this.access = access; this.clock = clock;
+        this.access = access; this.oboPresence = oboPresence; this.clock = clock;
     }
     public ContestSubmissionBoardResponse getBoard(Long userId, Long contestId, Long contestProblemId, int page, int size) {
         if (userId == null || userId <= 0 || contestId == null || contestId <= 0 || contestProblemId == null || contestProblemId <= 0) throw denied();
@@ -83,7 +87,9 @@ public class ContestSubmissionBoardService {
         if (status == null || !java.util.List.of("PENDING", "JUDGING", "COMPLETED", "FAILED").contains(status))
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "제출 상태를 확인할 수 없습니다.");
         return new ContestSubmissionBoardResponse.Item(row.getId(), solveId, status,
-                "COMPLETED".equals(status) ? row.getIsCorrect() : null, row.getSubmittedAt(), row.getUser().getNickname(), language, runtime, memory);
+                "COMPLETED".equals(status) ? row.getIsCorrect() : null, row.getSubmittedAt(), row.getUser().getNickname(), language, runtime, memory,
+                row.getUser().getTier(), oboPresence.hasObo(link.getProblem(),
+                        solve == null ? row.getProblemRevision() : solve.getProblemRevision()));
     }
     private static ResponseStatusException denied() { return new ResponseStatusException(HttpStatus.NOT_FOUND, "대회 제출 기록을 찾을 수 없습니다."); }
 }

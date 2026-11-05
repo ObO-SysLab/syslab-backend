@@ -8,7 +8,11 @@ import net.diveon.backend.domain.contest.entity.*;
 import net.diveon.backend.domain.contest.repository.*;
 import net.diveon.backend.domain.grade.entity.*;
 import net.diveon.backend.domain.grade.repository.*;
+import net.diveon.backend.domain.grade.service.SubmissionOboPresence;
 import net.diveon.backend.domain.problem.entity.Problem;
+import net.diveon.backend.domain.problem.entity.ProblemRevision;
+import net.diveon.backend.domain.problem.repository.ProblemCodingRepository;
+import net.diveon.backend.domain.problem.repository.ProblemObjectiveRepository;
 import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
@@ -27,16 +31,18 @@ class ContestSubmissionBoardTest {
     SolveResultRepository results = mock(SolveResultRepository.class);
     SolveResultCodingRepository codingResults = mock(SolveResultCodingRepository.class);
     ProblemAccessService access = mock(ProblemAccessService.class);
+    SubmissionOboPresence oboPresence = new SubmissionOboPresence(mock(ProblemCodingRepository.class), mock(ProblemObjectiveRepository.class));
     Clock clock = Clock.fixed(Instant.parse("2026-10-30T00:00:00Z"), ZoneOffset.UTC);
     LocalDateTime now = LocalDateTime.now(clock);
     ContestSubmissionBoardService service = new ContestSubmissionBoardService(problems, participants, submissions,
-            codingSubmissions, results, codingResults, access, clock);
+            codingSubmissions, results, codingResults, access, oboPresence, clock);
     User user = new User(); Contest contest = new Contest();
     ContestParticipant participant;
     Problem problem; ContestProblem link; ContestSubmission row;
 
     @BeforeEach void setup() {
         ReflectionTestUtils.setField(user, "id", 7L); ReflectionTestUtils.setField(user, "nickname", "me");
+        ReflectionTestUtils.setField(user, "tier", 8);
         ReflectionTestUtils.setField(contest, "id", 1L); contest.updateTime(now.minusHours(1), now.plusHours(1));
         problem = new Problem(user, "practice", "fixture", "OS", "easy", "public"); ReflectionTestUtils.setField(problem, "id", 2L);
         link = new ContestProblem(contest, problem, 100); ReflectionTestUtils.setField(link, "id", 9L);
@@ -57,6 +63,7 @@ class ContestSubmissionBoardTest {
                 assertEquals(17L, item.submissionId()); assertNull(item.solveSubmissionId());
                 assertEquals("COMPLETED", item.submissionStatus()); assertEquals(verdict, item.isCorrect());
                 assertEquals(100, board.currentTotalScore()); assertEquals(1, board.total());
+                assertEquals(8, item.userTier()); assertFalse(item.hasObo());
             }
         }
         verifyNoInteractions(codingSubmissions, results, codingResults);
@@ -76,12 +83,31 @@ class ContestSubmissionBoardTest {
         var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
         assertEquals(17L, item.submissionId()); assertEquals(92L, item.solveSubmissionId());
         assertEquals("python", item.language()); assertEquals(42, item.runtime()); assertEquals(16, item.memoryUsage());
+        assertEquals(8, item.userTier()); assertFalse(item.hasObo());
         assertFalse(item.toString().contains("private source")); verify(results, never()).findBySubmissionId(17L);
     }
     @Test void linkedJudgingStateIsVisibleBeforeContestCompletion() {
         coding().setSubmissionState(SolveSubmission.SubmissionState.JUDGING);
         var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
         assertEquals("JUDGING", item.submissionStatus()); assertNull(item.isCorrect()); verifyNoInteractions(results);
+    }
+    @Test void codingUsesLinkedSubmissionSnapshotAfterCurrentOboRemoval() throws Exception {
+        var solve = coding();
+        var mapper = new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+        var snapshot = mapper.readTree("{\"obo\":{\"mode\":\"coding_diff\",\"privateLabel\":\"hidden diagram\"}}");
+        ReflectionTestUtils.setField(solve, "problemRevision", new ProblemRevision("coding-history", 2L, snapshot));
+        ReflectionTestUtils.setField(row, "problemRevision", new ProblemRevision("unused-contest-history", 2L, mapper.readTree("{\"obo\":null}")));
+        var item = service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst();
+        var json = mapper.valueToTree(item);
+        assertTrue(item.hasObo()); assertTrue(json.path("hasObo").booleanValue());
+        assertEquals(8, json.path("userTier").intValue()); assertFalse(json.has("obo"));
+        assertFalse(json.toString().contains("hidden diagram"));
+    }
+    @Test void objectiveUsesItsOwnHistoricalSnapshot() throws Exception {
+        ReflectionTestUtils.setField(problem, "type", "objective");
+        var snapshot = new com.fasterxml.jackson.databind.ObjectMapper().readTree("{\"obo\":{\"mode\":\"objective\"}}");
+        ReflectionTestUtils.setField(row, "problemRevision", new ProblemRevision("objective-history", 2L, snapshot));
+        assertTrue(service.getBoard(7L, 1L, 9L, 1, 50).submissions().getFirst().hasObo());
     }
     @Test void failedCodingIsTerminalWithoutFakeWrongAnswerOrMetrics() {
         coding().setSubmissionState(SolveSubmission.SubmissionState.FAILED); row.updateStatus("FAILED");

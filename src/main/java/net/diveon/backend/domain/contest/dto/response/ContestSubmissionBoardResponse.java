@@ -7,5 +7,6 @@ import java.util.List;
 public record ContestSubmissionBoardResponse(Long contestId, Long contestProblemId, Long probId,
         int currentTotalScore, int page, int totalPages, long total, List<Item> submissions) {
     public record Item(Long submissionId, Long solveSubmissionId, String submissionStatus, Boolean isCorrect,
-            LocalDateTime submittedAt, String nickname, String language, Integer runtime, Integer memoryUsage) {}
+            LocalDateTime submittedAt, String nickname, String language, Integer runtime, Integer memoryUsage,
+            Integer userTier, boolean hasObo) {}
 }
