@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.vm.service;
 
 import java.time.Duration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -8,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class TerminalGrantStore {
     private final RedisTemplate<String, String> redis;
 
-    public TerminalGrantStore(RedisTemplate<String, String> redis) { this.redis = redis; }
+    public TerminalGrantStore(@Qualifier("redisTemplate") RedisTemplate<String, String> redis) { this.redis = redis; }
 
     public void put(String kind, String token, String value, Duration ttl) {
         redis.opsForValue().set(key(kind, token), value, ttl);
