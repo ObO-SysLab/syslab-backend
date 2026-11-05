@@ -14,6 +14,11 @@ public interface ContestProblemRepository extends JpaRepository<ContestProblem, 
 
     Optional<ContestProblem> findByContestIdAndProblemId(Long contestId, Long problemId);
 
+    Optional<ContestProblem> findByIdAndContestId(Long id, Long contestId);
+
+    @Query("SELECT cp FROM ContestProblem cp JOIN FETCH cp.contest WHERE cp.problem.id = :problemId")
+    List<ContestProblem> findAllWithContestByProblemId(@Param("problemId") Long problemId);
+
     @Query("SELECT cp FROM ContestProblem cp JOIN FETCH cp.problem WHERE cp.contest.id = :contestId ORDER BY cp.id ASC")
     List<ContestProblem> findAllWithProblemByContestId(@Param("contestId") Long contestId);
 }

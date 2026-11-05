@@ -1,0 +1,68 @@
+# Preserve recorded OBO source bytes across checkout platforms.
+# Explicit paths keep unrelated files under their existing policy.
+/Dockerfile text eol=crlf
+/obo-runtime/checker.mjs text eol=lf
+/obo-runtime/contracts.mjs text eol=crlf
+/obo-runtime/cpu.mjs text eol=lf
+/obo-runtime/document.mjs text eol=lf
+/obo-runtime/flows.mjs text eol=lf
+/obo-runtime/index.mjs text eol=lf
+/obo-runtime/manifest.json text eol=lf
+/obo-runtime/memory.mjs text eol=lf
+/obo-runtime/synchronization.mjs text eol=lf
+/obo-runtime/validation.mjs text eol=lf
+/ops/2026-10-31-obo-revisions.sql text eol=lf
+/src/main/java/net/diveon/backend/domain/contest/entity/ContestSubmission.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/contest/service/ContestSubmitServiceImpl.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/grade/entity/SolveSubmission.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/grade/repository/SolveSubmissionRepository.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/grade/service/CodingGradeQueueServiceImpl.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/grade/service/SubmissionGradeAsyncService.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/grade/service/SubmissionGradeStarterService.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/controller/ProblemController.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/controller/ProblemOboController.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/dto/request/ProblemUpdateCodingRequest.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/dto/request/ProblemUpdateObjectiveRequest.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/dto/response/ProblemDetailCodingResponse.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/dto/response/ProblemDetailObjectiveResponse.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/entity/ProblemCoding.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/entity/ProblemObjective.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/entity/ProblemRevision.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/others/ForDtoChoice.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/repository/ProblemRepository.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/repository/ProblemRevisionRepository.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/ObjectiveAnswerRules.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/OboDisclosureService.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/OboDocumentValidator.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/OboPublicContract.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemCreateService.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemDetailService.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemOboService.java text eol=crlf
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemRevisionService.java text eol=lf
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemUpdateService.java text eol=crlf
+/src/test/java/net/diveon/backend/domain/contest/service/ContestScoreConsistencyTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/contest/service/ContestSubmitAccessTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/grade/service/SubmissionGradeStarterServiceTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/controller/ProblemAccessControllerTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/OboDisclosurePostgresTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/OboDisclosureServiceTest.java text eol=crlf
+/src/test/java/net/diveon/backend/domain/problem/service/OboDocumentValidatorTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/OboMutationTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/PracticeBuildCreationTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/ProblemAccessBoundaryTest.java text eol=lf
+/src/test/java/net/diveon/backend/domain/problem/service/ProblemOboDisclosureTest.java text eol=lf
+/src/test/resources/obo/browser-coding-request.json text eol=lf
+
+# D35: preserve verified integration bytes, including mixed line endings.
+/obo-runtime/freeDiagram.mjs -text
+/src/main/java/net/diveon/backend/domain/problem/service/ProblemEditVersion.java -text
+/src/test/java/net/diveon/backend/domain/problem/service/OboLocalHttpTest.java -text
+/src/test/resources/obo/integration-diagrams.json -text
+/.gitattributes -text
+
+# Preserve public-contract bytes and reviewed new-source evidence.
+/obo-runtime/diagram-contract.json -text
+/src/test/java/net/diveon/backend/domain/problem/service/OboPublicContractTest.java -text
+/ops/deploy-backend.sh text eol=lf
+/ops/github-deploy.sh text eol=lf
+/ops/api_known_hosts text eol=lf

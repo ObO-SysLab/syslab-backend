@@ -8,8 +8,7 @@ import net.diveon.backend.domain.grade.dto.request.SubmissionGradeReqeust;
 import net.diveon.backend.domain.grade.dto.response.SubmissionGradeResponse;
 import net.diveon.backend.domain.grade.dto.response.SubmissionResultResponse;
 import net.diveon.backend.domain.grade.dto.response.SubmissionStatusResponse;
-import net.diveon.backend.domain.grade.service.SubmissionGradeAsyncService;
-import net.diveon.backend.domain.grade.service.SubmissionGradeStarterService;
+import net.diveon.backend.domain.grade.service.SubmissionGradeService;
 import net.diveon.backend.domain.grade.service.SubmissionResultService;
 import net.diveon.backend.domain.grade.service.SubmissionStatusService;
 import net.diveon.backend.global.response.ApiResponse;
@@ -25,19 +24,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/submissions")
 public class SubmissionGradeController {
-    private final SubmissionGradeAsyncService submissionGradeAsyncService;
-    private final SubmissionGradeStarterService submissionGradeStarterService;
+    private final SubmissionGradeService submissionGradeService;
     private final SubmissionStatusService submissionStatusService;
     private final SubmissionResultService submissionResultService;
 
     public SubmissionGradeController(
-        SubmissionGradeAsyncService submissionGradeAsyncService,
-        SubmissionGradeStarterService submissionGradeStarterService,
+        SubmissionGradeService submissionGradeService,
         SubmissionStatusService submissionStatusService,
         SubmissionResultService submissionResultService
     ){
-        this.submissionGradeAsyncService = submissionGradeAsyncService;
-        this.submissionGradeStarterService = submissionGradeStarterService;
+        this.submissionGradeService = submissionGradeService;
         this.submissionStatusService = submissionStatusService;
         this.submissionResultService = submissionResultService;
     }
@@ -47,23 +43,7 @@ public class SubmissionGradeController {
     public ResponseEntity<ApiResponse<SubmissionGradeResponse>> grade(@AuthenticationPrincipal String userId,
         @Valid @RequestBody SubmissionGradeReqeust reqeust
     ){
-        SubmissionGradeResponse initResponse = submissionGradeStarterService.submissionGradeStart(Long.parseLong(userId), reqeust);
-        long submissionId = initResponse.getSubmissionId();
-        String problemType = initResponse.getProblemType();
-
-        //long probId, 
-        // long submitterId, 
-        // long submissionId
-
-        if(problemType.equals("objective")){
-            submissionGradeAsyncService.gradeProblemObjective(reqeust.getProdId(), Long.parseLong(userId), submissionId);
-        }else if(problemType.equals("practice")){
-            submissionGradeAsyncService.gradeProblemPractice(reqeust.getProdId(), Long.parseLong(userId), submissionId);
-        }else if(problemType.equals("coding")){
-            submissionGradeAsyncService.gradeProblemCoding(reqeust.getProdId(), Long.parseLong(userId), submissionId);
-        }else{
-            throw new RuntimeException("문제 유형이 3가지중 어느것도 아닙니다.");
-        }
+        SubmissionGradeResponse initResponse = submissionGradeService.submit(Long.parseLong(userId), reqeust);
 
         return ResponseEntity.status(200).body(ApiResponse.success("접수되었습니다.", initResponse));
     }

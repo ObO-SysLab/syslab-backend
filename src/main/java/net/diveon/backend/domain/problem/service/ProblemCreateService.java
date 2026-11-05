@@ -35,6 +35,12 @@ import net.diveon.backend.domain.user.entity.User;
 import net.diveon.backend.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import java.time.Clock;
+import java.time.Duration;
+import java.util.UUID;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -55,6 +61,10 @@ public class ProblemCreateService {
     private final ContestRepository contestRepository;
     private final ContestProblemRepository contestProblemRepository;
     private final ContestParticipantRepository contestParticipantRepository;
+    private final PracticeBuildProperties practiceBuildProperties;
+    private final Clock practiceBuildClock;
+    private final OboDocumentValidator oboValidator;
+    private final ProblemRevisionService revisions;
 
     public ProblemCreateService(ProblemObjectiveRepository problemObjectiveRepository,
         ProblemPracticeRepository problemPracticeRepository,
@@ -67,7 +77,10 @@ public class ProblemCreateService {
         GroupProblemRepository groupProblemRepository,
         ContestRepository contestRepository,
         ContestProblemRepository contestProblemRepository,
-        ContestParticipantRepository contestParticipantRepository){
+        ContestParticipantRepository contestParticipantRepository,
+        PracticeBuildProperties practiceBuildProperties,
+        @Qualifier("practiceBuildClock") Clock practiceBuildClock,
+        OboDocumentValidator oboValidator, ProblemRevisionService revisions){
         this.problemObjectiveRepository = problemObjectiveRepository;
         this.problemPracticeRepository = problemPracticeRepository;
         this.problemCodingRepository = problemCodingRepository;
@@ -80,12 +93,18 @@ public class ProblemCreateService {
         this.contestRepository = contestRepository;
         this.contestProblemRepository = contestProblemRepository;
         this.contestParticipantRepository = contestParticipantRepository;
+        this.practiceBuildProperties = practiceBuildProperties;
+        this.practiceBuildClock = practiceBuildClock;
+        this.oboValidator = oboValidator;
+        this.revisions = revisions;
     }
 
 
     // 객관식형
     @Transactional
     public ProblemCreateObjectiveResponse createObjective(long userId, ProblemCreateObjectiveRequest request){
+        oboValidator.validateQuestion(request.getOboJson(), "objective", request.getAnswer());
+        oboValidator.validateChoices(request.getOboJson(), request.getChoices());
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -106,10 +125,11 @@ public class ProblemCreateService {
                 request.getDescription(),
                 request.getChoices(),
                 request.getAnswer(),
-                request.getIsSeqeuntialAnswer(),
+                OboDocumentValidator.simulation(request.getOboJson()) == null && Boolean.TRUE.equals(request.getIsSeqeuntialAnswer()),
                 oboEnabled
         );
         applyOboJson(problemObjective, request.getOboJson());
+        ObjectiveAnswerRules.validate(problemObjective, request.getAnswer());
         problemObjectiveRepository.save(problemObjective);
         //TODO : 이 로직이 왜 이런건지 확인하기
         // 지금 구조가 request.getObo().getSteps() 이런식이라 
@@ -136,6 +156,7 @@ public class ProblemCreateService {
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
+        revisions.capture(savedProblem);
 
         return new ProblemCreateObjectiveResponse(
                 savedProblem.getId(),
@@ -148,6 +169,10 @@ public class ProblemCreateService {
     // 실습형
     @Transactional
     public ProblemCreatePracticeResponse createPractice(long userId, ProblemCreatePracticeRequest request){
+        if (!practiceBuildProperties.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "실습 이미지 빌드가 준비되지 않았습니다.");
+        }
+        var requestedAt = practiceBuildClock.instant();
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -172,13 +197,15 @@ public class ProblemCreateService {
                 hashFlag(request.getFlag().trim()),
                 null
         );
+        problemPractice.requestBuild(UUID.randomUUID().toString(), requestedAt,
+                requestedAt.plus(Duration.ofMinutes(practiceBuildProperties.getDeadlineMinutes())));
         problemPracticeRepository.save(problemPractice);
-
-        // DB 저장 후 S3에 Dockerfile zip 업로드 → EventBridge가 감지해서 CodeBuild 자동 트리거
-        s3Service.uploadDockerfileZip(savedProblem.getId(), request.getDockerfile());
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
+
+        // Validate links first. Only this request's object can trigger its CodeBuild result.
+        s3Service.uploadDockerfileZip(savedProblem.getId(), problemPractice.getBuildRequestId(), request.getDockerfile());
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),
@@ -191,6 +218,14 @@ public class ProblemCreateService {
     // 코딩형
     @Transactional
     public ProblemCreateCodingResponse createCoding(long userId, ProblemCreateCodingRequest request) {
+        if (request == null || request.getConstraints() == null) {
+            throw new net.diveon.backend.global.exception.InvalidSubmissionRequestException("코딩 실행 제한이 필요합니다.");
+        }
+        var limits = request.getConstraints();
+        oboValidator.validateQuestion(request.getOboJson(), "coding", null);
+        net.diveon.backend.domain.grade.service.CodingExecutionLimits.problem(limits.getTimeLimitMs(),
+                limits.getMemoryLimitMb(), limits.getAllowedLanguages(), request.getTestcases());
+        oboValidator.validateCodingCases(request.getOboJson(), request.getTestcases());
         User author = userRepository.findById(userId)
                 .orElseThrow();
 
@@ -224,6 +259,7 @@ public class ProblemCreateService {
         applyOboJson(problemCoding, request.getOboJson());
         problemCodingRepository.save(problemCoding);
         s3Service.uploadCodingTestcases(savedProblem.getId(), request.getTestcases());
+        revisions.capture(savedProblem);
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);

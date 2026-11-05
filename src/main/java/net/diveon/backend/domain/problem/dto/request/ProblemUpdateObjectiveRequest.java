@@ -5,10 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class ProblemUpdateObjectiveRequest {
 
     private String title;
+    private String expectedEditVersion;
+    public String getExpectedEditVersion(){return expectedEditVersion;}
+    public void setExpectedEditVersion(String value){expectedEditVersion=value;}
     private String summary;
     private String description;
     private String difficulty;
     private JsonNode oboJson;
+    private String oboAction;
+    private java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> choices;
+    private java.util.List<Integer> answer;
+    public java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> getChoices(){return choices;}
+    public void setChoices(java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> choices){this.choices=choices;}
+    public java.util.List<Integer> getAnswer(){return answer;}
+    public void setAnswer(java.util.List<Integer> answer){this.answer=answer;}
+    public String getOboAction(){return oboAction;}
+    public void setOboAction(String oboAction){this.oboAction=oboAction;}
 
     public ProblemUpdateObjectiveRequest() {}
 

@@ -82,6 +82,7 @@ public class ProblemController {
             problemDetailService.detailProblem(Long.parseLong(userId), probId);
 
         return ResponseEntity.status(200)
+            .cacheControl(org.springframework.http.CacheControl.noStore())
             .body(ApiResponse.success("문제 상세 조회에 성공하였습니다.", responseData));
     }
 
@@ -111,10 +112,11 @@ public class ProblemController {
 
     @GetMapping("/{probId}/ranking")
     public ResponseEntity<ApiResponse<ProblemRankingResponse>> getRanking(
+        @AuthenticationPrincipal String userId,
         @PathVariable("probId") long probId,
         @RequestParam(defaultValue = "1") int page
     ) {
-        ProblemRankingResponse responseData = problemRankingService.getRanking(probId, page);
+        ProblemRankingResponse responseData = problemRankingService.getRanking(Long.parseLong(userId), probId, page);
         return ResponseEntity.ok(ApiResponse.success("문제 랭킹 조회에 성공하였습니다.", responseData));
     }
 }

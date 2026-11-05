@@ -32,6 +32,9 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
         private String nickname;
 
         private String language;
+        private String submissionStatus;
+
+        public String getSubmissionStatus() { return submissionStatus; }
 
         @JsonProperty("isCorrect")
         private Boolean isCorrect;
@@ -54,7 +57,8 @@ public class GradeBoardCodingResponse implements GradeBoardResponse {
 
         public SubmissionItem(Long submissionId, String nickname, String language, Boolean isCorrect,
                               Short score, Integer runtime, Integer memoryUsage, Integer codeSize,
-                              String submittedAt, String judgedAt) {
+                              String submittedAt, String judgedAt, String submissionStatus) {
+            this.submissionStatus = submissionStatus;
             this.submissionId = submissionId;
             this.nickname = nickname;
             this.language = language;

@@ -6,9 +6,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public interface S3Service {
-    void uploadDockerfileZip(Long probId, MultipartFile file);
+    void uploadDockerfileZip(Long probId, String requestId, MultipartFile file);
     void uploadCodingTestcases(Long probId, List<ForDtoTestCase> testcases);
 
-    void deleteDockerfileZip(Long probId);
+    void deleteDockerfileZip(Long probId, String requestId);
     void deleteCodingTestcases(Long probId);
 }

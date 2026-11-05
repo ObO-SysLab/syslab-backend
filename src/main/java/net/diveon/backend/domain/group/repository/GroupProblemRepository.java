@@ -14,4 +14,5 @@ public interface GroupProblemRepository extends JpaRepository<GroupProblem, Long
     java.util.Optional<net.diveon.backend.domain.group.entity.GroupProblem> findByGroupIdAndProblemId(Long groupId, Long problemId);
     Page<GroupProblem> findAllByGroupId(Long groupId, Pageable pageable);
     List<GroupProblem> findAllByGroupId(Long groupId);
+    List<GroupProblem> findAllByProblemId(Long problemId);
 }

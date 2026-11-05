@@ -12,6 +12,33 @@ import net.diveon.backend.domain.grade.entity.SolveSubmission;
 
 public interface SolveSubmissionRepository extends JpaRepository<SolveSubmission, Long>{
 
+    @Query("""
+            SELECT COUNT(s) FROM SolveSubmission s
+            WHERE s.user.id = :userId AND s.problem.id = :problemId
+              AND s.submissionState = 'COMPLETED'
+              AND NOT EXISTS (
+                  SELECT cs.id FROM ContestSubmission cs WHERE cs.solveSubmission.id = s.id
+                    AND (cs.contest.startTime IS NULL OR cs.contest.endTime IS NULL
+                         OR cs.contest.startTime >= cs.contest.endTime OR cs.contest.endTime > :now)
+              )
+            """)
+    long countDisclosureEligible(@Param("userId") Long userId, @Param("problemId") Long problemId,
+            @Param("now") java.time.LocalDateTime now);
+
+    // Legacy objective contest submissions have no SolveSubmission row.
+    @Query("""
+            SELECT COUNT(cs) FROM ContestSubmission cs LEFT JOIN cs.solveSubmission s
+            WHERE cs.user.id = :userId AND cs.contestProblem.problem.id = :problemId
+              AND cs.submissionStatus = 'COMPLETED'
+              AND cs.contest.startTime < cs.contest.endTime AND cs.contest.endTime <= :now
+              AND (s.id IS NULL OR s.submissionState = 'COMPLETED')
+            """)
+    long countCompletedContestForDisclosure(@Param("userId") Long userId, @Param("problemId") Long problemId,
+            @Param("now") java.time.LocalDateTime now);
+
+    @Query("SELECT s FROM SolveSubmission s WHERE s.problem.id = :probId AND s.submissionState IN ('COMPLETED', 'FAILED')")
+    Page<SolveSubmission> findTerminalByProbId(@Param("probId") Long probId, Pageable pageable);
+
     @Query("SELECT s FROM SolveSubmission s WHERE s.problem.id = :probId AND s.submissionState = 'COMPLETED'")
     Page<SolveSubmission> findCompletedByProbId(@Param("probId") Long probId, Pageable pageable);
 

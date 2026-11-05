@@ -11,6 +11,9 @@ import net.diveon.backend.domain.contest.entity.ContestSubmission;
 
 public interface ContestSubmissionRepository extends JpaRepository<ContestSubmission, Long> {
 
+    org.springframework.data.domain.Page<ContestSubmission> findByContestIdAndContestProblemIdAndUserId(
+            Long contestId, Long contestProblemId, Long userId, org.springframework.data.domain.Pageable page);
+
     @Query("""
             SELECT DISTINCT cs.contestProblem.id
             FROM ContestSubmission cs
@@ -39,7 +42,7 @@ public interface ContestSubmissionRepository extends JpaRepository<ContestSubmis
     List<Object[]> countSubmissionsPerProblem(@Param("contestId") Long contestId);
 
     @Query("""
-            SELECT cs.contestProblem.id, COUNT(cs)
+            SELECT cs.contestProblem.id, COUNT(DISTINCT cs.user.id)
             FROM ContestSubmission cs
             WHERE cs.contest.id = :contestId AND cs.isCorrect = true
             GROUP BY cs.contestProblem.id
