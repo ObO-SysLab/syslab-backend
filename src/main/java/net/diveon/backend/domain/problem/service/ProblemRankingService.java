@@ -59,7 +59,8 @@ public class ProblemRankingService {
                     submission.getUser().getNickname(),
                     submission.getUser().getProfileImgUrl(),
                     submission.getSubmittedAt(),
-                    language
+                    language,
+                    submission.getUser().getTier()
             ));
         }
 
