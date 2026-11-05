@@ -1,4 +1,4 @@
-name: Backend verification and release artifact
+name: Backend verification and deployment
 on:
   pull_request:
   push:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 concurrency:
   group: backend-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -22,6 +22,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Check deployment scripts
+        run: |
+          bash -n ops/deploy-backend.sh ops/github-deploy.sh
+          python3 -m unittest discover -s ops -p 'test_deploy_backend.py'
       - name: Test and build without deployment secrets
         run: bash gradlew test bootJar verifyRelease --no-daemon
       - name: Prepare exact source revision and checksums
@@ -45,3 +49,52 @@ jobs:
         with:
           name: backend-tests-${{ github.sha }}
           path: build/test-results/test/
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: backend-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: backend-${{ github.sha }}
+          path: release
+      - name: Verify the release artifact
+        working-directory: release
+        run: |
+          test "$(cat REVISION)" = "$GITHUB_SHA"
+          sha256sum --check --quiet SHA256SUMS
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          allowed-account-ids: '290373175858'
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish a commit-specific image
+        id: image
+        env:
+          ECR_REGISTRY: ${{ secrets.ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          set -euo pipefail
+          test "$AWS_REGION" = ap-northeast-2
+          test "$ECR_REGISTRY" = 290373175858.dkr.ecr.ap-northeast-2.amazonaws.com
+          [[ "$ECR_REPOSITORY" =~ ^[a-z0-9][a-z0-9._/-]*$ ]]
+          image="$ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
+          docker build -t "$image" release
+          docker push "$image"
+          digest=$(aws ecr describe-images --repository-name "$ECR_REPOSITORY" --image-ids "imageTag=$GITHUB_SHA" --query 'imageDetails[0].imageDigest' --output text)
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf 'uri=%s/%s@%s\n' "$ECR_REGISTRY" "$ECR_REPOSITORY" "$digest" >> "$GITHUB_OUTPUT"
+      - name: Deploy through temporary scoped SSH access
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          EC2_KEY: ${{ secrets.EC2_KEY }}
+          IMAGE_URI: ${{ steps.image.outputs.uri }}
+          SOURCE_REVISION: ${{ github.sha }}
+        run: bash release/ops/github-deploy.sh
