@@ -300,6 +300,36 @@ class OboDisclosurePostgresTest {
             verifyNoInteractions(s3);status.setRollbackOnly();
         }catch(Exception error){throw new RuntimeException(error);}finally{org.springframework.security.core.context.SecurityContextHolder.clearContext();}});
     }
+    @Test void privateAuthorBuildsRemainListedWhilePublicBuildsRequireReady(){tx.executeWithoutResult(status->{
+        var f=seed(SolveSubmission.SubmissionState.PENDING);
+        String unique="author-build-"+java.util.UUID.randomUUID();
+        var another=new User(unique,"unused",unique,unique+"@example.test",null,null);em.persist(another);
+        var mine=new java.util.ArrayList<Long>();
+        Long readyPublic=null;
+        for(String visibility:java.util.List.of("private","public")){
+            for(String state:java.util.List.of("PENDING","FAILED","READY")){
+                var problem=new Problem(f.user(),"practice",unique,"kernel","1",visibility);em.persist(problem);
+                var practice=new net.diveon.backend.domain.problem.entity.ProblemPractice(problem,"summary","description",
+                        "ubuntu:22.04",java.util.List.of("cat"),"0.5","512m","hash","source");
+                practice.updateImageStatus(state,"registry/repo:prob-"+problem.getId());em.persist(practice);
+                if("private".equals(visibility))mine.add(problem.getId());
+                if("public".equals(visibility)&&"READY".equals(state))readyPublic=problem.getId();
+            }
+        }
+        em.flush();
+        var repositories=new JpaRepositoryFactory(em);
+        var service=new ProblemListService(repositories.getRepository(net.diveon.backend.domain.user.repository.UserRepository.class),
+                repositories.getRepository(ProblemRepository.class),submissions);
+        var own=service.listProblems(f.user().getId(),1,unique,null,null,null,false,true);
+        assertEquals(java.util.Set.copyOf(mine),own.getProblems().stream().map(p->p.getProbId()).collect(java.util.stream.Collectors.toSet()));
+        assertEquals(0,service.listProblems(another.getId(),1,unique,null,null,null,false,true).getTotal());
+        for(Long userId:java.util.List.of(f.user().getId(),another.getId())){
+            var visible=service.listProblems(userId,1,unique,null,null,null,false,false);
+            assertEquals(java.util.List.of(readyPublic),visible.getProblems().stream().map(p->p.getProbId()).toList());
+        }
+        status.setRollbackOnly();
+    });}
+
     private static void authenticate(long userId){
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(String.valueOf(userId),null,java.util.List.of()));
