@@ -44,10 +44,10 @@ class OboLocalHttpTest extends OboDisclosurePostgresTest {
   var grader=new SubmissionGradeAsyncService(users,problems,objectives,codings,practices,submissions,objectiveSubs,codingSubs,practiceSubs,results,mock(CodingGradeQueueService.class),mock(net.diveon.backend.domain.user.service.UserTierService.class));
   var submit=new SubmissionGradeService(starter,grader,new JpaTransactionManager(factory.getObject()),true);
   var resultService=new SubmissionResultService(submissions,results,objectiveSubs,codingSubs,repo.getRepository(SolveResultCodingRepository.class));
-  var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repo.getRepository(ContestSubmissionRepository.class));
+  var obo=new ProblemOboService(problems,objectives,codings,access,disclosure,submissions,repo.getRepository(ContestSubmissionRepository.class),results);
   var mvc=MockMvcBuilders.standaloneSetup(new ProblemCreateController(create,mock(ProblemDeleteService.class)),new ProblemUpdateController(update),new ProblemOboController(obo),
    new ProblemController(detail,mock(ProblemListService.class),mock(ProblemRankingService.class),mock(ProblemRandomService.class),mock(ProblemTodayService.class),mock(ProblemRecommendService.class)),
-   new net.diveon.backend.domain.grade.controller.SubmissionGradeController(submit,new SubmissionStatusService(submissions),resultService))
+   new net.diveon.backend.domain.grade.controller.SubmissionGradeController(submit,new SubmissionStatusService(submissions,results),resultService))
    .setControllerAdvice(new net.diveon.backend.global.exception.GlobalExceptionHandler())
    .setMessageConverters(new org.springframework.http.converter.json.MappingJackson2HttpMessageConverter(mapper))
    .setCustomArgumentResolvers(new org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver()).build();

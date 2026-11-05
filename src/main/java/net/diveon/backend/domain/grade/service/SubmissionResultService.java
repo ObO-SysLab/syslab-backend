@@ -92,6 +92,7 @@ public class SubmissionResultService {
             submission.getId(),
             submission.getProblem().getId(),
             isCorrect,
+            SubmissionResultStatus.from(submission, result),
             submissionObjective.getAnswer(),
             submission.getSubmittedAt(),
             result.getCreatedAt()
@@ -115,6 +116,7 @@ public class SubmissionResultService {
             submission.getProblem().getId(),
             submissionCoding.getLanguage(),
             isCorrect,
+            SubmissionResultStatus.from(submission, result),
             resultCoding.getScore(),
             resultCoding.getRuntime(),
             resultCoding.getMemoryUsage(),
@@ -133,6 +135,7 @@ public class SubmissionResultService {
             submission.getId(),
             submission.getProblem().getId(),
             isCorrect,
+            SubmissionResultStatus.from(submission, result),
             submission.getSubmittedAt(),
             result.getCreatedAt()
         );

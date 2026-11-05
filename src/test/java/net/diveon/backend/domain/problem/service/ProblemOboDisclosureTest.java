@@ -27,7 +27,8 @@ class ProblemOboDisclosureTest {
     final OboDisclosureService disclosure = new OboDisclosureService(links, members, submissions,
         Clock.fixed(now.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
     final ContestSubmissionRepository contests=mock(ContestSubmissionRepository.class);
-    final ProblemOboService service = new ProblemOboService(mock(ProblemRepository.class), objectives, codings, access, disclosure, submissions, contests);
+    final net.diveon.backend.domain.grade.repository.SolveResultRepository results = mock(net.diveon.backend.domain.grade.repository.SolveResultRepository.class);
+    final ProblemOboService service = new ProblemOboService(mock(ProblemRepository.class), objectives, codings, access, disclosure, submissions, contests, results);
 
     Problem problem(String type) {
         var problem = mock(Problem.class); var author = mock(User.class);
@@ -118,19 +119,51 @@ class ProblemOboDisclosureTest {
         when(contest.getStartTime()).thenReturn(now.minusHours(1));when(contest.getEndTime()).thenReturn(now.plusMinutes(1));
         var link=mock(ContestProblem.class);when(link.getContest()).thenReturn(contest);when(link.getProblem()).thenReturn(problem);
         var user=mock(User.class);when(user.getId()).thenReturn(7L);
-        var submission=new ContestSubmission(contest,link,user,"COMPLETED");
+        var submission=new ContestSubmission(contest,link,user,"COMPLETED");submission.updateResult(true);
         var snapshot=JsonNodeFactory.instance.objectNode();snapshot.putObject("obo").put("mode","single").put("marker","original contest");
         submission.bindRevision(new ProblemRevision("9:contest",9L,snapshot),JsonNodeFactory.instance.arrayNode().add(2));
         when(contests.findById(42L)).thenReturn(Optional.of(submission));
         when(access.requireReadInContest(7L,9L,3L)).thenReturn(problem);
         when(submissions.countCompletedContestForDisclosure(7L,9L,now)).thenReturn(1L);
-        var locked=service.getContestSubmissionObo(7L,42L).explanation();
+        var lockedResponse=service.getContestSubmissionObo(7L,42L);assertNull(lockedResponse.resultStatus());
+        var locked=lockedResponse.explanation();
         assertEquals("contest",locked.lockedReason());assertNull(locked.obo());assertNull(locked.publicCases());
         when(contest.getEndTime()).thenReturn(now);
         var released=service.getContestSubmissionObo(7L,42L);
+        assertEquals("CORRECT",released.resultStatus());
         assertEquals("9:contest",released.explanation().revisionId());assertEquals(2,released.selectedAnswers().get(0).asInt());
         verifyNoInteractions(objectives,codings);
         assertThrows(ProblemNotFoundException.class,()->service.getContestSubmissionObo(8L,42L));
+    }
+    @Test void contestOboUsesCodingErrorAndPreservesOwnerAndEndTimeBoundary() {
+        var problem=problem("coding");when(problem.getId()).thenReturn(9L);
+        var user=mock(User.class);when(user.getId()).thenReturn(7L);
+        var contest=mock(Contest.class);when(contest.getId()).thenReturn(3L);
+        when(contest.getStartTime()).thenReturn(now.minusHours(1));when(contest.getEndTime()).thenReturn(now);
+        var link=mock(ContestProblem.class);when(link.getProblem()).thenReturn(problem);when(link.getContest()).thenReturn(contest);
+        var solve=new net.diveon.backend.domain.grade.entity.SolveSubmission(problem,user);
+        var snapshot=JsonNodeFactory.instance.objectNode();snapshot.putObject("obo").put("mode","single");
+        solve.bindRevision(new ProblemRevision("9:coding",9L,snapshot));
+        org.springframework.test.util.ReflectionTestUtils.setField(solve,"id",11L);
+        solve.setSubmissionState(net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState.COMPLETED);
+        var row=new ContestSubmission(contest,link,user,solve,"COMPLETED");row.updateResult(false);
+        when(contests.findById(42L)).thenReturn(Optional.of(row));
+        when(contests.findBySolveSubmissionId(11L)).thenReturn(Optional.of(row));
+        when(submissions.findById(11L)).thenReturn(Optional.of(solve));
+        when(submissions.countDisclosureEligible(7L,9L,now)).thenReturn(1L);
+        when(access.requireReadInContest(7L,9L,3L)).thenReturn(problem);
+        when(results.findBySubmissionId(11L)).thenReturn(Optional.of(new net.diveon.backend.domain.grade.entity.SolveResult(
+            solve,net.diveon.backend.domain.grade.entity.SolveResult.SolveResultState.ERROR)));
+        var json=new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules()
+            .valueToTree(service.getContestSubmissionObo(7L,42L));
+        assertEquals("ERROR",json.path("resultStatus").textValue());assertFalse(json.path("isCorrect").booleanValue());
+        verify(results,times(1)).findBySubmissionId(11L);
+        when(contest.getEndTime()).thenReturn(now.plusMinutes(1));
+        var locked=service.getContestSubmissionObo(7L,42L);
+        assertNull(locked.resultStatus());assertEquals("contest",locked.explanation().lockedReason());
+        assertNull(locked.explanation().obo());
+        assertThrows(ProblemNotFoundException.class,()->service.getContestSubmissionObo(8L,42L));
+        verifyNoMoreInteractions(results);
     }
     @Test void projectionDropsGradingOnlyInstancesAndKeepsOnlyBoundExplanations() throws Exception {
         var raw=new com.fasterxml.jackson.databind.ObjectMapper().readTree("""
