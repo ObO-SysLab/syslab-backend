@@ -17,13 +17,16 @@ public class ContestSubmissionStatusService {
 
     private final ContestSubmissionRepository contestSubmissionRepository;
     private final JdbcTemplate jdbcTemplate;
+    private final net.diveon.backend.domain.grade.repository.SolveResultRepository results;
 
     public ContestSubmissionStatusService(
             ContestSubmissionRepository contestSubmissionRepository,
             StringRedisTemplate redisTemplate,
-            JdbcTemplate jdbcTemplate) {
+            JdbcTemplate jdbcTemplate,
+            net.diveon.backend.domain.grade.repository.SolveResultRepository results) {
         this.contestSubmissionRepository = contestSubmissionRepository;
         this.jdbcTemplate = jdbcTemplate;
+        this.results = results;
     }
 
     @Transactional(readOnly = true, isolation = org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
@@ -47,7 +50,11 @@ public class ContestSubmissionStatusService {
                     ? getParticipantScore(contestId, userId)
                     : 0;
             int rank = getRank(contestId, userId, score);
-            return ContestSubmissionStatusResponse.completed(submissionId, isCorrect, score, rank);
+            var solve = submission.getSolveSubmission();
+            var result = solve != null && solve.getSubmissionState() == net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState.COMPLETED
+                    ? results.findBySubmissionId(solve.getId()).orElse(null) : null;
+            return ContestSubmissionStatusResponse.completed(submissionId, isCorrect,
+                    net.diveon.backend.domain.grade.service.SubmissionResultStatus.fromContest(submission, result), score, rank);
         }
 
         return ContestSubmissionStatusResponse.pending(submissionId, status, calculateProgress(status));

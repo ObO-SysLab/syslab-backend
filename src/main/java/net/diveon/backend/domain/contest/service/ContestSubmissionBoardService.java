@@ -8,6 +8,7 @@ import net.diveon.backend.domain.contest.entity.*;
 import net.diveon.backend.domain.contest.repository.*;
 import net.diveon.backend.domain.grade.repository.*;
 import net.diveon.backend.domain.grade.service.SubmissionOboPresence;
+import net.diveon.backend.domain.grade.service.SubmissionResultStatus;
 import net.diveon.backend.domain.problem.service.ProblemAccessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +71,7 @@ public class ContestSubmissionBoardService {
         Long solveId = null; String language = null;
         Integer runtime = null, memory = null;
         String status = row.getSubmissionStatus();
+        net.diveon.backend.domain.grade.entity.SolveResult result = null;
         if ("coding".equals(link.getProblem().getType()) && solve != null) {
             if (!Objects.equals(solve.getUser().getId(), userId) || !Objects.equals(solve.getProblem().getId(), link.getProblem().getId())) throw denied();
             solveId = solve.getId();
@@ -79,15 +81,18 @@ public class ContestSubmissionBoardService {
             var coding = codingSubmissions.findById(solveId).orElse(null);
             if (coding != null) language = coding.getLanguage();
             if ("COMPLETED".equals(status)) {
-                var result = results.findBySubmissionId(solveId).orElse(null);
+                result = results.findBySubmissionId(solveId).orElse(null);
                 var metrics = result == null ? null : codingResults.findById(result.getId()).orElse(null);
                 if (metrics != null) { runtime = metrics.getRuntime(); memory = metrics.getMemoryUsage(); }
             }
         }
+        if (!"coding".equals(link.getProblem().getType()) && solve != null
+                && "COMPLETED".equals(status) && solve.getSubmissionState() == net.diveon.backend.domain.grade.entity.SolveSubmission.SubmissionState.COMPLETED)
+            result = results.findBySubmissionId(solve.getId()).orElse(null);
         if (status == null || !java.util.List.of("PENDING", "JUDGING", "COMPLETED", "FAILED").contains(status))
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "제출 상태를 확인할 수 없습니다.");
         return new ContestSubmissionBoardResponse.Item(row.getId(), solveId, status,
-                "COMPLETED".equals(status) ? row.getIsCorrect() : null, row.getSubmittedAt(), row.getUser().getNickname(), language, runtime, memory,
+                "COMPLETED".equals(status) ? row.getIsCorrect() : null, SubmissionResultStatus.fromContest(row, result), row.getSubmittedAt(), row.getUser().getNickname(), language, runtime, memory,
                 row.getUser().getTier(), oboPresence.hasObo(link.getProblem(),
                         solve == null ? row.getProblemRevision() : solve.getProblemRevision()));
     }

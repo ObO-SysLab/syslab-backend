@@ -22,6 +22,8 @@ public class SubmissionResultCodingResponse implements SubmissionResultResponse 
     @JsonProperty("isCorrect")
     private final boolean isCorrect;
 
+    private final String resultStatus;
+
     @JsonProperty("score")
     private final short score;
 
@@ -48,6 +50,7 @@ public class SubmissionResultCodingResponse implements SubmissionResultResponse 
         long probId,
         String language,
         boolean isCorrect,
+        String resultStatus,
         short score,
         int runtime,
         int memoryUsage,
@@ -60,6 +63,7 @@ public class SubmissionResultCodingResponse implements SubmissionResultResponse 
         this.probId = probId;
         this.language = language;
         this.isCorrect = isCorrect;
+        this.resultStatus = resultStatus;
         this.score = score;
         this.runtime = runtime;
         this.memoryUsage = memoryUsage;
@@ -76,6 +80,7 @@ public class SubmissionResultCodingResponse implements SubmissionResultResponse 
     public String getLanguage() { return language; }
     @JsonIgnore
     public boolean isCorrect() { return isCorrect; }
+    public String getResultStatus() { return resultStatus; }
     public short getScore() { return score; }
     public int getRuntime() { return runtime; }
     public int getMemoryUsage() { return memoryUsage; }
