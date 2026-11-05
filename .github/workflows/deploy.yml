@@ -19,16 +19,22 @@ jobs:
         with:
           java-version: '21'
           distribution: corretto
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Test and build without deployment secrets
         run: bash gradlew test bootJar verifyRelease --no-daemon
       - name: Prepare exact source revision and checksums
         run: |
-          mkdir -p release
-          cp build/libs/diveon-backend.jar release/
+          mkdir -p release/build/libs
+          cp build/libs/diveon-backend.jar release/build/libs/
+          cp -R obo-runtime release/
           cp -R ops release/
           cp Dockerfile release/
           printf '%s\n' "$GITHUB_SHA" > release/REVISION
           (cd release && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS)
+      - name: Build the packaged context (no registry push)
+        run: docker build -t diveon-backend:${{ github.sha }} release
       - uses: actions/upload-artifact@v4
         with:
           name: backend-${{ github.sha }}
