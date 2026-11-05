@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS problem_solver (
 );
 -- Seed deduplication from both histories. Do NOT silently rewrite historical counters.
 INSERT INTO problem_solver(prob_id, user_id)
-SELECT s.prob_id, s.user_id FROM solve_submission s
+SELECT s.prob_id, s.submitter_id FROM solve_submission s
 JOIN solve_result r ON r.submission_id = s.id
 WHERE r.result_status = 'CORRECT'
 UNION
