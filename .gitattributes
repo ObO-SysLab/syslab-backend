@@ -63,3 +63,6 @@
 # Preserve public-contract bytes and reviewed new-source evidence.
 /obo-runtime/diagram-contract.json -text
 /src/test/java/net/diveon/backend/domain/problem/service/OboPublicContractTest.java -text
+/ops/deploy-backend.sh text eol=lf
+/ops/github-deploy.sh text eol=lf
+/ops/api_known_hosts text eol=lf
