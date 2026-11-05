@@ -28,6 +28,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class GradeBoardService {
     private final ProblemAccessService access;
+    private final SubmissionOboPresence oboPresence;
 
     private final SolveSubmissionRepository solveSubmissionRepository;
     private final SolveSubmissionCodingRepository solveSubmissionCodingRepository;
@@ -39,13 +40,15 @@ public class GradeBoardService {
                              SolveSubmissionCodingRepository solveSubmissionCodingRepository,
                              SolveResultRepository solveResultRepository,
                              SolveResultCodingRepository solveResultCodingRepository,
-                             ProblemRepository problemRepository, ProblemAccessService access) {
+                             ProblemRepository problemRepository, ProblemAccessService access,
+                             SubmissionOboPresence oboPresence) {
         this.solveSubmissionRepository = solveSubmissionRepository;
         this.solveSubmissionCodingRepository = solveSubmissionCodingRepository;
         this.solveResultRepository = solveResultRepository;
         this.solveResultCodingRepository = solveResultCodingRepository;
         this.problemRepository = problemRepository;
         this.access = access;
+        this.oboPresence = oboPresence;
     }
 
     public GradeBoardResponse getBoard(Long userId, Long probId, int page, int size, String result, String sort) {
@@ -102,7 +105,9 @@ public class GradeBoardService {
                             submission.getUser().getNickname(),
                             isCorrect,
                             submission.getSubmittedAt().toString(),
-                            judgedAt
+                            judgedAt,
+                            submission.getUser().getTier(),
+                            oboPresence.hasObo(submission.getProblem(), submission.getProblemRevision())
                     );
                 })
                 .filter(item -> item != null)
@@ -139,7 +144,8 @@ public class GradeBoardService {
                             submission.getUser().getNickname(),
                             isCorrect,
                             submission.getSubmittedAt().toString(),
-                            judgedAt
+                            judgedAt,
+                            submission.getUser().getTier()
                     );
                 })
                 .filter(item -> item != null)
@@ -196,7 +202,9 @@ public class GradeBoardService {
                             codeSize,
                             submission.getSubmittedAt().toString(),
                             judgedAt,
-                            submission.getSubmissionState().name()
+                            submission.getSubmissionState().name(),
+                            submission.getUser().getTier(),
+                            oboPresence.hasObo(submission.getProblem(), submission.getProblemRevision())
                     );
                 })
                 .filter(item -> item != null) // null 제거 후 리스트로
