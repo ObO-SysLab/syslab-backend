@@ -66,6 +66,11 @@ public final class OboPublicContract {
                 if(!"RR".equals(scenario)||!"result".equals(mode))throw new IllegalStateException("Invalid RR output contract");
                 return response.put("ioFormat","rr-segments-v1");
             }
+            if("text-v1".equals(question.path("ioFormat").asText())){
+                // Line formats are described by the shared runtime's textHelp; no JSON schema is published.
+                if(!"result".equals(mode))throw new IllegalStateException("Invalid text output contract");
+                return response.put("ioFormat","text-v1");
+            }
             response.set("inputSchema",spec.path("inputSchema").deepCopy());
             response.set("outputSchema",spec.path("process".equals(mode)?"processOutputSchema":"resultOutputSchema").deepCopy());
             return response;
