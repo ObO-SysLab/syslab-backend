@@ -33,6 +33,18 @@ public final class OboPublicContract {
     public static JsonNode describe(JsonNode document){
         if(document!=null&&"coding_diff".equals(document.path("mode").asText())){
             var response=new ObjectMapper().createObjectNode().put("kind","diagram").put("modelVersion",1);
+            // Baekjoon-style plain output (2026-11-08): publish the line shape only (no IDs, labels, values or expected output).
+            var format=document.path("codingDiff").path("outputFormat");
+            if(format.isObject()){
+                for(var node:document.path("codingDiff").path("nodes")){
+                    if(!node.path("id").asText().equals(format.path("target").asText()))continue;
+                    String type=node.path("type").asText();var data=node.path("data");
+                    var shape=response.putObject("outputFormat").put("kind","lines-v1").put("targetType",type).put("blank",format.path("blank").asText("-"));
+                    if("slot-grid".equals(type))shape.put("cells",data.path("slotCount").isInt()?data.path("slotCount").asInt():data.path("slots").size());
+                    if("table-grid".equals(type))shape.put("columns",data.path("headers").size()>0?data.path("headers").size():data.path("rows").path(0).size());
+                    return response;
+                }
+            }
             var nodes=response.putArray("nodes");var edgeIds=response.putArray("edgeIds");
             for(var node:document.path("codingDiff").path("nodes")){
                 String type=node.path("type").asText();
