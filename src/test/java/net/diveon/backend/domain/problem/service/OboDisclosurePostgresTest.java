@@ -8,7 +8,7 @@ import net.diveon.backend.domain.grade.repository.*;
 import net.diveon.backend.domain.grade.service.*;
 import net.diveon.backend.domain.problem.repository.*;
 import net.diveon.backend.domain.problem.dto.request.*;
-import java.net.ServerSocket;
+import net.diveon.backend.support.TestPorts;
 import java.nio.file.*;
 import java.time.*;
 import java.util.Map;
@@ -51,7 +51,7 @@ class OboDisclosurePostgresTest {
         assertNotNull(System.getenv("PG_BIN")); bin=Path.of(System.getenv("PG_BIN"));
         directory=Files.createTempDirectory("obo-disclosure-pg-").toRealPath();
         assertTrue(directory.startsWith(Path.of(System.getProperty("java.io.tmpdir")).toRealPath()));
-        int port;try(var socket=new ServerSocket(0)){port=socket.getLocalPort();}
+        int port=TestPorts.freePort();
         try {
             command(bin.resolve("initdb"+suffix).toString(),"-D",directory.resolve("data").toString(),"-U","postgres","-A","trust","--no-locale","-E","UTF8");
             command(bin.resolve("pg_ctl"+suffix).toString(),"-D",directory.resolve("data").toString(),"-l",directory.resolve("server.log").toString(),"-o","-h 127.0.0.1 -p "+port,"-w","start");
