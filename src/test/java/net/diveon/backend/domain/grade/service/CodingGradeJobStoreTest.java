@@ -6,7 +6,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import java.nio.file.*;
-import java.net.ServerSocket;
+import net.diveon.backend.support.TestPorts;
 import java.util.concurrent.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +33,7 @@ class CodingGradeJobStoreTest {
         suffix = System.getProperty("os.name").startsWith("Windows") ? ".exe" : "";
         directory = Files.createTempDirectory("syslab-recovery-pg-");
         int port;
-        try (var socket = new ServerSocket(0)) { port = socket.getLocalPort(); }
+        port = TestPorts.freePort();
         command(pgBin.resolve("initdb" + suffix).toString(), "-D", directory.resolve("data").toString(),
                 "-U", "postgres", "-A", "trust", "--no-locale", "-E", "UTF8");
         command(pgBin.resolve("pg_ctl" + suffix).toString(), "-D", directory.resolve("data").toString(),
