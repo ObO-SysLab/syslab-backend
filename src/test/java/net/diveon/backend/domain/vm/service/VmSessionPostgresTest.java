@@ -1,7 +1,7 @@
 package net.diveon.backend.domain.vm.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import java.net.ServerSocket;
+import net.diveon.backend.support.TestPorts;
 import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -63,7 +63,7 @@ class VmSessionPostgresTest {
         pgBin = Path.of(binaryPath); executableSuffix = System.getProperty("os.name").startsWith("Windows") ? ".exe" : "";
         directory = Files.createTempDirectory("diveon-vm-pg-").toRealPath();
         assertTrue(directory.startsWith(Path.of(System.getProperty("java.io.tmpdir")).toRealPath()));
-        int port; try (var socket = new ServerSocket(0)) { port = socket.getLocalPort(); }
+        int port = TestPorts.freePort();
         try {
             command(pgBin.resolve("initdb" + executableSuffix).toString(), "-D", directory.resolve("data").toString(),
                 "-U", "postgres", "-A", "trust", "--no-locale", "-E", "UTF8");

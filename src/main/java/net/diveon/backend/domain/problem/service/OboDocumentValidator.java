@@ -123,6 +123,16 @@ public class OboDocumentValidator {
                 if(!result.path("ok").asBoolean()||!result.path("correct").asBoolean())throw invalid("테스트케이스 "+testcase.getIndex()+": "+result.path("message").asText("RR 입력·기대 출력을 확인하세요."));
                 continue;
             }
+            if("text-v1".equals(simulation.path("question").path("ioFormat").asText())){
+                // Baekjoon-style text (2026-11-08): the engine computes the answer; a stored sample output must match it.
+                boolean hasOutput=testcase.getOutput()!=null&&!testcase.getOutput().isBlank();
+                var request=mapper.createObjectNode().put("operation",hasOutput?"textGrade":"textReference").put("scenarioId",scenarioId).put("input",testcase.getInput());
+                if(hasOutput)request.put("stdout",testcase.getOutput());
+                var result=invoke(request);
+                if(!result.path("ok").asBoolean())throw invalid("테스트케이스 "+testcase.getIndex()+": "+result.path("message").asText("텍스트 입력을 확인하세요."));
+                if(hasOutput&&!result.path("correct").asBoolean())throw invalid("테스트케이스 "+testcase.getIndex()+": 기대 출력이 모델 실행 결과와 다릅니다. 예제 버튼으로 다시 만들어 주세요.");
+                continue;
+            }
             try{
                 var input=mapper.reader().with(com.fasterxml.jackson.core.JsonParser.Feature.STRICT_DUPLICATE_DETECTION).readTree(testcase.getInput());
                 var request=mapper.createObjectNode().put("operation","reference").put("scenarioId",scenarioId);request.set("input",input);
