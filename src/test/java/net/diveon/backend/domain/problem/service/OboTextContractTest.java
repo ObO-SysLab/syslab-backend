@@ -41,6 +41,24 @@ class OboTextContractTest {
    assertTrue(error.getMessage().contains("2번째 줄"),error.getMessage());
    assertThrows(InvalidSubmissionRequestException.class,()->v.validateCodingCases(doc,cases("{\"refs\":[1]}",null)));
  }
+ /** DP order finding as text (2026-11-09): any order reaching every meal goal at its last action is right. */
+ JsonNode dpDocument() throws Exception {
+   var doc=mapper.readTree("""
+ {"schemaVersion":2,"mode":"simulation","simulation":{"schemaVersion":2,"instances":[{"id":"dp","scenarioId":"DP","modelVersion":1,"name":"dp","input":{"actors":["A","B","C"],"policy":"ordered","mode":"findSchedule","thinkTicks":{"A":0,"B":0,"C":0},"eatTicks":{"A":1,"B":1,"C":1},"goalMeals":{"A":1,"B":1,"C":1}},"views":[],"decorations":[],"labels":{}}],"question":{"selectionMode":"single","judgeProfile":"obo-v1","assessmentMode":"result","gradingInstanceId":"dp","ioFormat":"text-v1"},"explanations":{"common":["dp"],"choices":{}}}}
+ """);
+   var order=((com.fasterxml.jackson.databind.node.ObjectNode)doc.at("/simulation/instances/0/input")).putArray("order");
+   for(int i=0;i<60;i++)order.add(new String[]{"A","B","C"}[i%3]);
+   return doc;
+ }
+ @Test void acceptsOrderFindingAsTextWithAnyValidOrder() throws Exception {
+   var v=validator();var doc=dpDocument();
+   v.validate(doc);
+   String input="3 ordered findSchedule\nA B C\n0 0 0\n1 1 1\ngoal 1 1 1\n60\n"+"A B C ".repeat(20).trim();
+   v.validateCodingCases(doc,cases(input,"C B A ".repeat(9).trim()));
+   assertThrows(InvalidSubmissionRequestException.class,()->v.validateCodingCases(doc,cases(input,"A B C")));
+   var json=(com.fasterxml.jackson.databind.node.ObjectNode)doc.deepCopy();((com.fasterxml.jackson.databind.node.ObjectNode)json.at("/simulation/question")).put("ioFormat","json-v1");
+   assertThrows(InvalidSubmissionRequestException.class,()->v.validate(json));
+ }
  @Test void refusesProcessModeForTextAnswers() throws Exception {
    var doc=document();((com.fasterxml.jackson.databind.node.ObjectNode)doc.at("/simulation/question")).put("assessmentMode","process");
    assertThrows(InvalidSubmissionRequestException.class,()->validator().validate(doc));
