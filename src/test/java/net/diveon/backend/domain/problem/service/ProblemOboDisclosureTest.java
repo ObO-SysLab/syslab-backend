@@ -99,7 +99,8 @@ class ProblemOboDisclosureTest {
             .add(JsonNodeFactory.instance.objectNode().put("isSample",false)));
         when(submission.getProblemRevision()).thenReturn(new ProblemRevision("9:old",9L,snapshot));
         when(submission.getPublicOboRecords()).thenReturn(JsonNodeFactory.instance.arrayNode()
-            .add(JsonNodeFactory.instance.objectNode().put("caseIndex",1).put("message","public").put("internalDebug","must not leave server"))
+            .add(JsonNodeFactory.instance.objectNode().put("caseIndex",1).put("message","public").put("internalDebug","must not leave server")
+                .put("inputText","7 3 FIFO\n7 0").put("expected","7 Miss 7 - -").put("firstWrong",1))
             .add(JsonNodeFactory.instance.objectNode().put("caseIndex",2).put("message","hidden secret"))
             .add(JsonNodeFactory.instance.objectNode().put("caseIndex",99).put("message","invalid index")));
         when(submissions.findById(11L)).thenReturn(Optional.of(submission));
@@ -110,6 +111,10 @@ class ProblemOboDisclosureTest {
         assertFalse(response.obo().has("testcases"));assertFalse(response.obo().has("answer"));
         assertEquals(1,response.publicCases().size());assertFalse(response.publicCases().toString().contains("secret"));
         assertFalse(response.publicCases().get(0).has("internalDebug"));
+        // Fields the learner result needs pass through (text-v1 example 2026-11-08, wrong-line position 2026-11-09).
+        assertEquals("7 3 FIFO\n7 0",response.publicCases().get(0).path("inputText").asText());
+        assertEquals("7 Miss 7 - -",response.publicCases().get(0).path("expected").asText());
+        assertEquals(1,response.publicCases().get(0).path("firstWrong").asInt());
         verifyNoInteractions(objectives,codings);
         assertThrows(ProblemNotFoundException.class,()->service.getSubmissionObo(8L,11L));
     }
