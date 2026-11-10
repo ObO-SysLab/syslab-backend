@@ -55,6 +55,11 @@ public class ContestController {
         this.contestSubmissionResultService = contestSubmissionResultService;
     }
 
+    // Signed-out visitors reach the public GET routes as "anonymousUser" (2026-11-10: was a 500).
+    private static Long optionalUserId(String userId) {
+        return userId == null || "anonymousUser".equals(userId) ? null : Long.parseLong(userId);
+    }
+
     // 대회 목록 조회
     @GetMapping
     public ResponseEntity<ApiResponse<ContestListResponse>> getContestList(
@@ -64,7 +69,7 @@ public class ContestController {
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal String userId) {
-        Long parsedUserId = userId != null ? Long.parseLong(userId) : null;
+        Long parsedUserId = optionalUserId(userId);
         ContestListResponse response = contestService.getContestList(keyword, status, onlyJoined, page, size, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("대회 목록 조회 성공", response));
     }
@@ -82,7 +87,7 @@ public class ContestController {
     public ResponseEntity<ApiResponse<ContestDetailResponse>> getContestDetail(
             @PathVariable Long contestId,
             @AuthenticationPrincipal String userId) {
-        Long parsedUserId = userId != null ? Long.parseLong(userId) : null;
+        Long parsedUserId = optionalUserId(userId);
         ContestDetailResponse response = contestService.getContestDetail(contestId, parsedUserId);
         return ResponseEntity.ok(ApiResponse.success("대회 상세 정보 조회 성공", response));
     }
