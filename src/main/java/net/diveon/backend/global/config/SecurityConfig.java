@@ -50,6 +50,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/groups/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/contests/*/rankings").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/contests/*/problems/*/board").authenticated()
+                        // Personal contest data: signed-out requests get 403 instead of failing on the user id (2026-11-10).
+                        .requestMatchers(HttpMethod.GET, "/api/contests/me/**", "/api/contests/*/submissions/**",
+                                "/api/contests/*/participants/**", "/api/contests/*/problems", "/api/contests/*/qnas").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
