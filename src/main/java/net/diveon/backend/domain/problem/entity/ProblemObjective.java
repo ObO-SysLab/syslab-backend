@@ -111,9 +111,11 @@ public class ProblemObjective {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;
     }
-    public void updateAssessment(List<ForDtoChoice> choices,List<Integer> answer,boolean unordered){
+    /** ordered: null keeps the stored option. Simulation problems are never ordered. */
+    public void updateAssessment(List<ForDtoChoice> choices,List<Integer> answer,Boolean ordered,boolean simulation){
         if(choices!=null)this.choices=new java.util.ArrayList<>(choices);
         if(answer!=null)this.answer=new java.util.ArrayList<>(answer);
-        if(unordered)this.isSeqeuntialAnswer=false;
+        if(ordered!=null)this.isSeqeuntialAnswer=ordered;
+        if(simulation)this.isSeqeuntialAnswer=false;
     }
 }

@@ -83,7 +83,7 @@ public class ProblemUpdateService {
             problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
             problemObjective.updateProblemObjective(request.getSummary(), request.getDescription());
             JsonNode next = mutateObo(request.getOboAction(), request.getOboJson(), problemObjective.getOboJsonData());
-            problemObjective.updateAssessment(request.getChoices(),request.getAnswer(),OboDocumentValidator.simulation(next)!=null);
+            problemObjective.updateAssessment(request.getChoices(),request.getAnswer(),request.getIsSeqeuntialAnswer(),OboDocumentValidator.simulation(next)!=null);
             oboValidator.validateQuestion(next, "objective", problemObjective.getAnswer());
             oboValidator.validateChoices(next, problemObjective.getChoices());
             if (request.getOboAction() != null && !"keep".equals(request.getOboAction())) problemObjective.setOboJsonData(next);

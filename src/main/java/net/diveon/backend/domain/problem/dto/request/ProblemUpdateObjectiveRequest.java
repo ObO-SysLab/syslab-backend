@@ -15,6 +15,11 @@ public class ProblemUpdateObjectiveRequest {
     private String oboAction;
     private java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> choices;
     private java.util.List<Integer> answer;
+    // Same name as the create request and the detail response (spelling kept for API compatibility).
+    @com.fasterxml.jackson.annotation.JsonProperty("isSeqeuntialAnswer")
+    private Boolean isSeqeuntialAnswer;
+    public Boolean getIsSeqeuntialAnswer(){return isSeqeuntialAnswer;}
+    public void setIsSeqeuntialAnswer(Boolean value){isSeqeuntialAnswer=value;}
     public java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> getChoices(){return choices;}
     public void setChoices(java.util.List<net.diveon.backend.domain.problem.others.ForDtoChoice> choices){this.choices=choices;}
     public java.util.List<Integer> getAnswer(){return answer;}
