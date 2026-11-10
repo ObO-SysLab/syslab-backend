@@ -36,6 +36,10 @@ public class ProblemCommentResponse {
         @JsonProperty("authorNickname")
         private String authorNickname;
 
+        // Author's profile picture URL, or null when none is set (2026-11-10).
+        @JsonProperty("authorProfileImgUrl")
+        private String authorProfileImgUrl;
+
         private String content;
 
         @JsonProperty("isPrivate")
@@ -58,7 +62,7 @@ public class ProblemCommentResponse {
         }
 
         public static CommentListItem of(ProblemComment comment) {
-            return new CommentListItem(
+            CommentListItem item = new CommentListItem(
                 comment.getId(),
                 comment.getAuthor().getNickname(),
                 comment.getContent(),
@@ -66,10 +70,13 @@ public class ProblemCommentResponse {
                 comment.getCreatedAt().toString(),
                 comment.getUpdatedAt().toString()
             );
+            item.authorProfileImgUrl = comment.getAuthor().getProfileImgUrl();
+            return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
+        public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
@@ -84,6 +91,10 @@ public class ProblemCommentResponse {
 
         @JsonProperty("authorNickname")
         private String authorNickname;
+
+        // Author's profile picture URL, or null when none is set (2026-11-10).
+        @JsonProperty("authorProfileImgUrl")
+        private String authorProfileImgUrl;
 
         private String content;
 
@@ -111,7 +122,7 @@ public class ProblemCommentResponse {
         }
 
         public static CommentItem of(ProblemComment comment, List<ReplyItem> replies) {
-            return new CommentItem(
+            CommentItem item = new CommentItem(
                 comment.getId(),
                 comment.getAuthor().getNickname(),
                 comment.getContent(),
@@ -120,10 +131,13 @@ public class ProblemCommentResponse {
                 comment.getUpdatedAt().toString(),
                 replies
             );
+            item.authorProfileImgUrl = comment.getAuthor().getProfileImgUrl();
+            return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
+        public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
@@ -140,6 +154,10 @@ public class ProblemCommentResponse {
 
         @JsonProperty("authorNickname")
         private String authorNickname;
+
+        // Author's profile picture URL, or null when none is set (2026-11-10).
+        @JsonProperty("authorProfileImgUrl")
+        private String authorProfileImgUrl;
 
         private String content;
 
@@ -163,7 +181,7 @@ public class ProblemCommentResponse {
         }
 
         public static ReplyItem of(ProblemComment reply) {
-            return new ReplyItem(
+            ReplyItem item = new ReplyItem(
                 reply.getId(),
                 reply.getAuthor().getNickname(),
                 reply.getContent(),
@@ -171,10 +189,13 @@ public class ProblemCommentResponse {
                 reply.getCreatedAt().toString(),
                 reply.getUpdatedAt().toString()
             );
+            item.authorProfileImgUrl = reply.getAuthor().getProfileImgUrl();
+            return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
+        public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
