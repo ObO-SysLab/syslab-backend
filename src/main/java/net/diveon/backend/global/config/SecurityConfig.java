@@ -42,6 +42,8 @@ public class SecurityConfig {
                         // The controller authenticates these two machine-only POST routes.
                         .requestMatchers(HttpMethod.POST, "/internal/terminal/connect", "/internal/terminal/check").permitAll()
                         .requestMatchers("/local/google-login-test.html", "/api/local/auth/google/login", "/api/auth/google/login", "/api/auth/login", "/api/auth/signup", "/api/auth/refresh", "/api/auth/check-loginId", "/api/auth/check-nickname", "/api/auth/email/send", "/api/auth/email/verify", "/api/auth/email/find-id", "/api/auth/email/send-reset", "/api/auth/email/password/reset", "/api/ad/**", "/error").permitAll()
+                        // 홈 '실시간 탐사 로그': 공개 문제의 최근 채점 결과는 로그인 없이 본다.
+                        .requestMatchers(HttpMethod.GET, "/api/activity/recent").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()

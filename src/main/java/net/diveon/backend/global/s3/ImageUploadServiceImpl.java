@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 // 배포 환경용. 프로필/그룹 이미지를 syslab-frontend 버킷(CloudFront 서빙)에 업로드
@@ -41,5 +42,14 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         }
 
         return "https://" + cloudfrontDomain + "/" + key;
+    }
+
+    @Override
+    public void delete(String key) {
+        try {
+            s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build());
+        } catch (Exception e) {
+            throw new RuntimeException("이미지 삭제 실패: " + e.getMessage(), e);
+        }
     }
 }

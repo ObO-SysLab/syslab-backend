@@ -63,10 +63,24 @@ public class ProfileService {
                 .orElseThrow(UserNotFoundException::new);
 
         ImageFileValidator.validateAndGetExtension(image);
-        String key = "profiles/users/" + userId;
-        String imageUrl = imageUploadService.upload(key, image);
+        String imageUrl = imageUploadService.upload(profileImageKey(userId), image);
 
         user.updateProfileImage(imageUrl);
         return imageUrl;
+    }
+
+    // 프로필 사진을 지운다. 업로드한 S3 객체를 먼저 지우고(없어도 성공), DB 주소를 비운다.
+    // 일부 화면은 사용자 번호로 S3 주소를 직접 만들어 쓰므로 객체까지 지워야 옛 사진이 남지 않는다.
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        imageUploadService.delete(profileImageKey(userId));
+        user.updateProfileImage(null);
+    }
+
+    public static String profileImageKey(Long userId) {
+        return "profiles/users/" + userId;
     }
 }

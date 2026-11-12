@@ -368,6 +368,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 이미 대회에 추가된 문제 → 409
+        @ExceptionHandler(ContestProblemAlreadyExistsException.class)
+        public ResponseEntity<ErrorResponse> handleContestProblemAlreadyExists(
+                ContestProblemAlreadyExistsException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/conflict/contest-problem-already-exists",
+                        "Conflict",
+                        409,
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+        }
+
         // 이미 그룹에 추가된 문제 → 409
         @ExceptionHandler(GroupProblemAlreadyExistsException.class)
         public ResponseEntity<ErrorResponse> handleGroupProblemAlreadyExists(

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import net.diveon.backend.domain.user.repository.UserRepository;
 import net.diveon.backend.global.exception.ContestAccessDeniedException;
 import net.diveon.backend.global.exception.ContestNotFoundException;
 import net.diveon.backend.global.exception.ContestParticipantNotFoundException;
+import net.diveon.backend.global.exception.ContestProblemAlreadyExistsException;
 import net.diveon.backend.global.exception.ContestProblemNotFoundException;
 import net.diveon.backend.global.exception.InvalidContestProblemPointsException;
 import net.diveon.backend.global.exception.ProblemNotFoundException;
@@ -197,8 +199,21 @@ public class ContestProblemNormalService {
             throw new ProblemNotFoundException("해당 문제의 소유자가 아닙니다.");
         }
 
-        ContestProblem contestProblem = new ContestProblem(contest, problem, point);
-        contestProblemRepository.save(contestProblem);
+        int points = point == null ? 100 : point;
+        if (points < 0) {
+            throw new InvalidContestProblemPointsException();
+        }
+        if (contestProblemRepository.findByContestIdAndProblemId(contestId, problemId).isPresent()) {
+            throw new ContestProblemAlreadyExistsException();
+        }
+
+        ContestProblem contestProblem = new ContestProblem(contest, problem, points);
+        try {
+            contestProblemRepository.saveAndFlush(contestProblem);
+        } catch (DataIntegrityViolationException e) {
+            // 동시에 두 번 추가한 경우 유니크 제약(UK_CONTEST_PROBLEM_UNIQUE)에 걸린다.
+            throw new ContestProblemAlreadyExistsException();
+        }
     }
 
     private ForDtoContestProblem toResponse(ContestProblem contestProblem, Set<Long> solvedContestProblemIds,
