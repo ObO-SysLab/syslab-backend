@@ -312,7 +312,7 @@ class OboDisclosurePostgresTest {
                 var practice=new net.diveon.backend.domain.problem.entity.ProblemPractice(problem,"summary","description",
                         "ubuntu:22.04",java.util.List.of("cat"),"0.5","512m","hash","source");
                 practice.updateImageStatus(state,"registry/repo:prob-"+problem.getId());em.persist(practice);
-                if("private".equals(visibility))mine.add(problem.getId());
+                mine.add(problem.getId()); // '내가 만든 문제'는 공개 범위와 상관없이 전부
                 if("public".equals(visibility)&&"READY".equals(state))readyPublic=problem.getId();
             }
         }
