@@ -27,15 +27,18 @@ public class GroupPendingMemberListResponse {
         private final Long userId;
         private final String nickname;
         private final LocalDateTime appliedAt;
+        private final Integer tier;
 
-        public PendingMember(Long userId, String nickname, LocalDateTime appliedAt) {
+        public PendingMember(Long userId, String nickname, LocalDateTime appliedAt, Integer tier) {
             this.userId = userId;
             this.nickname = nickname;
             this.appliedAt = appliedAt;
+            this.tier = tier;
         }
 
         public Long getUserId() { return userId; }
         public String getNickname() { return nickname; }
         public LocalDateTime getAppliedAt() { return appliedAt; }
+        public Integer getTier() { return tier; }
     }
 }

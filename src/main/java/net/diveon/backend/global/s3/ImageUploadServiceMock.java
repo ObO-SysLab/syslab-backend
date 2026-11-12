@@ -18,4 +18,9 @@ public class ImageUploadServiceMock implements ImageUploadService {
         log.info("[Mock] 이미지 업로드 생략 - key: {}, 파일명: {}", key, file.getOriginalFilename());
         return "https://mock.cloudfront.net/" + key;
     }
+
+    @Override
+    public void delete(String key) {
+        log.info("[Mock] 이미지 삭제 생략 - key: {}", key);
+    }
 }
