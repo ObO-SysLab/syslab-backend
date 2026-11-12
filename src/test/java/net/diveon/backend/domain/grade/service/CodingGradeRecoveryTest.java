@@ -14,7 +14,7 @@ class CodingGradeRecoveryTest {
     private final CodingGradeQueueServiceImpl queue = mock(CodingGradeQueueServiceImpl.class);
     private final SolveSubmissionCodingRepository submissions = mock(SolveSubmissionCodingRepository.class);
     private final ObjectMapper mapper = new ObjectMapper();
-    private final CodingGradeRecovery recovery = new CodingGradeRecovery(jobs, queue, submissions, mapper, 3);
+    private final CodingGradeRecovery recovery = new CodingGradeRecovery(jobs, queue, submissions, mapper, 3, Runnable::run);
 
     private CodingGradeJobStore.Dispatch job() throws Exception {
         var message = new CodingGradeMessage("101", "key", "python", "2", 1, 128, 2);
@@ -52,6 +52,28 @@ class CodingGradeRecoveryTest {
 
     @Test void unboundedRetriesAreRejected() {
         assertThrows(IllegalArgumentException.class,
-                () -> new CodingGradeRecovery(jobs, queue, submissions, mapper, 4));
+                () -> new CodingGradeRecovery(jobs, queue, submissions, mapper, 4, Runnable::run));
+    }
+
+    // 커밋 직후 발송: 채점 전용 스레드에 바로 넣고, 그 스레드가 작업표에서 꺼내 보낸다.
+    @Test void committedSubmissionIsDispatchedWithoutWaitingForTheTick() throws Exception {
+        var queued = new java.util.ArrayList<Runnable>();
+        var immediate = new CodingGradeRecovery(jobs, queue, submissions, mapper, 3, queued::add);
+        when(jobs.claimNext(3)).thenReturn(job()).thenReturn(null);
+        var code = mock(SolveSubmissionCoding.class);
+        when(code.getAnswer()).thenReturn("print(1)");
+        when(submissions.findById(101L)).thenReturn(Optional.of(code));
+        immediate.dispatchAfterCommit(new CodingGradeRequested(101));
+        assertEquals(1, queued.size());
+        verifyNoInteractions(queue); // 커밋한 스레드에서는 보내지 않는다
+        queued.getFirst().run();
+        verify(queue).dispatch(any(CodingGradeMessage.class), eq("print(1)"));
+    }
+
+    @Test void aRejectedImmediateDispatchIsLeftToTheTick() {
+        var closed = new CodingGradeRecovery(jobs, queue, submissions, mapper, 3,
+                task -> { throw new org.springframework.core.task.TaskRejectedException("closed"); });
+        assertDoesNotThrow(() -> closed.dispatchAfterCommit(new CodingGradeRequested(101)));
+        verifyNoInteractions(jobs, queue);
     }
 }
