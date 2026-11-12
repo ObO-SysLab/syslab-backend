@@ -22,7 +22,7 @@ public class RecentActivityService {
             FROM solve_result sr
             JOIN solve_submission ss ON ss.id = sr.submission_id
             JOIN problem_summary ps ON ps.id = ss.prob_id
-            JOIN domain_user u ON u.id = ss.submitter_id
+            JOIN domain_user u ON u.id = ss.submitter_id AND u.deleted_at IS NULL
             WHERE ps.visibility = 'public'
             ORDER BY sr.id DESC
             LIMIT ?

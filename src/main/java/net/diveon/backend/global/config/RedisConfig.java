@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import net.diveon.backend.global.security.WithdrawnUsers;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -29,5 +31,11 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
         return template;
+    }
+
+    // 탈퇴한 사용자의 남은 액세스 토큰 차단(JwtFilter, 탈퇴 처리에서 사용)
+    @Bean
+    public WithdrawnUsers withdrawnUsers(StringRedisTemplate stringRedisTemplate) {
+        return new WithdrawnUsers(stringRedisTemplate);
     }
 }
