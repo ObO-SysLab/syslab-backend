@@ -2,6 +2,8 @@ package net.diveon.backend.global.config;
 
 import net.diveon.backend.global.security.JwtFilter;
 import net.diveon.backend.global.security.JwtProvider;
+import net.diveon.backend.global.security.WithdrawnUsers;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,9 +26,16 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final ObjectProvider<WithdrawnUsers> withdrawnUsers;
 
-    public SecurityConfig(JwtProvider jwtProvider) {
+    public SecurityConfig(JwtProvider jwtProvider, ObjectProvider<WithdrawnUsers> withdrawnUsers) {
         this.jwtProvider = jwtProvider;
+        this.withdrawnUsers = withdrawnUsers;
+    }
+
+    private JwtFilter jwtFilter() {
+        WithdrawnUsers withdrawn = withdrawnUsers.getIfAvailable();
+        return withdrawn == null ? new JwtFilter(jwtProvider) : new JwtFilter(jwtProvider, withdrawn::isWithdrawn);
     }
 
     @Bean
@@ -44,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers("/local/google-login-test.html", "/api/local/auth/google/login", "/api/auth/google/login", "/api/auth/login", "/api/auth/signup", "/api/auth/refresh", "/api/auth/check-loginId", "/api/auth/check-nickname", "/api/auth/email/send", "/api/auth/email/verify", "/api/auth/email/find-id", "/api/auth/email/send-reset", "/api/auth/email/password/reset", "/api/ad/**", "/error").permitAll()
                         // 홈 '실시간 탐사 로그': 공개 문제의 최근 채점 결과는 로그인 없이 본다.
                         .requestMatchers(HttpMethod.GET, "/api/activity/recent").permitAll()
+                        // 상점 상품 목록·착용 정보는 로그인 없이 본다(보유 표시는 로그인했을 때만).
+                        .requestMatchers(HttpMethod.GET, "/api/store/items", "/api/store/equipped").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/groups/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/members/pending").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/groups/*/problems").authenticated()
@@ -58,7 +69,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/contests/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

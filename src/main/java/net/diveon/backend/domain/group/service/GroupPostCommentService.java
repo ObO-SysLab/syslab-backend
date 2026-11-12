@@ -1,5 +1,9 @@
 package net.diveon.backend.domain.group.service;
 
+import net.diveon.backend.domain.notification.service.CommentNotifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import net.diveon.backend.domain.group.dto.GroupCommentRequest;
 import net.diveon.backend.domain.group.dto.GroupCommentResponse;
 import net.diveon.backend.domain.group.entity.GroupPost;
@@ -28,15 +32,27 @@ public class GroupPostCommentService {
     private final GroupPostCommentRepository groupPostCommentRepository;
     private final GroupUserRepository groupUserRepository;
     private final UserRepository userRepository;
+    private final CommentNotifier notifier;
+    private static final Logger log = LoggerFactory.getLogger(GroupPostCommentService.class);
 
     public GroupPostCommentService(GroupPostRepository groupPostRepository,
                                    GroupPostCommentRepository groupPostCommentRepository,
                                    GroupUserRepository groupUserRepository,
                                    UserRepository userRepository) {
+        this(groupPostRepository, groupPostCommentRepository, groupUserRepository, userRepository, CommentNotifier.NONE);
+    }
+
+    @Autowired
+    public GroupPostCommentService(GroupPostRepository groupPostRepository,
+                                   GroupPostCommentRepository groupPostCommentRepository,
+                                   GroupUserRepository groupUserRepository,
+                                   UserRepository userRepository,
+                                   CommentNotifier notifier) {
         this.groupPostRepository = groupPostRepository;
         this.groupPostCommentRepository = groupPostCommentRepository;
         this.groupUserRepository = groupUserRepository;
         this.userRepository = userRepository;
+        this.notifier = notifier;
     }
 
     @Transactional(readOnly = true)
@@ -71,6 +87,13 @@ public class GroupPostCommentService {
 
         GroupPostComment comment = new GroupPostComment(post, author, request.getContent());
         GroupPostComment saved = groupPostCommentRepository.save(comment);
+        // 게시글 작성자에게 알린다(별도 트랜잭션, 실패해도 댓글은 남는다).
+        try {
+            notifier.groupPostComment(post.getAuthor().getId(), userId, author.getNickname(), saved.getId(),
+                    groupId, post.getTitle());
+        } catch (RuntimeException e) {
+            log.warn("그룹 댓글 알림 실패: {}", e.getMessage());
+        }
 
         return GroupCommentResponse.CommentCreate.of(saved);
     }

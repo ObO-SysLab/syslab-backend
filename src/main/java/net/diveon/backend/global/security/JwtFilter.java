@@ -11,13 +11,21 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.function.Predicate;
 
 public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtProvider jwtProvider;
+    // 탈퇴한 사용자의 남은 토큰을 거른다(없으면 확인하지 않음).
+    private final Predicate<String> withdrawn;
 
     public JwtFilter(JwtProvider jwtProvider) {
+        this(jwtProvider, userId -> false);
+    }
+
+    public JwtFilter(JwtProvider jwtProvider, Predicate<String> withdrawn) {
         this.jwtProvider = jwtProvider;
+        this.withdrawn = withdrawn;
     }
 
     @Override
@@ -29,6 +37,10 @@ public class JwtFilter extends OncePerRequestFilter {
         if (token != null && jwtProvider.validateToken(token)) {
             try {
                 String userId = jwtProvider.getUserId(token);
+                if (withdrawn.test(userId)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userId, null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);

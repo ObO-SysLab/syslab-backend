@@ -368,6 +368,20 @@ public class GlobalExceptionHandler {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
         }
 
+        // 상점·알림·탈퇴 규칙 위반 → 예외에 담긴 상태 코드
+        @ExceptionHandler(DomainRuleException.class)
+        public ResponseEntity<ErrorResponse> handleDomainRule(
+                DomainRuleException ex, HttpServletRequest request) {
+                ErrorResponse body = new ErrorResponse(
+                        "https://diveon.net/problems/domain-rule",
+                        ex.getStatus().getReasonPhrase(),
+                        ex.getStatus().value(),
+                        ex.getMessage(),
+                        request.getRequestURI()
+                );
+                return ResponseEntity.status(ex.getStatus()).body(body);
+        }
+
         // 이미 대회에 추가된 문제 → 409
         @ExceptionHandler(ContestProblemAlreadyExistsException.class)
         public ResponseEntity<ErrorResponse> handleContestProblemAlreadyExists(
