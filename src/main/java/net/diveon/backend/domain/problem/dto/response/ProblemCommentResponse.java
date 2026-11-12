@@ -40,6 +40,10 @@ public class ProblemCommentResponse {
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
 
+        // 상점 꾸미기(칭호·테두리) 조회용 작성자 번호
+        @JsonProperty("authorId")
+        private Long authorId;
+
         private String content;
 
         @JsonProperty("isPrivate")
@@ -71,12 +75,14 @@ public class ProblemCommentResponse {
                 comment.getUpdatedAt().toString()
             );
             item.authorProfileImgUrl = comment.getAuthor().getProfileImgUrl();
+            item.authorId = comment.getAuthor().getId();
             return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
         public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
+        public Long getAuthorId() { return authorId; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
@@ -95,6 +101,10 @@ public class ProblemCommentResponse {
         // Author's profile picture URL, or null when none is set (2026-11-10).
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
+
+        // 상점 꾸미기(칭호·테두리) 조회용 작성자 번호
+        @JsonProperty("authorId")
+        private Long authorId;
 
         private String content;
 
@@ -132,12 +142,14 @@ public class ProblemCommentResponse {
                 replies
             );
             item.authorProfileImgUrl = comment.getAuthor().getProfileImgUrl();
+            item.authorId = comment.getAuthor().getId();
             return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
         public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
+        public Long getAuthorId() { return authorId; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
@@ -158,6 +170,10 @@ public class ProblemCommentResponse {
         // Author's profile picture URL, or null when none is set (2026-11-10).
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
+
+        // 상점 꾸미기(칭호·테두리) 조회용 작성자 번호
+        @JsonProperty("authorId")
+        private Long authorId;
 
         private String content;
 
@@ -190,12 +206,14 @@ public class ProblemCommentResponse {
                 reply.getUpdatedAt().toString()
             );
             item.authorProfileImgUrl = reply.getAuthor().getProfileImgUrl();
+            item.authorId = reply.getAuthor().getId();
             return item;
         }
 
         public Long getCommentId() { return commentId; }
         public String getAuthorNickname() { return authorNickname; }
         public String getAuthorProfileImgUrl() { return authorProfileImgUrl; }
+        public Long getAuthorId() { return authorId; }
         public String getContent() { return content; }
         public Boolean getIsPrivate() { return isPrivate; }
         public String getCreatedAt() { return createdAt; }
