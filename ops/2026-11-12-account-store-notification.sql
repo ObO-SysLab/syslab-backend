@@ -31,15 +31,26 @@ CREATE TABLE IF NOT EXISTS user_item (
     CONSTRAINT uk_user_item UNIQUE (user_id, item_id)
 );
 
--- 포인트 장부: SOLVE(+난이도×10, ref=문제 번호), PURCHASE(-가격, ref=상품 번호). 잔액 = amount 합.
+-- 포인트 장부. 잔액 = amount 합. 하루 획득 한도(100P)는 earned_on(서울 날짜)별 SOLVE·DAILY 합에 적용한다.
+--   SOLVE    +난이도×10 (공개 문제 첫 정답, ref=문제 번호)
+--   DAILY    +50 (그날의 오늘의 다이브 포인트 정답, ref=YYYYMMDD)
+--   PURCHASE -가격 (ref=상품 번호)
 CREATE TABLE IF NOT EXISTS point_ledger (
     id         bigserial   PRIMARY KEY,
     user_id    bigint      NOT NULL REFERENCES domain_user(id) ON DELETE CASCADE,
     amount     integer     NOT NULL,
-    reason     varchar(20) NOT NULL CHECK (reason IN ('SOLVE', 'PURCHASE')),
+    reason     varchar(20) NOT NULL CHECK (reason IN ('SOLVE', 'DAILY', 'PURCHASE')),
     ref_id     bigint      NOT NULL,
+    earned_on  date        NOT NULL,
     created_at timestamp   NOT NULL,
     CONSTRAINT uk_point_ledger UNIQUE (user_id, reason, ref_id)
+);
+CREATE INDEX IF NOT EXISTS idx_point_ledger_user_day ON point_ledger (user_id, earned_on);
+
+-- 날짜별 오늘의 다이브 포인트(서울 날짜). 지금까지는 Redis에만 있어 기록이 남지 않았다.
+CREATE TABLE IF NOT EXISTS daily_problem (
+    day     date   PRIMARY KEY,
+    prob_id bigint NOT NULL REFERENCES problem_summary(id) ON DELETE CASCADE
 );
 
 -- 7. 알림
@@ -74,16 +85,16 @@ INSERT INTO notification_cursor (name, last_id)
 SELECT 'solve_result', COALESCE(MAX(id), 0) FROM solve_result
 ON CONFLICT (name) DO NOTHING;
 
--- 상품 8개. 가격은 포인트 획득량(문제당 난이도×10)에 맞췄다.
+-- 상품 8개. 가격은 하루 한도 100P 기준 며칠 모아야 하는지로 정했다(최고가 5,000P = 50일).
 INSERT INTO store_item (category, name, description, price, rarity, asset_key, sort_order) VALUES
-    ('avatar', '기본 요원',     '기본 아바타 테두리',             0,   'Common',    'frame-default',       10),
-    ('avatar', '네온 해커',     '분홍 네온 아바타 테두리',         120, 'Rare',      'frame-neon',          20),
-    ('avatar', '어셈블리 장인', '호박색 아바타 테두리',            150, 'Rare',      'frame-asm',           30),
-    ('avatar', '사이버 수사대', '청록빛 이중 아바타 테두리',       200, 'Epic',      'frame-cyber',         40),
-    ('title',  'Binary Hunter', '닉네임 옆에 붙는 칭호',           50,  'Common',    'title-binary-hunter', 50),
-    ('title',  'Root Access',   '모든 권한을 가진 자의 칭호',      500, 'Legendary', 'title-root-access',   60),
-    ('theme',  '오션 드라이브', '푸른 물결 프로필 카드 배경',      100, 'Rare',      'theme-ocean-drive',   70),
-    ('theme',  '다크 커널',     '터미널 격자 프로필 카드 배경',    300, 'Legendary', 'theme-dark-kernel',   80)
+    ('avatar', '기본 요원',     '기본 아바타 테두리',             0,    'Common',    'frame-default',       10),
+    ('avatar', '네온 해커',     '분홍 네온 아바타 테두리',         1200, 'Rare',      'frame-neon',          20),
+    ('avatar', '어셈블리 장인', '호박색 아바타 테두리',            1500, 'Rare',      'frame-asm',           30),
+    ('avatar', '사이버 수사대', '청록빛 이중 아바타 테두리',       2500, 'Epic',      'frame-cyber',         40),
+    ('title',  'Binary Hunter', '닉네임 옆에 붙는 칭호',           300,  'Common',    'title-binary-hunter', 50),
+    ('title',  'Root Access',   '모든 권한을 가진 자의 칭호',      5000, 'Legendary', 'title-root-access',   60),
+    ('theme',  '오션 드라이브', '푸른 물결 프로필 카드 배경',      800,  'Rare',      'theme-ocean-drive',   70),
+    ('theme',  '다크 커널',     '터미널 격자 프로필 카드 배경',    3500, 'Legendary', 'theme-dark-kernel',   80)
 ON CONFLICT (asset_key) DO NOTHING;
 
 COMMIT;

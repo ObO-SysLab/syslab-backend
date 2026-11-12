@@ -81,6 +81,9 @@ public class StoreService {
         result.put("balance", ((Number) sums.get("balance")).intValue());
         result.put("earned", ((Number) sums.get("earned")).intValue());
         result.put("spent", ((Number) sums.get("spent")).intValue());
+        result.put("todayEarned", points.earnedToday(userId));
+        result.put("dailyCap", PointService.DAILY_CAP);
+        result.put("dailyBonus", PointService.DAILY_BONUS);
         result.put("history", history);
         return result;
     }

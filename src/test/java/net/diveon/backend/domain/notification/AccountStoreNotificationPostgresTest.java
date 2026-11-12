@@ -73,7 +73,9 @@ class AccountStoreNotificationPostgresTest {
     static final String suffix = System.getProperty("os.name").startsWith("Windows") ? ".exe" : "";
 
     static User author, solver, other;
-    static Problem p1, p2, pGroup, pOwn, pContest, p6;
+    static Problem p1, p2, pGroup, pOwn, pContest, p6, yesterdayHard;
+    static net.diveon.backend.domain.problem.repository.ProblemRepository problems;
+    static net.diveon.backend.domain.grade.repository.SolveSubmissionRepository submissions;
 
     static void command(String... args) throws Exception {
         var process = new ProcessBuilder(args).redirectErrorStream(true)
@@ -125,6 +127,8 @@ class AccountStoreNotificationPostgresTest {
             var repositories = new JpaRepositoryFactory(em);
             users = repositories.getRepository(UserRepository.class);
             groupUsers = repositories.getRepository(GroupUserRepository.class);
+            problems = repositories.getRepository(net.diveon.backend.domain.problem.repository.ProblemRepository.class);
+            submissions = repositories.getRepository(net.diveon.backend.domain.grade.repository.SolveSubmissionRepository.class);
             points = new PointService(jdbc);
             store = new StoreService(jdbc, points, users);
             notifications = new NotificationService(jdbc);
@@ -155,6 +159,17 @@ class AccountStoreNotificationPostgresTest {
         return p;
     }
 
+    // 정답 제출 하나(제출 시각을 정해서). 포인트는 제출 시각의 서울 날짜로 하루 한도를 계산한다.
+    static void solve(User u, Problem p, LocalDateTime at, SolveResult.SolveResultState state) {
+        tx.executeWithoutResult(s -> {
+            var sub = new SolveSubmission(p, u);
+            em.persist(sub);
+            em.persist(new SolveResult(sub, state));
+            em.flush();
+            jdbc.update("UPDATE solve_submission SET submitted_at = ? WHERE id = ?", java.sql.Timestamp.valueOf(at), sub.getId());
+        });
+    }
+
     static void seed() {
         tx.executeWithoutResult(s -> {
             author = user("author");
@@ -167,9 +182,11 @@ class AccountStoreNotificationPostgresTest {
             pContest = problem(author, "1", "contest");
             p6 = problem(author, "2", "public");
             em.flush();
-            for (Problem p : List.of(p1, p2, pGroup, pOwn, pContest))
-                jdbc.update("INSERT INTO problem_solver(prob_id, user_id) VALUES (?, ?)", p.getId(), solver.getId());
         });
+        LocalDateTime base = LocalDateTime.now().withSecond(0).withNano(0).minusMinutes(30);
+        int i = 0;
+        for (Problem p : List.of(p1, p2, pGroup, pOwn, pContest))
+            solve(solver, p, base.plusMinutes(i++), SolveResult.SolveResultState.CORRECT);
     }
 
     static long countNotifications(User u, String type) {
@@ -188,6 +205,7 @@ class AccountStoreNotificationPostgresTest {
         tx.executeWithoutResult(s -> points.reconcile(solver.getId()));
         // p1(10) + p2(30). 그룹·대회 문제와 본인 문제는 제외
         assertEquals(40, points.balance(solver.getId()));
+        assertEquals(40, points.earnedToday(solver.getId()));
         assertEquals(2, (int) jdbc.queryForObject("SELECT count(*) FROM point_ledger WHERE user_id = ?", Integer.class, solver.getId()));
     }
 
@@ -198,12 +216,23 @@ class AccountStoreNotificationPostgresTest {
         var poor = assertThrows(DomainRuleException.class, () -> tx.executeWithoutResult(s -> store.purchase(solver.getId(), hunter)));
         assertEquals(HttpStatus.BAD_REQUEST, poor.getStatus());
 
-        jdbc.update("INSERT INTO problem_solver(prob_id, user_id) VALUES (?, ?)", p6.getId(), solver.getId());
+        // 지난 3일 동안 하루에 레벨 7 문제 두 개(140P)씩 풀었다 → 하루 한도 100P씩만 지급(70 + 30)
+        for (int day = 1; day <= 3; day++) {
+            LocalDateTime at = LocalDateTime.now().minusDays(day).withHour(10).withMinute(0).withSecond(0).withNano(0);
+            Problem[] hard = new Problem[2];
+            tx.executeWithoutResult(s -> { hard[0] = problem(author, "7", "public"); hard[1] = problem(author, "7", "public"); });
+            solve(solver, hard[0], at, SolveResult.SolveResultState.CORRECT);
+            solve(solver, hard[1], at.plusMinutes(5), SolveResult.SolveResultState.CORRECT);
+            if (day == 1) yesterdayHard = hard[0];
+        }
         int left = tx.execute(s -> store.purchase(solver.getId(), hunter));
-        assertEquals(10, left);
+        assertEquals(40, left); // 40 + 300 - 300
+        var capped = jdbc.queryForList("SELECT amount FROM point_ledger WHERE user_id = ? AND earned_on = ? ORDER BY amount DESC",
+                Integer.class, solver.getId(), java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(1)));
+        assertEquals(List.of(70, 30), capped);
         var dup = assertThrows(DomainRuleException.class, () -> tx.executeWithoutResult(s -> store.purchase(solver.getId(), hunter)));
         assertEquals(HttpStatus.CONFLICT, dup.getStatus());
-        assertEquals(10, (int) tx.execute(s -> store.purchase(solver.getId(), frame)));
+        assertEquals(40, (int) tx.execute(s -> store.purchase(solver.getId(), frame)));
 
         tx.executeWithoutResult(s -> { store.equip(solver.getId(), hunter); store.equip(solver.getId(), frame); });
         var eq = store.equipped(List.of(solver.getId(), author.getId())).get(0);
@@ -217,12 +246,43 @@ class AccountStoreNotificationPostgresTest {
         assertEquals(8, items.size());
         assertTrue(items.stream().anyMatch(i -> i.getItemId() == hunter && i.isOwned() && !i.isEquipped()));
         assertTrue(store.items(null).stream().noneMatch(i -> i.isOwned()));
-        @SuppressWarnings("unchecked") var history = (List<Object>) tx.execute(s -> store.me(solver.getId())).get("history");
-        assertEquals(5, history.size());
+        var me = tx.execute(s -> store.me(solver.getId()));
+        @SuppressWarnings("unchecked") var history = (List<Object>) me.get("history");
+        assertEquals(9, history.size()); // SOLVE 8줄 + 구매 1줄(0P 구매는 내역에서 뺀다)
+        assertEquals(40, me.get("balance"));
+        assertEquals(100, me.get("dailyCap"));
     }
 
     @Test @Order(4)
+    void dailyProblemBonusRespectsTheCap() {
+        var today = new net.diveon.backend.domain.problem.service.ProblemTodayService(
+                problems, submissions, jdbc) {
+            @Override protected java.time.LocalDate today() { return java.time.LocalDate.now(); }
+        };
+        jdbc.update("INSERT INTO daily_problem (day, prob_id) VALUES (?, ?)", java.sql.Date.valueOf(java.time.LocalDate.now()), p1.getId());
+        jdbc.update("INSERT INTO daily_problem (day, prob_id) VALUES (?, ?)", java.sql.Date.valueOf(java.time.LocalDate.now().minusDays(1)), yesterdayHard.getId());
+        assertEquals(p1.getId(), (long) tx.execute(s -> today.todayProblemId()));
+
+        tx.executeWithoutResult(s -> points.reconcile(solver.getId()));
+        tx.executeWithoutResult(s -> points.reconcile(solver.getId()));
+        // 오늘: 40 + 오늘의 문제 50 = 90. 어제는 이미 100P라 오늘의 문제 보너스가 0P
+        assertEquals(90, points.earnedToday(solver.getId()));
+        assertEquals(90, points.balance(solver.getId()));
+        assertEquals(List.of(50, 0), jdbc.queryForList(
+                "SELECT amount FROM point_ledger WHERE user_id = ? AND reason = 'DAILY' ORDER BY earned_on DESC", Integer.class, solver.getId()));
+
+        // 기록이 없는 날은 공개 문제 하나를 골라 기록하고, 다시 물어도 같은 문제다.
+        var future = new net.diveon.backend.domain.problem.service.ProblemTodayService(problems, submissions, jdbc) {
+            @Override protected java.time.LocalDate today() { return java.time.LocalDate.now().plusDays(1); }
+        };
+        long picked = tx.execute(s -> future.todayProblemId());
+        assertEquals(picked, (long) tx.execute(s -> future.todayProblemId()));
+        assertEquals("public", jdbc.queryForObject("SELECT visibility FROM problem_summary WHERE id = ?", String.class, picked));
+    }
+
+    @Test @Order(5)
     void solveNotificationsUseCursorAndSettings() {
+        jdbc.update("UPDATE notification_cursor SET last_id = (SELECT COALESCE(MAX(id), 0) FROM solve_result) WHERE name = 'solve_result'");
         tx.executeWithoutResult(s -> notifications.updateSettings(other.getId(), new NotificationSettings(false, true, false)));
         tx.executeWithoutResult(s -> {
             var a = new SolveSubmission(p1, solver); em.persist(a); em.persist(new SolveResult(a, SolveResult.SolveResultState.CORRECT));
@@ -237,7 +297,7 @@ class AccountStoreNotificationPostgresTest {
         assertTrue(body.startsWith("#" + p1.getId() + " "), body);
     }
 
-    @Test @Order(5)
+    @Test @Order(6)
     void commentNotificationsSkipSelfAndRespectSettings() {
         notifications.problemComment(author.getId(), solver.getId(), "solver", 900, p1.getId(), "t", false);
         notifications.problemComment(author.getId(), author.getId(), "author", 901, p1.getId(), "t", false);
@@ -251,7 +311,7 @@ class AccountStoreNotificationPostgresTest {
         assertFalse(settings.getComment());
     }
 
-    @Test @Order(6)
+    @Test @Order(7)
     void contestStartOnlyWithinAnHourOnce() {
         tx.executeWithoutResult(s -> {
             var soon = new Contest(author, null, "곧 시작", "d", Contest.ContestType.INDIVIDUAL, Contest.ParticipationType.INDIVIDUAL,
@@ -279,7 +339,7 @@ class AccountStoreNotificationPostgresTest {
         assertEquals(0, notifications.unreadCount(solver.getId()));
     }
 
-    @Test @Order(7)
+    @Test @Order(8)
     void withdrawalBlocksLeadersAndAnonymizesMembers() {
         var images = mock(ImageUploadService.class);
         var userService = mock(UserService.class);
@@ -329,7 +389,7 @@ class AccountStoreNotificationPostgresTest {
         assertEquals(HttpStatus.NOT_FOUND, again.getStatus());
     }
 
-    @Test @Order(8)
+    @Test @Order(9)
     void activityShowsPublicResultsOfActiveUsersOnly() {
         var before = activity.getRecent(20).getActivities();
         assertTrue(before.stream().anyMatch(a -> a.getUserId().equals(other.getId())));
