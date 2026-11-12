@@ -201,7 +201,10 @@ public class GroupMemberService {
                         groupUser.getUser().getId(),
                         groupUser.getUser().getNickname(),
                         convertGroupRole(groupUser.getRole()),
-                        groupUser.getJoinedAt()
+                        groupUser.getJoinedAt(),
+                        groupUser.getUser().getTier(),
+                        groupUser.getUser().getScore(),
+                        groupUser.getUser().getProfileImgUrl()
                 ))
                 .toList();
 
@@ -300,7 +303,8 @@ public class GroupMemberService {
                 .map(assignRequest -> new GroupPendingMemberListResponse.PendingMember(
                         assignRequest.getUser().getId(),
                         assignRequest.getUser().getNickname(),
-                        assignRequest.getAppliedAt()
+                        assignRequest.getAppliedAt(),
+                        assignRequest.getUser().getTier()
                 ))
                 .toList();
 

@@ -6,6 +6,7 @@ import net.diveon.backend.global.response.ApiResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,5 +30,12 @@ public class UserProfileImageController {
             @RequestParam("image") MultipartFile image) {
         String imageUrl = profileService.uploadProfileImage(Long.parseLong(userId), image);
         return ResponseEntity.ok(ApiResponse.success("프로필 이미지 업로드 성공", new ProfileImageUploadResponse(imageUrl)));
+    }
+
+    // 프로필 이미지 삭제
+    @DeleteMapping("/profile-image")
+    public ResponseEntity<ApiResponse<Void>> deleteProfileImage(@AuthenticationPrincipal String userId) {
+        profileService.deleteProfileImage(Long.parseLong(userId));
+        return ResponseEntity.ok(ApiResponse.success("프로필 이미지 삭제 성공", null));
     }
 }
