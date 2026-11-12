@@ -1,5 +1,9 @@
 package net.diveon.backend.domain.problem.service;
 
+import net.diveon.backend.domain.notification.service.CommentNotifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import net.diveon.backend.domain.problem.dto.request.ProblemCommentCreateRequest;
 import net.diveon.backend.domain.problem.dto.request.ProblemCommentUpdateRequest;
 import net.diveon.backend.domain.problem.dto.response.ProblemCommentResponse;
@@ -27,6 +31,8 @@ public class ProblemCommentService {
     private final ProblemRepository problemRepository;
     private final UserRepository userRepository;
     private final ProblemAccessService access;
+    private final CommentNotifier notifier;
+    private static final Logger log = LoggerFactory.getLogger(ProblemCommentService.class);
 
     public ProblemCommentService(
         ProblemCommentRepository commentRepository,
@@ -34,10 +40,22 @@ public class ProblemCommentService {
         UserRepository userRepository,
         ProblemAccessService access
     ) {
+        this(commentRepository, problemRepository, userRepository, access, CommentNotifier.NONE);
+    }
+
+    @Autowired
+    public ProblemCommentService(
+        ProblemCommentRepository commentRepository,
+        ProblemRepository problemRepository,
+        UserRepository userRepository,
+        ProblemAccessService access,
+        CommentNotifier notifier
+    ) {
         this.commentRepository = commentRepository;
         this.problemRepository = problemRepository;
         this.userRepository = userRepository;
         this.access = access;
+        this.notifier = notifier;
     }
 
     // 댓글 목록 조회
@@ -95,8 +113,24 @@ public class ProblemCommentService {
 
         ProblemComment comment = new ProblemComment(problem, user, parent, request.getContent(), request.getIsPrivate());
         ProblemComment saved = commentRepository.save(comment);
+        notifyComment(problem, parent, saved, user);
 
         return ProblemCommentResponse.CommentCreate.of(saved);
+    }
+
+    // 최상위 댓글은 출제자에게, 답글은 원 댓글 작성자에게 알린다. 비공개 답글은 원 댓글 작성자가 볼 수 없으면 알리지 않는다.
+    // 알림은 별도 트랜잭션이라 실패해도 댓글 저장에는 영향이 없다.
+    private void notifyComment(Problem problem, ProblemComment parent, ProblemComment saved, User actor) {
+        try {
+            long problemAuthorId = problem.getAuthor().getId();
+            long recipientId = parent == null ? problemAuthorId : parent.getAuthor().getId();
+            boolean visible = parent == null || !Boolean.TRUE.equals(saved.getIsPrivate()) || recipientId == problemAuthorId;
+            if (!visible) return;
+            notifier.problemComment(recipientId, actor.getId(), actor.getNickname(), saved.getId(),
+                    problem.getId(), problem.getTitle(), parent != null);
+        } catch (RuntimeException e) {
+            log.warn("댓글 알림 실패: {}", e.getMessage());
+        }
     }
 
     // 댓글 수정

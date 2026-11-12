@@ -62,6 +62,10 @@ public class User {
     @Column(name = "interest")
     private String interest;
 
+    // 탈퇴 시각. NULL이면 활성 계정(ops/2026-11-12-account-store-notification.sql)
+    @Column(name = "deleted_at", columnDefinition = "TIMESTAMP")
+    private LocalDateTime deletedAt;
+
     public User() {}
 
     public User(String loginId, String password, String nickname, String email, String belong, List<String> interest) {
@@ -100,6 +104,25 @@ public class User {
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
     }
+
+    // 계정 탈퇴: 개인정보를 지우고 로그인 아이디·닉네임을 바꾼다. 문제·제출·댓글 기록은 이 이름으로 남는다.
+    public void withdraw(String anonymizedLoginId, String anonymizedNickname, String encodedRandomPassword, LocalDateTime at) {
+        this.loginId = anonymizedLoginId;
+        this.nickname = anonymizedNickname;
+        this.password = encodedRandomPassword;
+        this.realName = null;
+        this.email = null;
+        this.phoneNumber = null;
+        this.birthday = null;
+        this.comment = null;
+        this.belong = null;
+        this.interest = null;
+        this.profileImgUrl = null;
+        this.deletedAt = at;
+    }
+
+    public LocalDateTime getDeletedAt() { return deletedAt; }
+    public boolean isDeleted() { return deletedAt != null; }
 
     public void updateProfileImage(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;

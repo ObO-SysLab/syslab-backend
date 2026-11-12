@@ -50,6 +50,7 @@ public class UserRankingSnapshotRefreshService {
                 COALESCE(u.tier, 1),
                 COALESCE(u.score, 0)
             FROM domain_user u
+            WHERE u.deleted_at IS NULL
             ORDER BY COALESCE(u.score, 0) DESC, u.id ASC
             """, snapshot.getId());
 
