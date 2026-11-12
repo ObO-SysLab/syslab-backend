@@ -1,6 +1,7 @@
 package net.diveon.backend.domain.grade.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
     private final ProblemCodingRepository problemCodingRepository;
     private final CodingGradeJobStore jobs;
     private final jakarta.persistence.EntityManager entityManager;
+    private final ApplicationEventPublisher events;
 
     @Value("${grading.recovery.enabled:false}")
     private boolean recoveryEnabled;
@@ -55,7 +57,8 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         SolveSubmissionCodingRepository solveSubmissionCodingRepository,
         ProblemCodingRepository problemCodingRepository,
         CodingGradeJobStore jobs,
-        jakarta.persistence.EntityManager entityManager
+        jakarta.persistence.EntityManager entityManager,
+        ApplicationEventPublisher events
     ) {
         this.s3Client = s3Client;
         this.sqsClient = sqsClient;
@@ -65,6 +68,7 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         this.problemCodingRepository = problemCodingRepository;
         this.jobs = jobs;
         this.entityManager = entityManager;
+        this.events = events;
     }
 
     @Override
@@ -117,7 +121,10 @@ public class CodingGradeQueueServiceImpl implements CodingGradeQueueService {
         try {
             // The contest submission and its request become visible in the same commit.
             entityManager.flush();
-            jobs.register(Long.parseLong(message.getSubmissionId()), objectMapper.writeValueAsString(message), timeout);
+            long submissionId = Long.parseLong(message.getSubmissionId());
+            jobs.register(submissionId, objectMapper.writeValueAsString(message), timeout);
+            // 커밋 직후 바로 보낸다(CodingGradeRecovery). 15초 주기 작업은 놓친 요청을 위한 안전망으로 남는다.
+            events.publishEvent(new CodingGradeRequested(submissionId));
         } catch (JsonProcessingException e) {
             throw new IllegalArgumentException("Invalid grading message", e);
         }
