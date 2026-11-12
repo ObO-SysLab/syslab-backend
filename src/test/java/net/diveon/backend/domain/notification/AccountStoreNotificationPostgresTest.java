@@ -399,4 +399,24 @@ class AccountStoreNotificationPostgresTest {
         assertTrue(after.stream().allMatch(a -> a.getSubmittedAt() != null));
         assertEquals(0, store.equipped(List.of(other.getId())).size());
     }
+
+    // QA 2번: 외부 채점기(코딩)는 solve_result를 직접 넣어 점수·티어가 그대로였다. 일괄 갱신이 사용자별 규칙과 같은 값을 내야 한다.
+    @Test @Order(10)
+    void bulkTierRefreshMatchesPerUserRuleAndIsIdempotent() {
+        var results = new JpaRepositoryFactory(em).getRepository(net.diveon.backend.domain.grade.repository.SolveResultRepository.class);
+        var tiers = new net.diveon.backend.domain.user.service.UserTierService(users, results, jdbc);
+        // 지금까지 정답은 refreshTierScore 없이 넣었으므로 저장값은 처음 그대로(0점·1티어)다.
+        assertEquals(0, (int) jdbc.queryForObject("SELECT score FROM domain_user WHERE id = ?", Integer.class, solver.getId()));
+
+        int changed = tx.execute(s -> tiers.refreshAllTierScores());
+        assertTrue(changed >= 1);
+        int expected = results.calculateTierScoreByUserId(solver.getId());
+        assertEquals(460, expected); // p1 10 + p2 30 + 레벨 7 여섯 개 420. 그룹·대회·본인 문제 제외
+        var row = jdbc.queryForMap("SELECT score, tier FROM domain_user WHERE id = ?", solver.getId());
+        assertEquals(expected, row.get("score"));
+        assertEquals(2, row.get("tier"));
+        assertEquals(0, (int) tx.execute(s -> tiers.refreshAllTierScores()));
+        // 탈퇴 처리된 사용자(9번에서 other)는 건드리지 않는다.
+        assertEquals(0, (int) jdbc.queryForObject("SELECT score FROM domain_user WHERE id = ?", Integer.class, other.getId()));
+    }
 }

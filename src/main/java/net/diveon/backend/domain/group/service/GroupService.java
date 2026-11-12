@@ -169,6 +169,14 @@ public class GroupService {
 
         group.update(request.getTitle(), request.getDescription(), request.getIsPrivate(), request.getIsAutoApprove());
 
+        // 공개 그룹으로 만든 뒤 비공개로 바꾸면 초대 코드가 없었다. 생성할 때와 같게 30일짜리 코드를 만든다(쓸 수 있는 코드는 그대로 둔다).
+        LocalDateTime now = LocalDateTime.now();
+        if (Boolean.TRUE.equals(group.getIsPrivate())
+                && (group.getInvitationCode() == null
+                    || (group.getInvitationCodeExpiresAt() != null && group.getInvitationCodeExpiresAt().isBefore(now)))) {
+            group.updateInvitationCode(UUID.randomUUID().toString(), now.plusDays(30));
+        }
+
         // 태그 전체 교체 (기존 태그 삭제 후 새로 저장)
         groupTagRepository.deleteAllByGroupId(groupId);
         List<String> tags = request.getTags();
