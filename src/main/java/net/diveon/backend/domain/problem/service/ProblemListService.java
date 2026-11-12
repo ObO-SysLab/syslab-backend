@@ -71,9 +71,9 @@ public class ProblemListService {
         return (root, query, cb) -> {
             var predicates = new java.util.ArrayList<>();
 
+            // '내가 만든 문제'는 공개 범위와 상관없이 내가 낸 문제 전부다(작성자는 모든 범위의 자기 문제를 열 수 있다).
             if (onlyMine) {
                 predicates.add(cb.equal(root.get("author").get("id"), userId));
-                predicates.add(cb.equal(root.get("visibility"), "private"));
             } else {
                 predicates.add(cb.equal(root.get("visibility"), "public"));
             }
