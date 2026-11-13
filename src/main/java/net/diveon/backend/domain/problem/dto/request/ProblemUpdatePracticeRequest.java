@@ -6,8 +6,13 @@ public class ProblemUpdatePracticeRequest {
     private String summary;
     private String description;
     private String difficulty;
+    // Absent (null) keeps the saved hint; an empty string removes it.
+    private String hint;
 
     public ProblemUpdatePracticeRequest() {}
+
+    public String getHint() { return hint; }
+    public void setHint(String hint) { this.hint = hint; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
