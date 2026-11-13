@@ -10,7 +10,7 @@ public class ProblemCreatePracticeRequest {
     /*
     실습형 문제 생성의 경우, 현재는 파일 업로드(.zip)가 필요해서 multipart/form-data형식으로만 가능.
     근데 이 형식은 @ModelAttribute로 받는데, 이건 @JsonProperty 무시하고 Java 필드명 그대로 매핑
-    그래서 osImage, allowedCommands, cpuLimit, memoryLimit 전부 camelCase로 보내야 함
+    그래서 commandAllowlist처럼 전부 camelCase로 보내야 함
     다른 API들은 JSON이라 snake_case인데 이 API만 예외
 
     -> 이후 zip파일을 직접 올리는 방식이아니라, 자동 생성 방식으로 고도화 되면 아마 form-data형식을 버리게 될 거 같아서
@@ -40,18 +40,9 @@ public class ProblemCreatePracticeRequest {
     private Long groupId;
     private Long contestId;
 
-    // The image comes from the uploaded Dockerfile; the page no longer sends a (hidden, made-up) OS name.
-    private String osImage = "dockerfile";
-
-    private List<String> allowedCommands;
-
-    // Restricts the practice image; empty or absent = unrestricted. A new name on purpose: old
-    // pages still post hidden allowedCommands defaults, which must never turn into a restriction.
+    // Restricts the practice image; empty or absent = unrestricted. Old pages may still post the
+    // removed osImage/allowedCommands/cpuLimit/memoryLimit fields; they are not bound and are ignored.
     private List<String> commandAllowlist;
-
-    private String cpuLimit = "0.3";
-
-    private String memoryLimit = "256m";
 
     @NotBlank
     private String flag;
@@ -89,20 +80,8 @@ public class ProblemCreatePracticeRequest {
     public Long getContestId() { return contestId; }
     public void setContestId(Long contestId) { this.contestId = contestId; }
 
-    public String getOsImage() { return osImage; }
-    public void setOsImage(String osImage) { this.osImage = osImage == null || osImage.isBlank() ? "dockerfile" : osImage; }
-
-    public List<String> getAllowedCommands() { return allowedCommands; }
-    public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
-
     public List<String> getCommandAllowlist() { return commandAllowlist; }
     public void setCommandAllowlist(List<String> commandAllowlist) { this.commandAllowlist = commandAllowlist; }
-
-    public String getCpuLimit() { return cpuLimit; }
-    public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }
-
-    public String getMemoryLimit() { return memoryLimit; }
-    public void setMemoryLimit(String memoryLimit) { this.memoryLimit = memoryLimit; }
 
     public String getFlag() { return flag; }
     public void setFlag(String flag) { this.flag = flag; }

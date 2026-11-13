@@ -38,8 +38,8 @@ class PracticeAuthoringStatusTest {
         ReflectionTestUtils.setField(owner, "id", 1L);
         problem = new Problem(owner, "practice", "Authoring status", "kernel", "1", "private");
         ReflectionTestUtils.setField(problem, "id", 9L);
-        practice = new ProblemPractice(problem, "summary", "description", "ubuntu:22.04",
-                List.of("ls", "cat"), "0.5", "512m", "private-flag-hash", "s3://private-source/source.zip");
+        practice = new ProblemPractice(problem, "summary", "description",
+                "private-flag-hash", "s3://private-source/source.zip");
         ReflectionTestUtils.setField(practice, "codeBuildId", "private-project:internal-build-id");
         ReflectionTestUtils.setField(practice, "buildRequestId", "internal-request-id");
         when(problems.findById(9L)).thenReturn(Optional.of(problem));
