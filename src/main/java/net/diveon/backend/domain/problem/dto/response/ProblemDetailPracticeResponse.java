@@ -82,7 +82,8 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
     public static ProblemDetailPracticeResponse of(Problem problem, ProblemPractice problemPractice, boolean isOwner, boolean canExecute) {
         VmInfo vmInfo = new VmInfo(
             problemPractice.getOsImage(),
-            problemPractice.getAllowedCommands()
+            problemPractice.getAllowedCommands(),
+            problemPractice.getCommandAllowlist()
         );
 
         ProblemDetailPracticeResponse response = new ProblemDetailPracticeResponse(
@@ -102,7 +103,7 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
             problem.getCreatedAt().toString(),
             problem.getUpatedAt().toString()
         );
-        response.practiceBuild = PracticeBuildStatusResponse.of(problemPractice, canExecute);
+        response.practiceBuild = PracticeBuildStatusResponse.of(problemPractice, canExecute, isOwner);
         return response;
     }
 
@@ -131,15 +132,21 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
         @JsonProperty("allowedCommands")
         private List<String> allowedCommands;
 
+        // Commands the practice image actually allows; null = unrestricted.
+        @JsonProperty("commandAllowlist")
+        private List<String> commandAllowlist;
+
         public VmInfo() {
         }
 
-        public VmInfo(String osImage, List<String> allowedCommands) {
+        public VmInfo(String osImage, List<String> allowedCommands, List<String> commandAllowlist) {
             this.osImage = osImage;
             this.allowedCommands = allowedCommands;
+            this.commandAllowlist = commandAllowlist;
         }
 
         public String getOsImage() { return osImage; }
         public List<String> getAllowedCommands() { return allowedCommands; }
+        public List<String> getCommandAllowlist() { return commandAllowlist; }
     }
 }

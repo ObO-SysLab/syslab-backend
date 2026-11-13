@@ -36,6 +36,12 @@ public class ProblemPractice {
     @Column(name = "allowed_commands", columnDefinition = "JSONB")
     private List<String> allowedCommands;
 
+    // Commands the current image is restricted to; null = unrestricted. The legacy column above
+    // received hidden form defaults and never restricted anything, so it is not reused.
+    @Type(JsonType.class)
+    @Column(name = "command_allowlist", columnDefinition = "JSONB")
+    private List<String> commandAllowlist;
+
     @Column(name = "cpu_limit", length = 10, nullable = false)
     private String cpuLimit;
 
@@ -67,12 +73,18 @@ public class ProblemPractice {
     private Instant buildDeadlineAt;
     @Column(name = "build_failure_reason", length = 40)
     private String buildFailureReason;
+    // Validated author-facing reason from the build ("CODE" or "CODE:command"); shown to the author only.
+    @Column(name = "build_failure_detail", length = 80)
+    private String buildFailureDetail;
 
     @Column(name = "is_draft")
     private Boolean isDraft = false;
 
     @Column(name = "time_limit_sec")
     private Integer timeLimitSec;
+
+    /** Build outcome (and failure reason) when the image lacks the requested command restriction. */
+    public static final String RESTRICTION_UNVERIFIED = "RESTRICTION_UNVERIFIED";
 
     public ProblemPractice() {
     }
@@ -99,6 +111,14 @@ public class ProblemPractice {
     public String getDescription() { return description; }
     public String getOsImage() { return osImage; }
     public List<String> getAllowedCommands() { return allowedCommands; }
+    public List<String> getCommandAllowlist() { return commandAllowlist; }
+
+    /** Set with the build request: the image built from that request carries this policy. */
+    public void restrictCommands(List<String> normalizedPolicy) {
+        if (!"PENDING".equals(imageStatus) || ecrImageUri != null)
+            throw new IllegalStateException("Command policy is fixed by the build request");
+        commandAllowlist = normalizedPolicy == null ? null : List.copyOf(normalizedPolicy);
+    }
     public String getCpuLimit() { return cpuLimit; }
     public String getMemoryLimit() { return memoryLimit; }
     public String getFlagHash() { return flagHash; }
@@ -111,6 +131,7 @@ public class ProblemPractice {
     public Instant getBuildRequestedAt() { return buildRequestedAt; }
     public Instant getBuildDeadlineAt() { return buildDeadlineAt; }
     public String getBuildFailureReason() { return buildFailureReason; }
+    public String getBuildFailureDetail() { return buildFailureDetail; }
 
     public void requestBuild(String requestId, Instant requestedAt, Instant deadlineAt) {
         if (requestId == null || !java.util.UUID.fromString(requestId).toString().equals(requestId)
@@ -121,12 +142,18 @@ public class ProblemPractice {
         buildDeadlineAt = deadlineAt;
         codeBuildId = null;
         buildFailureReason = null;
+        buildFailureDetail = null;
         ecrImageUri = null;
         imageStatus = "PENDING";
     }
 
     /** Called only under the repository row lock; terminal state never regresses. */
     public boolean applyBuild(String requestId, String buildId, String status, String imageUri, Instant now) {
+        return applyBuild(requestId, buildId, status, imageUri, now, null);
+    }
+
+    public boolean applyBuild(String requestId, String buildId, String status, String imageUri, Instant now,
+            String failureDetail) {
         if (!"PENDING".equals(imageStatus) || !Objects.equals(buildRequestId, requestId)
                 || buildDeadlineAt == null) return false;
         if (!now.isBefore(buildDeadlineAt)) {
@@ -135,7 +162,8 @@ public class ProblemPractice {
             return true;
         }
         if (codeBuildId != null && !codeBuildId.equals(buildId)) return false;
-        if (!java.util.Set.of("IN_PROGRESS", "SUCCEEDED", "FAILED", "FAULT", "STOPPED", "TIMED_OUT").contains(status))
+        if (!java.util.Set.of("IN_PROGRESS", "SUCCEEDED", "FAILED", "FAULT", "STOPPED", "TIMED_OUT",
+                RESTRICTION_UNVERIFIED).contains(status))
             throw new IllegalArgumentException("Unknown build status");
         if ("SUCCEEDED".equals(status) && (imageUri == null || !imageUri.matches(".+@sha256:[0-9a-f]{64}")))
             throw new IllegalArgumentException("Verified image digest required");
@@ -146,6 +174,7 @@ public class ProblemPractice {
         } else if (!"IN_PROGRESS".equals(status)) {
             imageStatus = "FAILED";
             buildFailureReason = status;
+            buildFailureDetail = failureDetail != null && failureDetail.length() <= 80 ? failureDetail : null;
         }
         return true;
     }

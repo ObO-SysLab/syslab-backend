@@ -40,10 +40,14 @@ public class ProblemCreatePracticeRequest {
     private Long groupId;
     private Long contestId;
 
-    @NotBlank
-    private String osImage;
+    // The image comes from the uploaded Dockerfile; the page no longer sends a (hidden, made-up) OS name.
+    private String osImage = "dockerfile";
 
     private List<String> allowedCommands;
+
+    // Restricts the practice image; empty or absent = unrestricted. A new name on purpose: old
+    // pages still post hidden allowedCommands defaults, which must never turn into a restriction.
+    private List<String> commandAllowlist;
 
     private String cpuLimit = "0.3";
 
@@ -86,10 +90,13 @@ public class ProblemCreatePracticeRequest {
     public void setContestId(Long contestId) { this.contestId = contestId; }
 
     public String getOsImage() { return osImage; }
-    public void setOsImage(String osImage) { this.osImage = osImage; }
+    public void setOsImage(String osImage) { this.osImage = osImage == null || osImage.isBlank() ? "dockerfile" : osImage; }
 
     public List<String> getAllowedCommands() { return allowedCommands; }
     public void setAllowedCommands(List<String> allowedCommands) { this.allowedCommands = allowedCommands; }
+
+    public List<String> getCommandAllowlist() { return commandAllowlist; }
+    public void setCommandAllowlist(List<String> commandAllowlist) { this.commandAllowlist = commandAllowlist; }
 
     public String getCpuLimit() { return cpuLimit; }
     public void setCpuLimit(String cpuLimit) { this.cpuLimit = cpuLimit; }

@@ -33,7 +33,7 @@ class PracticeBuildReconcilerTest {
     @Test void missingEventRecoversFromDiscoveryAndBindsDigest() {
         var build = new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED");
         when(gateway.discover(Set.of(identity))).thenReturn(Map.of(identity, build));
-        when(gateway.imageUri(build)).thenReturn(IMAGE);
+        when(gateway.imageUri(build, null)).thenReturn(IMAGE);
         reconciler.recover();
         assertThat(practice.getImageStatus()).isEqualTo("READY");
         assertThat(practice.getCodeBuildId()).isEqualTo(BUILD);
@@ -51,6 +51,29 @@ class PracticeBuildReconcilerTest {
         assertThat(practice.getImageStatus()).isEqualTo("PENDING");
     }
 
+    @Test void failedBuildKeepsItsAuthorFacingReason() {
+        var build = new PracticeBuildGateway.Build(BUILD, identity, "FAILED");
+        when(gateway.get(BUILD)).thenReturn(build);
+        when(gateway.failureDetail(identity)).thenReturn("COMMAND_NOT_FOUND:xxd");
+        reconciler.accept(BUILD);
+        assertThat(practice.getImageStatus()).isEqualTo("FAILED");
+        assertThat(practice.getBuildFailureDetail()).isEqualTo("COMMAND_NOT_FOUND:xxd");
+    }
+
+    @Test void unreadableReasonNeverBlocksTheFailure() {
+        when(gateway.get(BUILD)).thenReturn(new PracticeBuildGateway.Build(BUILD, identity, "FAILED"));
+        when(gateway.failureDetail(identity)).thenThrow(new IllegalStateException("s3 offline"));
+        reconciler.accept(BUILD);
+        assertThat(practice.getImageStatus()).isEqualTo("FAILED");
+        assertThat(practice.getBuildFailureDetail()).isNull();
+    }
+
+    @Test void runningBuildDoesNotLookForAReason() {
+        when(gateway.get(BUILD)).thenReturn(new PracticeBuildGateway.Build(BUILD, identity, "IN_PROGRESS"));
+        reconciler.accept(BUILD);
+        verify(gateway, never()).failureDetail(any());
+    }
+
     @Test void knownBuildIsRecheckedWithoutEvent() {
         practice.applyBuild(REQUEST, BUILD, "IN_PROGRESS", null, START);
         when(gateway.get(BUILD)).thenReturn(new PracticeBuildGateway.Build(BUILD, identity, "STOPPED"));
@@ -62,13 +85,34 @@ class PracticeBuildReconcilerTest {
     @Test void missingDigestRetriesWithoutDeclaringSuccess() {
         var build = new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED");
         when(gateway.get(BUILD)).thenReturn(build);
-        when(gateway.imageUri(build)).thenThrow(new IllegalStateException("not visible"));
+        when(gateway.imageUri(build, null)).thenThrow(new IllegalStateException("not visible"));
         assertThatThrownBy(() -> reconciler.accept(BUILD)).isInstanceOf(IllegalStateException.class);
         assertThat(practice.getImageStatus()).isEqualTo("PENDING");
         assertThat(practice.getCodeBuildId()).isEqualTo(BUILD);
-        doReturn(IMAGE).when(gateway).imageUri(build);
+        doReturn(IMAGE).when(gateway).imageUri(build, null);
         reconciler.accept(BUILD);
         assertThat(practice.getImageStatus()).isEqualTo("READY");
+    }
+
+    @Test void restrictedRequestAsksForItsMarkerTag() {
+        practice.restrictCommands(List.of("cat", "ls"));
+        var build = new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED");
+        when(gateway.get(BUILD)).thenReturn(build);
+        when(gateway.imageUri(build, PracticeCommandPolicy.markerTag(BUILD, List.of("cat", "ls")))).thenReturn(IMAGE);
+        reconciler.accept(BUILD);
+        assertThat(practice.getImageStatus()).isEqualTo("READY");
+        assertThat(practice.getEcrImageUri()).isEqualTo(IMAGE);
+    }
+
+    @Test void imageWithoutRequestedRestrictionFailsInsteadOfBecomingReady() {
+        practice.restrictCommands(List.of("ls"));
+        var build = new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED");
+        when(gateway.get(BUILD)).thenReturn(build);
+        when(gateway.imageUri(eq(build), anyString())).thenThrow(new PracticeBuildGateway.RestrictionUnverifiedException());
+        reconciler.accept(BUILD);
+        assertThat(practice.getImageStatus()).isEqualTo("FAILED");
+        assertThat(practice.getBuildFailureReason()).isEqualTo("RESTRICTION_UNVERIFIED");
+        assertThat(practice.getEcrImageUri()).isNull();
     }
 
     @Test void oldRequestDoesNotFetchImageOrWrite() {
@@ -76,7 +120,7 @@ class PracticeBuildReconcilerTest {
         when(gateway.get(BUILD)).thenReturn(new PracticeBuildGateway.Build(BUILD, old, "SUCCEEDED"));
         reconciler.accept(BUILD);
         verify(repo, never()).findBuildForUpdate(anyLong());
-        verify(gateway, never()).imageUri(any());
+        verify(gateway, never()).imageUri(any(), any());
     }
 
     @Test void disabledRecoveryHasNoExternalCalls() {
