@@ -17,11 +17,30 @@ class PracticeBuildArtifactsTest {
         var client = mock(S3Client.class);
         var service = new S3ServiceImpl(client);
         ReflectionTestUtils.setField(service, "bucket", "source-bucket");
-        service.uploadDockerfileZip(7L, REQUEST, new MockMultipartFile("file", new byte[]{1}));
+        service.uploadDockerfileZip(7L, REQUEST, new MockMultipartFile("file", new byte[]{1}), null);
         service.deleteDockerfileZip(7L, REQUEST);
         String key = new PracticeBuildIdentity(7, REQUEST).sourceKey();
         verify(client).putObject(argThat((PutObjectRequest r) -> key.equals(r.key()) && "source-bucket".equals(r.bucket())), any(RequestBody.class));
         verify(client).deleteObject(argThat((DeleteObjectRequest r) -> key.equals(r.key())));
+        String result = new PracticeBuildIdentity(7, REQUEST).resultKey();
+        verify(client).deleteObject(argThat((DeleteObjectRequest r) -> result.equals(r.key())));
+    }
+
+    @Test void commandPolicyTravelsAsMetadataOfTheExactSourceObject() {
+        var client = mock(S3Client.class);
+        var service = new S3ServiceImpl(client);
+        ReflectionTestUtils.setField(service, "bucket", "source-bucket");
+        service.uploadDockerfileZip(7L, REQUEST, new MockMultipartFile("file", new byte[]{1}), java.util.List.of("cat", "ls"));
+        verify(client).putObject(argThat((PutObjectRequest r) -> java.util.Map.of("diveon-commands", "v1:cat,ls").equals(r.metadata())),
+                any(RequestBody.class));
+    }
+
+    @Test void unrestrictedSourceHasNoPolicyMetadata() {
+        var client = mock(S3Client.class);
+        var service = new S3ServiceImpl(client);
+        ReflectionTestUtils.setField(service, "bucket", "source-bucket");
+        service.uploadDockerfileZip(7L, REQUEST, new MockMultipartFile("file", new byte[]{1}), null);
+        verify(client).putObject(argThat((PutObjectRequest r) -> !r.metadata().containsKey("diveon-commands")), any(RequestBody.class));
     }
 
     @Test void legacySourceDeletionStillWorks() {
@@ -37,9 +56,19 @@ class PracticeBuildArtifactsTest {
         when(client.batchDeleteImage(any(BatchDeleteImageRequest.class))).thenReturn(BatchDeleteImageResponse.builder().build());
         var service = new EcrServiceImpl(client);
         ReflectionTestUtils.setField(service, "ecrRepository", "practice");
-        service.deleteImage(7L, BUILD);
+        service.deleteImage(7L, BUILD, null);
         verify(client).batchDeleteImage(argThat((BatchDeleteImageRequest r) -> r.imageIds().getFirst().imageDigest() == null
                 && PracticeBuildIdentity.imageTag(BUILD).equals(r.imageIds().getFirst().imageTag())));
+    }
+
+    @Test void restrictedImageCleanupRemovesBuildAndMarkerTagsTogether() {
+        var client = mock(EcrClient.class);
+        when(client.batchDeleteImage(any(BatchDeleteImageRequest.class))).thenReturn(BatchDeleteImageResponse.builder().build());
+        var service = new EcrServiceImpl(client);
+        ReflectionTestUtils.setField(service, "ecrRepository", "practice");
+        service.deleteImage(7L, BUILD, java.util.List.of("cat", "ls"));
+        verify(client).batchDeleteImage(argThat((BatchDeleteImageRequest r) -> r.imageIds().stream().map(ImageIdentifier::imageTag).toList()
+                .equals(java.util.List.of(PracticeBuildIdentity.imageTag(BUILD), PracticeCommandPolicy.markerTag(BUILD, java.util.List.of("cat", "ls"))))));
     }
 
     @Test void legacyImageCleanupStillUsesProblemTagAndReportsServiceFailure() {
@@ -48,7 +77,7 @@ class PracticeBuildArtifactsTest {
                 .failures(ImageFailure.builder().failureCode("ImageNotFound").build()).build());
         var service = new EcrServiceImpl(client);
         ReflectionTestUtils.setField(service, "ecrRepository", "practice");
-        assertThatThrownBy(() -> service.deleteImage(7L, null)).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> service.deleteImage(7L, null, null)).isInstanceOf(IllegalStateException.class);
         verify(client).batchDeleteImage(argThat((BatchDeleteImageRequest r) -> "prob-7".equals(r.imageIds().getFirst().imageTag())));
     }
 }

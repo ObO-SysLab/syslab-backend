@@ -7,6 +7,9 @@ import software.amazon.awssdk.services.ecr.EcrClient;
 import software.amazon.awssdk.services.ecr.model.BatchDeleteImageRequest;
 import software.amazon.awssdk.services.ecr.model.ImageIdentifier;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 @Profile("prod")
 public class EcrServiceImpl implements EcrService {
@@ -21,13 +24,17 @@ public class EcrServiceImpl implements EcrService {
     }
 
     @Override
-    public void deleteImage(Long probId, String buildId) {
-        // Delete this build's tag, not a digest that may be shared by another problem.
+    public void deleteImage(Long probId, String buildId, List<String> commandPolicy) {
+        // Delete this build's tags, not a digest that may be shared by another problem. A restricted
+        // image also carries its policy marker; ECR deletes the image only once no tag is left.
+        List<ImageIdentifier> tags = new ArrayList<>();
+        tags.add(ImageIdentifier.builder()
+                .imageTag(buildId == null ? "prob-" + probId : PracticeBuildIdentity.imageTag(buildId)).build());
+        if (buildId != null && commandPolicy != null)
+            tags.add(ImageIdentifier.builder().imageTag(PracticeCommandPolicy.markerTag(buildId, commandPolicy)).build());
         var response = ecrClient.batchDeleteImage(BatchDeleteImageRequest.builder()
                 .repositoryName(ecrRepository)
-                .imageIds(ImageIdentifier.builder()
-                        .imageTag(buildId == null ? "prob-" + probId : PracticeBuildIdentity.imageTag(buildId))
-                        .build())
+                .imageIds(tags)
                 .build());
         if (!response.failures().isEmpty()) throw new IllegalStateException("ECR image cleanup failed");
     }

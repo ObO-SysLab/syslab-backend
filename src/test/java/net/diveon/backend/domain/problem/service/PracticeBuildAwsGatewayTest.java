@@ -15,8 +15,9 @@ import static net.diveon.backend.domain.problem.service.PracticeBuildStateTest.*
 class PracticeBuildAwsGatewayTest {
     final CodeBuildClient client = mock(CodeBuildClient.class);
     final EcrClient ecr = mock(EcrClient.class);
+    final software.amazon.awssdk.services.s3.S3Client s3 = mock(software.amazon.awssdk.services.s3.S3Client.class);
     final PracticeBuildProperties props = new PracticeBuildProperties();
-    final PracticeBuildAwsGateway gateway = new PracticeBuildAwsGateway(client, ecr, props, "bucket", "registry", "repo");
+    final PracticeBuildAwsGateway gateway = new PracticeBuildAwsGateway(client, ecr, s3, props, "bucket", "registry", "repo");
     final PracticeBuildIdentity identity = new PracticeBuildIdentity(1, REQUEST);
     final String arn = "arn:aws:codebuild:ap-northeast-2:123456789012:build/" + BUILD;
 
@@ -92,12 +93,57 @@ class PracticeBuildAwsGatewayTest {
         String tag = PracticeBuildIdentity.imageTag(BUILD);
         when(ecr.describeImages(any(DescribeImagesRequest.class))).thenReturn(DescribeImagesResponse.builder()
                 .imageDetails(ImageDetail.builder().repositoryName("repo").imageTags(tag).imageDigest("sha256:" + "a".repeat(64)).build()).build());
-        assertThat(gateway.imageUri(new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED"))).isEqualTo(IMAGE);
+        assertThat(gateway.imageUri(new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED"), null)).isEqualTo(IMAGE);
         verify(ecr).describeImages(argThat((DescribeImagesRequest r) -> r.imageIds().getFirst().imageTag().equals(tag)));
+    }
+
+    @Test void restrictedBuildNeedsMarkerOnTheSameDigest() {
+        String tag = PracticeBuildIdentity.imageTag(BUILD);
+        String marker = PracticeCommandPolicy.markerTag(BUILD, java.util.List.of("cat", "ls"));
+        var build = new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED");
+        when(ecr.describeImages(any(DescribeImagesRequest.class))).thenReturn(DescribeImagesResponse.builder()
+                .imageDetails(ImageDetail.builder().repositoryName("repo").imageTags(tag, marker).imageDigest("sha256:" + "a".repeat(64)).build()).build());
+        assertThat(gateway.imageUri(build, marker)).isEqualTo(IMAGE);
+        assertThatThrownBy(() -> gateway.imageUri(build, marker.replace("eeba", "0000")))
+                .isInstanceOf(PracticeBuildGateway.RestrictionUnverifiedException.class);
+    }
+
+    @Test void restrictedBuildWithoutMarkerIsUnverified() {
+        String tag = PracticeBuildIdentity.imageTag(BUILD);
+        when(ecr.describeImages(any(DescribeImagesRequest.class))).thenReturn(DescribeImagesResponse.builder()
+                .imageDetails(ImageDetail.builder().repositoryName("repo").imageTags(tag).imageDigest("sha256:" + "a".repeat(64)).build()).build());
+        assertThatThrownBy(() -> gateway.imageUri(new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED"),
+                PracticeCommandPolicy.markerTag(BUILD, java.util.List.of("ls"))))
+                .isInstanceOf(PracticeBuildGateway.RestrictionUnverifiedException.class);
     }
 
     @Test void missingImageCannotBecomeReady() {
         when(ecr.describeImages(any(DescribeImagesRequest.class))).thenReturn(DescribeImagesResponse.builder().build());
-        assertThatThrownBy(() -> gateway.imageUri(new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED"))).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> gateway.imageUri(new PracticeBuildGateway.Build(BUILD, identity, "SUCCEEDED"), null)).isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test void failureReasonIsReadFromTheRequestsResultObject() {
+        when(s3.getObjectAsBytes(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class))).thenReturn(
+                software.amazon.awssdk.core.ResponseBytes.fromByteArray(
+                        software.amazon.awssdk.services.s3.model.GetObjectResponse.builder().build(),
+                        "{\"version\":1,\"code\":\"COMMAND_NOT_FOUND\",\"command\":\"xxd\"}".getBytes()));
+        assertThat(gateway.failureDetail(identity)).isEqualTo("COMMAND_NOT_FOUND:xxd");
+        verify(s3).getObjectAsBytes(argThat((software.amazon.awssdk.services.s3.model.GetObjectRequest r) ->
+                "bucket".equals(r.bucket()) && identity.resultKey().equals(r.key())));
+    }
+
+    @Test void missingResultObjectMeansNoReason() {
+        when(s3.getObjectAsBytes(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class)))
+                .thenThrow(software.amazon.awssdk.services.s3.model.NoSuchKeyException.builder().build());
+        assertThat(gateway.failureDetail(identity)).isNull();
+    }
+
+    @Test void onlyKnownCodesAndCommandNamesSurvive() {
+        assertThat(PracticeBuildAwsGateway.parseFailure("{\"version\":1,\"code\":\"DOCKERFILE_FAILED\"}".getBytes())).isEqualTo("DOCKERFILE_FAILED");
+        assertThat(PracticeBuildAwsGateway.parseFailure("{\"version\":1,\"code\":\"BUSYBOX_COMMAND\",\"command\":\"$(id)\"}".getBytes())).isEqualTo("BUSYBOX_COMMAND");
+        assertThat(PracticeBuildAwsGateway.parseFailure("{\"version\":1,\"code\":\"<script>\"}".getBytes())).isNull();
+        assertThat(PracticeBuildAwsGateway.parseFailure("{\"version\":2,\"code\":\"PUSH_FAILED\"}".getBytes())).isNull();
+        assertThat(PracticeBuildAwsGateway.parseFailure("not json".getBytes())).isNull();
+        assertThat(PracticeBuildAwsGateway.parseFailure(("{\"version\":1,\"code\":\"PUSH_FAILED\",\"pad\":\"" + "x".repeat(1100) + "\"}").getBytes())).isNull();
     }
 }

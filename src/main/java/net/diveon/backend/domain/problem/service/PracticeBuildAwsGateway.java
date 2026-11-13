@@ -1,5 +1,7 @@
 package net.diveon.backend.domain.problem.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -9,6 +11,9 @@ import software.amazon.awssdk.services.codebuild.model.ListBuildsForProjectReque
 import software.amazon.awssdk.services.ecr.EcrClient;
 import software.amazon.awssdk.services.ecr.model.DescribeImagesRequest;
 import software.amazon.awssdk.services.ecr.model.ImageIdentifier;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
@@ -17,15 +22,21 @@ import java.util.*;
 public class PracticeBuildAwsGateway implements PracticeBuildGateway {
     private final CodeBuildClient codebuild;
     private final EcrClient ecr;
+    private final S3Client s3;
     private final PracticeBuildProperties properties;
+    // Same codes as FAILURE_CODES in syslab-infra vm/codebuild/build_image.py.
+    static final Set<String> FAILURE_CODES = Set.of("SOURCE_INVALID", "POLICY_INVALID", "DOCKERFILE_FAILED",
+            "COMMAND_NOT_FOUND", "BUSYBOX_COMMAND", "LAB_ACCOUNT_EXISTS", "IMAGE_TOOL_MISSING", "RESTRICTION_FAILED", "PUSH_FAILED");
+    private static final ObjectMapper JSON = new ObjectMapper();
     private final String bucket, registry, repository;
 
-    public PracticeBuildAwsGateway(CodeBuildClient codebuild, EcrClient ecr, PracticeBuildProperties properties,
+    public PracticeBuildAwsGateway(CodeBuildClient codebuild, EcrClient ecr, S3Client s3, PracticeBuildProperties properties,
             @Value("${aws.s3.bucket-practice-dockerfile}") String bucket,
             @Value("${aws.ecr.practice-registry}") String registry,
             @Value("${aws.ecr.practice-repository}") String repository) {
         this.codebuild = codebuild;
         this.ecr = ecr;
+        this.s3 = s3;
         this.properties = properties;
         this.bucket = bucket;
         this.registry = registry;
@@ -94,7 +105,7 @@ public class PracticeBuildAwsGateway implements PracticeBuildGateway {
     }
 
     @Override
-    public String imageUri(Build build) {
+    public String imageUri(Build build, String requiredTag) {
         String tag = PracticeBuildIdentity.imageTag(build.id());
         var response = ecr.describeImages(DescribeImagesRequest.builder().repositoryName(repository)
                 .imageIds(ImageIdentifier.builder().imageTag(tag).build())
@@ -105,6 +116,37 @@ public class PracticeBuildAwsGateway implements PracticeBuildGateway {
         if (!repository.equals(image.repositoryName()) || !image.imageTags().contains(tag)
                 || image.imageDigest() == null || !image.imageDigest().matches("sha256:[0-9a-f]{64}"))
             throw new IllegalStateException("Image digest could not be verified");
+        // Both tags are pushed before CodeBuild reports success; a missing marker never appears later.
+        if (requiredTag != null && !image.imageTags().contains(requiredTag))
+            throw new RestrictionUnverifiedException();
         return registry + "/" + repository + "@" + image.imageDigest();
+    }
+
+    @Override
+    public String failureDetail(PracticeBuildIdentity identity) {
+        try {
+            var body = s3.getObjectAsBytes(GetObjectRequest.builder().bucket(bucket).key(identity.resultKey())
+                    .overrideConfiguration(c -> c.apiCallTimeout(Duration.ofSeconds(5))
+                            .apiCallAttemptTimeout(Duration.ofSeconds(2))).build());
+            return parseFailure(body.asByteArray());
+        } catch (RuntimeException missingOrUnreadable) {
+            return null; // The generic failure message still applies.
+        }
+    }
+
+    /** Accepts only a known code and a command name; anything else in the object is ignored. */
+    static String parseFailure(byte[] body) {
+        if (body == null || body.length > 1024) return null;
+        try {
+            JsonNode node = JSON.readTree(body);
+            if (node == null || !node.path("version").isInt() || node.path("version").asInt() != 1
+                    || !node.path("code").isTextual() || !FAILURE_CODES.contains(node.path("code").asText())) return null;
+            String code = node.path("code").asText();
+            JsonNode command = node.path("command");
+            return command.isTextual() && PracticeCommandPolicy.isCommandName(command.asText())
+                    ? code + ":" + command.asText() : code;
+        } catch (IOException malformed) {
+            return null;
+        }
     }
 }

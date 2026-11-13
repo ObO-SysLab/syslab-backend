@@ -19,8 +19,13 @@ public class PracticeBuildStore {
     // AWS calls must finish before entering this short transaction.
     @Transactional
     public void apply(PracticeBuildIdentity identity, String buildId, String status, String imageUri) {
+        apply(identity, buildId, status, imageUri, null);
+    }
+
+    @Transactional
+    public void apply(PracticeBuildIdentity identity, String buildId, String status, String imageUri, String failureDetail) {
         var practice = repository.findBuildForUpdate(identity.problemId())
                 .orElseThrow(() -> new IllegalStateException("Build request not committed or removed"));
-        practice.applyBuild(identity.requestId(), buildId, status, imageUri, clock.instant());
+        practice.applyBuild(identity.requestId(), buildId, status, imageUri, clock.instant(), failureDetail);
     }
 }

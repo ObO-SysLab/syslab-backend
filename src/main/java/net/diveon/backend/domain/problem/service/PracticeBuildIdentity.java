@@ -15,6 +15,9 @@ public record PracticeBuildIdentity(long problemId, String requestId) {
 
     public String sourceKey() { return "prob-" + problemId + "/builds/" + requestId + "/source.zip"; }
 
+    /** Author-facing failure reason the trusted build writes next to the source (never triggers a build). */
+    public String resultKey() { return "prob-" + problemId + "/builds/" + requestId + "/result.json"; }
+
     public static PracticeBuildIdentity fromKey(String key) {
         var match = KEY.matcher(key == null ? "" : key);
         if (!match.matches()) throw new IllegalArgumentException("Invalid practice build source key");
