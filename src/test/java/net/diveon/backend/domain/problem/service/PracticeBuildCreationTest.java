@@ -35,7 +35,7 @@ class PracticeBuildCreationTest {
         verifyNoInteractions(problems, practices, users, s3);
     }
 
-    @Test void requestAndTenMinuteDeadlineAreStoredBeforeExactSourceUpload() {
+    ProblemCreatePracticeRequest enabledRequest() {
         props.setEnabled(true);
         when(users.findById(1L)).thenReturn(Optional.of(mock(User.class)));
         when(problems.save(any())).thenAnswer(invocation -> {
@@ -47,12 +47,45 @@ class PracticeBuildCreationTest {
         var request = new ProblemCreatePracticeRequest();
         request.setFlag("flag"); request.setVisibility("public"); request.setTitle("practice");
         request.setDockerfile(new MockMultipartFile("dockerfile", "source.zip", "application/zip", new byte[]{1}));
+        return request;
+    }
+
+    @Test void legacyHiddenAllowedCommandsNeverRestrictTheImage() {
+        var request = enabledRequest();
+        request.setAllowedCommands(java.util.List.of("ls", "cat", "grep", "find"));
+        service.createPractice(1, request);
+        var saved = ArgumentCaptor.forClass(ProblemPractice.class);
+        verify(practices).save(saved.capture());
+        assertThat(saved.getValue().getCommandAllowlist()).isNull();
+        verify(s3).uploadDockerfileZip(eq(7L), anyString(), any(), isNull());
+    }
+
+    @Test void allowlistIsNormalizedStoredAndSentWithTheSource() {
+        var request = enabledRequest();
+        request.setCommandAllowlist(java.util.List.of("ls", " cat", "ls"));
+        service.createPractice(1, request);
+        var saved = ArgumentCaptor.forClass(ProblemPractice.class);
+        verify(practices).save(saved.capture());
+        assertThat(saved.getValue().getCommandAllowlist()).containsExactly("cat", "ls");
+        verify(s3).uploadDockerfileZip(7L, saved.getValue().getBuildRequestId(), request.getDockerfile(), java.util.List.of("cat", "ls"));
+    }
+
+    @Test void invalidAllowlistIsRejectedBeforeAnyWrite() {
+        var request = enabledRequest();
+        request.setCommandAllowlist(java.util.List.of("ls; rm -rf /"));
+        assertThatThrownBy(() -> service.createPractice(1, request))
+                .isInstanceOfSatisfying(ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(400));
+        verifyNoInteractions(problems, practices, s3);
+    }
+
+    @Test void requestAndTenMinuteDeadlineAreStoredBeforeExactSourceUpload() {
+        var request = enabledRequest();
         service.createPractice(1, request);
         var saved = ArgumentCaptor.forClass(ProblemPractice.class);
         var order = inOrder(practices, s3);
         order.verify(practices).save(saved.capture());
         var practice = saved.getValue();
-        order.verify(s3).uploadDockerfileZip(7L, practice.getBuildRequestId(), request.getDockerfile());
+        order.verify(s3).uploadDockerfileZip(7L, practice.getBuildRequestId(), request.getDockerfile(), null);
         assertThat(practice.getBuildRequestedAt()).isEqualTo(START);
         assertThat(practice.getBuildDeadlineAt()).isEqualTo(START.plusSeconds(600));
         assertThat(PracticeBuildIdentity.fromKey(new PracticeBuildIdentity(7, practice.getBuildRequestId()).sourceKey()).problemId()).isEqualTo(7);

@@ -172,6 +172,13 @@ public class ProblemCreateService {
         if (!practiceBuildProperties.isEnabled()) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "실습 이미지 빌드가 준비되지 않았습니다.");
         }
+        List<String> commandPolicy;
+        try {
+            commandPolicy = PracticeCommandPolicy.normalize(request.getCommandAllowlist());
+        } catch (IllegalArgumentException invalid) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "허용 명령어는 영문·숫자로 된 명령어 이름(32자 이하)을 " + PracticeCommandPolicy.MAX_COMMANDS + "개까지 입력할 수 있습니다.");
+        }
         var requestedAt = practiceBuildClock.instant();
         User author = userRepository.findById(userId)
                 .orElseThrow();
@@ -199,13 +206,15 @@ public class ProblemCreateService {
         );
         problemPractice.requestBuild(UUID.randomUUID().toString(), requestedAt,
                 requestedAt.plus(Duration.ofMinutes(practiceBuildProperties.getDeadlineMinutes())));
+        problemPractice.restrictCommands(commandPolicy);
         problemPracticeRepository.save(problemPractice);
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
         saveContestProblemIfNeeded(savedProblem, request.getContestId(), request.getVisibility(), userId);
 
         // Validate links first. Only this request's object can trigger its CodeBuild result.
-        s3Service.uploadDockerfileZip(savedProblem.getId(), problemPractice.getBuildRequestId(), request.getDockerfile());
+        s3Service.uploadDockerfileZip(savedProblem.getId(), problemPractice.getBuildRequestId(), request.getDockerfile(),
+                commandPolicy);
 
         return new ProblemCreatePracticeResponse(
                 savedProblem.getId(),

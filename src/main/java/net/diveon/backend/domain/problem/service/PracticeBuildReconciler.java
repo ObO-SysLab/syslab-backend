@@ -49,10 +49,27 @@ public class PracticeBuildReconciler {
             store.apply(build.identity(), build.id(), "IN_PROGRESS", null);
             var bound = repository.findById(build.identity().problemId()).orElseThrow();
             if (!matches(bound, build) || !build.id().equals(bound.getCodeBuildId())) return;
-            store.apply(build.identity(), build.id(), build.status(), gateway.imageUri(build));
-        } else {
+            var policy = bound.getCommandAllowlist();
+            String image;
+            try {
+                image = gateway.imageUri(build, policy == null ? null : PracticeCommandPolicy.markerTag(build.id(), policy));
+            } catch (PracticeBuildGateway.RestrictionUnverifiedException unrestricted) {
+                // Never offer an image that lacks the requested restriction (e.g. an old buildspec).
+                store.apply(build.identity(), build.id(), ProblemPractice.RESTRICTION_UNVERIFIED, null);
+                return;
+            }
+            store.apply(build.identity(), build.id(), build.status(), image);
+        } else if ("IN_PROGRESS".equals(build.status())) {
             store.apply(build.identity(), build.id(), build.status(), null);
+        } else {
+            // Read the author-facing reason before the short row-locking transaction.
+            store.apply(build.identity(), build.id(), build.status(), null, failureDetail(build.identity()));
         }
+    }
+
+    private String failureDetail(PracticeBuildIdentity identity) {
+        try { return gateway.failureDetail(identity); }
+        catch (RuntimeException unreadable) { return null; } // Never delay the terminal state.
     }
 
     @Scheduled(fixedDelayString = "${practice.build.poll-ms:30000}", scheduler = "practiceBuildScheduler")

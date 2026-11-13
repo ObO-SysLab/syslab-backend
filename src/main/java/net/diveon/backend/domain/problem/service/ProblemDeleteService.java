@@ -142,7 +142,7 @@ public class ProblemDeleteService {
 
         if (isReady) {
             try {
-                ecrService.deleteImage(probId, practice.getCodeBuildId());
+                ecrService.deleteImage(probId, practice.getCodeBuildId(), practice.getCommandAllowlist());
             } catch (Exception e) {
                 log.warn("ECR 이미지 삭제 실패 - probId: {}", probId, e);
             }
