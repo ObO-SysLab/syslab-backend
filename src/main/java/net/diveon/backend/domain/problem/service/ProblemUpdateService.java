@@ -133,6 +133,7 @@ public class ProblemUpdateService {
 
             problem.updateProblem(request.getTitle(), null, request.getDifficulty(), null);
             problemPractice.updatePractice(request.getSummary(), request.getDescription());
+            if (request.getHint() != null) problemPractice.describeHint(request.getHint());
 
             return new ProblemUpdatePracticeResponse(probId, problem.getType(), problem.getTitle(), problem.getUpatedAt().toString());
     }

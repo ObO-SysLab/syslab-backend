@@ -162,6 +162,11 @@ public class ProblemPractice {
     public Boolean getIsDraft() { return isDraft; }
     public Integer getTimeLimitSec() { return timeLimitSec; }
 
+    /** Optional hint learners can open on the problem page; blank clears it. */
+    public void describeHint(String hint) {
+        this.hint = hint == null || hint.isBlank() ? null : hint.strip();
+    }
+
     public void updatePractice(String summary, String description) {
         if (summary != null) this.summary = summary;
         if (description != null) this.description = description;

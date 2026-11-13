@@ -216,9 +216,9 @@ public class ContestService {
         Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
-        // 시작 전인 대회만 참가 가능
-        if (contest.getStatus() != Contest.ContestStatus.UPCOMING) {
-            throw new ContestAlreadyStartedException();
+        // 진행 중에도 참가할 수 있다(2026-11-13, 행사장에서 늦게 오는 참가자). 종료된 대회만 막는다.
+        if (contest.getStatus() == Contest.ContestStatus.ENDED) {
+            throw new ContestAlreadyStartedException("종료된 대회에는 참가할 수 없습니다.");
         }
 
         // 그룹 전용 대회면 그룹원인지 확인
