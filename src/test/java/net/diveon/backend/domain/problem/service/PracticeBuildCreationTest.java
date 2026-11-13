@@ -52,7 +52,7 @@ class PracticeBuildCreationTest {
 
     @Test void legacyHiddenAllowedCommandsNeverRestrictTheImage() {
         var request = enabledRequest();
-        request.setAllowedCommands(java.util.List.of("ls", "cat", "grep", "find"));
+        // Old pages post the removed allowedCommands field; it is not bound and never restricts anything.
         service.createPractice(1, request);
         var saved = ArgumentCaptor.forClass(ProblemPractice.class);
         verify(practices).save(saved.capture());

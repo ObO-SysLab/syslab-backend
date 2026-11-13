@@ -64,3 +64,13 @@
   - ubuntu와 debian에서 다음을 확인한다: 허용·거부, 셸 탈출, 동적 로더, 실패 코드, 도우미 옵션이 있을 때와 없을 때의 noexec 대조.
 - 백엔드: JDK21과 `-I ../obo-harness/experiments/backend-test-path.init.gradle`로 전체 테스트를 돌린다. 해시 예시 값은 infra 테스트와 같다.
 - 프런트: `npx vitest run`, `npx tsc --noEmit`, `npm run build`
+
+## 제한 기능의 한계 (문서로만 둔다)
+
+구조상 막을 수 없는 것들이다. 출제 화면에는 안내하지 않는다.
+- bash 내장 명령(`echo *`, `read`)으로 `ls`·`cat`을 흉내 낼 수 있다.
+- `gcc`처럼 내부 프로그램(`cc1`·`as`·`ld`)을 부르는 명령어는 그 프로그램까지 허용해야 동작한다.
+- busybox 이미지는 제한할 수 없어 빌드가 실패한다.
+- `/home/lab`에 출제자가 넣은 실행 파일은 실행된다.
+
+자세한 내용은 infra `vm/codebuild/README.md`에 있다.
