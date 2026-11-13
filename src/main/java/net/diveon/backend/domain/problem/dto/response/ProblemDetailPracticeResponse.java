@@ -100,8 +100,14 @@ public class ProblemDetailPracticeResponse implements ProblemDetailResponse {
             problem.getUpatedAt().toString()
         );
         response.practiceBuild = PracticeBuildStatusResponse.of(problemPractice, canExecute, isOwner);
+        response.hint = problemPractice.getHint();
         return response;
     }
+
+    // Optional author hint; null when there is none.
+    private String hint;
+
+    public String getHint() { return hint; }
 
     public Long getProbId() { return probId; }
     public String getAuthor() { return author; }

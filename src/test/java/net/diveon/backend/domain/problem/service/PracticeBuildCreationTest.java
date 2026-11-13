@@ -70,6 +70,19 @@ class PracticeBuildCreationTest {
         verify(s3).uploadDockerfileZip(7L, saved.getValue().getBuildRequestId(), request.getDockerfile(), java.util.List.of("cat", "ls"));
     }
 
+    @Test void hintIsStoredTrimmedAndBlankHintIsNone() {
+        var request = enabledRequest();
+        request.setHint("  find 의 -inum 을 써 보세요.\n");
+        service.createPractice(1, request);
+        var saved = ArgumentCaptor.forClass(ProblemPractice.class);
+        verify(practices).save(saved.capture());
+        assertThat(saved.getValue().getHint()).isEqualTo("find 의 -inum 을 써 보세요.");
+
+        var blank = new ProblemPractice();
+        blank.describeHint("   ");
+        assertThat(blank.getHint()).isNull();
+    }
+
     @Test void invalidAllowlistIsRejectedBeforeAnyWrite() {
         var request = enabledRequest();
         request.setCommandAllowlist(java.util.List.of("ls; rm -rf /"));

@@ -203,6 +203,7 @@ public class ProblemCreateService {
         problemPractice.requestBuild(UUID.randomUUID().toString(), requestedAt,
                 requestedAt.plus(Duration.ofMinutes(practiceBuildProperties.getDeadlineMinutes())));
         problemPractice.restrictCommands(commandPolicy);
+        problemPractice.describeHint(request.getHint());
         problemPracticeRepository.save(problemPractice);
 
         saveGroupProblemIfNeeded(savedProblem, request.getGroupId(), request.getVisibility());
