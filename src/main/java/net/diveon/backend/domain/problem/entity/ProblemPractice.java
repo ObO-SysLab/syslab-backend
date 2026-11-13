@@ -29,24 +29,11 @@ public class ProblemPractice {
     @Column(name = "description", columnDefinition = "TEXT", nullable = false)
     private String description;
 
-    @Column(name = "os_image", length = 100, nullable = false)
-    private String osImage;
-
-    @Type(JsonType.class)
-    @Column(name = "allowed_commands", columnDefinition = "JSONB")
-    private List<String> allowedCommands;
-
-    // Commands the current image is restricted to; null = unrestricted. The legacy column above
-    // received hidden form defaults and never restricted anything, so it is not reused.
+    // Commands the current image is restricted to; null = unrestricted. (The legacy os_image,
+    // allowed_commands, cpu_limit and memory_limit columns were never used and are dropped.)
     @Type(JsonType.class)
     @Column(name = "command_allowlist", columnDefinition = "JSONB")
     private List<String> commandAllowlist;
-
-    @Column(name = "cpu_limit", length = 10, nullable = false)
-    private String cpuLimit;
-
-    @Column(name = "memory_limit", length = 10, nullable = false)
-    private String memoryLimit;
 
     @Column(name = "flag_hash", length = 255, nullable = false)
     private String flagHash;
@@ -90,16 +77,10 @@ public class ProblemPractice {
     }
 
     public ProblemPractice(Problem problem, String summary, String description,
-                           String osImage, List<String> allowedCommands,
-                           String cpuLimit, String memoryLimit,
                            String flagHash, String dockerFileUrl) {
         this.problem = problem;
         this.summary = summary;
         this.description = description;
-        this.osImage = osImage;
-        this.allowedCommands = allowedCommands;
-        this.cpuLimit = cpuLimit;
-        this.memoryLimit = memoryLimit;
         this.flagHash = flagHash;
         this.dockerFileUrl = dockerFileUrl;
         this.isDraft = false;
@@ -109,8 +90,6 @@ public class ProblemPractice {
     public Problem getProblem() { return problem; }
     public String getSummary() { return summary; }
     public String getDescription() { return description; }
-    public String getOsImage() { return osImage; }
-    public List<String> getAllowedCommands() { return allowedCommands; }
     public List<String> getCommandAllowlist() { return commandAllowlist; }
 
     /** Set with the build request: the image built from that request carries this policy. */
@@ -119,8 +98,6 @@ public class ProblemPractice {
             throw new IllegalStateException("Command policy is fixed by the build request");
         commandAllowlist = normalizedPolicy == null ? null : List.copyOf(normalizedPolicy);
     }
-    public String getCpuLimit() { return cpuLimit; }
-    public String getMemoryLimit() { return memoryLimit; }
     public String getFlagHash() { return flagHash; }
     public String getDockerFileUrl() { return dockerFileUrl; }
     public String getHint() { return hint; }

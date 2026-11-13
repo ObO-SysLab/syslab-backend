@@ -197,10 +197,6 @@ public class ProblemCreateService {
                 savedProblem,
                 request.getSummary(),
                 request.getDescription(),
-                request.getOsImage(),
-                request.getAllowedCommands(),
-                request.getCpuLimit(),
-                request.getMemoryLimit(),
                 hashFlag(request.getFlag().trim()),
                 null
         );
