@@ -63,6 +63,8 @@ bin/
 .DS_Store
 Thumbs.db
 docs/
+CLAUDE.md
 HELP.md
+AGENTS.md
 db_schema.md
 api_schema.md
