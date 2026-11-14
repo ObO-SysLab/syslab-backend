@@ -6,7 +6,7 @@ import java.util.List;
 import net.diveon.backend.domain.problem.others.ForDtoTestCase;
 import net.diveon.backend.global.exception.InvalidSubmissionRequestException;
 
-/** Baekjoon-style text input/output for rule models (text-v1, 2026-11-08). */
+/** Baekjoon-style text input/output for rule models (text-v1). */
 class OboTextContractTest {
  final ObjectMapper mapper=new ObjectMapper();
  static final String INPUT="7 3 FIFO\n7 0 1 2 0 3 0";
@@ -41,7 +41,7 @@ class OboTextContractTest {
    assertTrue(error.getMessage().contains("2번째 줄"),error.getMessage());
    assertThrows(InvalidSubmissionRequestException.class,()->v.validateCodingCases(doc,cases("{\"refs\":[1]}",null)));
  }
- /** DP order finding as text (2026-11-09): any order reaching every meal goal at its last action is right. */
+ /** DP order finding as text: any order reaching every meal goal at its last action is right. */
  JsonNode dpDocument() throws Exception {
    var doc=mapper.readTree("""
  {"schemaVersion":2,"mode":"simulation","simulation":{"schemaVersion":2,"instances":[{"id":"dp","scenarioId":"DP","modelVersion":1,"name":"dp","input":{"actors":["A","B","C"],"policy":"ordered","mode":"findSchedule","thinkTicks":{"A":0,"B":0,"C":0},"eatTicks":{"A":1,"B":1,"C":1},"goalMeals":{"A":1,"B":1,"C":1}},"views":[],"decorations":[],"labels":{}}],"question":{"selectionMode":"single","judgeProfile":"obo-v1","assessmentMode":"result","gradingInstanceId":"dp","ioFormat":"text-v1"},"explanations":{"common":["dp"],"choices":{}}}}

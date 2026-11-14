@@ -36,7 +36,7 @@ public class ProblemCommentResponse {
         @JsonProperty("authorNickname")
         private String authorNickname;
 
-        // Author's profile picture URL, or null when none is set (2026-11-10).
+        // Author's profile picture URL, or null when none is set.
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
 
@@ -98,7 +98,7 @@ public class ProblemCommentResponse {
         @JsonProperty("authorNickname")
         private String authorNickname;
 
-        // Author's profile picture URL, or null when none is set (2026-11-10).
+        // Author's profile picture URL, or null when none is set.
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
 
@@ -167,7 +167,7 @@ public class ProblemCommentResponse {
         @JsonProperty("authorNickname")
         private String authorNickname;
 
-        // Author's profile picture URL, or null when none is set (2026-11-10).
+        // Author's profile picture URL, or null when none is set.
         @JsonProperty("authorProfileImgUrl")
         private String authorProfileImgUrl;
 

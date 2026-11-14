@@ -18,7 +18,7 @@ import net.diveon.backend.global.exception.ContestAlreadyStartedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
-/** 2026-11-13: participants may join a running contest (festival walk-ins); only ended contests refuse. */
+/** Participants may join a running contest (late arrivals at the venue); only ended contests refuse. */
 class ContestLateJoinTest {
     private final ContestRepository contests = mock(ContestRepository.class);
     private final ContestParticipantRepository participants = mock(ContestParticipantRepository.class);

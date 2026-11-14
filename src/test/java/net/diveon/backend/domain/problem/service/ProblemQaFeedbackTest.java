@@ -12,7 +12,7 @@ import net.diveon.backend.domain.problem.entity.ProblemObjective;
 import net.diveon.backend.domain.user.entity.User;
 import org.junit.jupiter.api.Test;
 
-/** 2026-11-10 user QA: ordered objective answers survive editing; comments carry the author picture. */
+/** Ordered objective answers survive editing; comments carry the author picture. */
 class ProblemQaFeedbackTest {
     private static ProblemObjective objective(boolean ordered) {
         return new ProblemObjective(new Problem(), "s", "d", List.of(), List.of(3, 1), ordered, false);
