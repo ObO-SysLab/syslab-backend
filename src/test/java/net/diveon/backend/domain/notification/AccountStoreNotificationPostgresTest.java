@@ -52,7 +52,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * 2026-11-12 묶음 B: 운영과 같은 순서(기존 스키마 → ops SQL → validate)를 임시 PostgreSQL에서 재현하고
+ * 운영과 같은 순서(기존 스키마 → ops SQL → validate)를 임시 PostgreSQL에서 재현하고
  * 상점·알림·탈퇴·탐사 로그의 네이티브 쿼리를 실제로 실행한다. 앱을 띄우지 않고 배포 설정도 읽지 않는다.
  */
 @EnabledIfEnvironmentVariable(named = "OBO_PG_TEST", matches = "local")

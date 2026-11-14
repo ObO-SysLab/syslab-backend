@@ -124,7 +124,7 @@ public class OboDocumentValidator {
                 continue;
             }
             if("text-v1".equals(simulation.path("question").path("ioFormat").asText())){
-                // Baekjoon-style text (2026-11-08): the engine computes the answer; a stored sample output must match it.
+                // Baekjoon-style text: the engine computes the answer; a stored sample output must match it.
                 boolean hasOutput=testcase.getOutput()!=null&&!testcase.getOutput().isBlank();
                 var request=mapper.createObjectNode().put("operation",hasOutput?"textGrade":"textReference").put("scenarioId",scenarioId).put("input",testcase.getInput());
                 if(hasOutput)request.put("stdout",testcase.getOutput());
