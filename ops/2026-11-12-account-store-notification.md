@@ -15,7 +15,7 @@
 2. `2026-11-12-account-store-notification.sql`을 적용한다. 한 트랜잭션이고, 잠금은 5초, 실행은 60초에서 중단된다.
 3. 확인 쿼리 결과를 본다: 상품 8개, 새 테이블 7개, 처리 위치 행 1개, `deleted_at` 칼럼, 사용자 수 변화 없음.
 
-1~3은 `obo-harness/experiments/production-deployment/store-20261112-apply.sh` 하나로 한다(`run-ssh.py`, 고정 호스트 키).
+1~3은 API 서버에 고정 호스트 키로 SSH 접속해 한 번에 실행한다.
 4. 백엔드를 배포한다(main push).
 5. 확인한다.
    - `GET /api/store/items`: 200, 8개

@@ -62,7 +62,7 @@
   - ws-server: `node --test auth.test.js server.test.js terminal.test.js`
 - infra Linux: `DIVEON_RESTRICTION_LINUX=1 python -B -m unittest discover -s vm/codebuild -p 'test_restriction_linux.py' -v`
   - ubuntu와 debian에서 다음을 확인한다: 허용·거부, 셸 탈출, 동적 로더, 실패 코드, 도우미 옵션이 있을 때와 없을 때의 noexec 대조.
-- 백엔드: JDK21과 `-I ../obo-harness/experiments/backend-test-path.init.gradle`로 전체 테스트를 돌린다. 해시 예시 값은 infra 테스트와 같다.
+- 백엔드: JDK 21로 `./gradlew test`를 돌린다. 해시 예시 값은 infra 테스트와 같다.
 - 프런트: `npx vitest run`, `npx tsc --noEmit`, `npm run build`
 
 ## 제한 기능의 한계 (문서로만 둔다)
