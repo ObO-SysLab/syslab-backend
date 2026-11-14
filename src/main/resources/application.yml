@@ -16,7 +16,7 @@ spring:
       hibernate:
         format_sql: true
 
-# Requires the manual ops migration and coordinated worker/Lambda rollout.
+# Turn on only after the grading recovery SQL and the grading Lambda are in place.
 grading:
   recovery:
     enabled: false
@@ -33,7 +33,7 @@ server:
   error:
     include-message: always
 
-# Enable only after the AUDIT-07 SQL, buildspec, events and IAM rollout.
+# Turn on only after the practice build SQL, buildspec, EventBridge rules and IAM are in place.
 practice:
   build:
     enabled: false

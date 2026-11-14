@@ -216,7 +216,7 @@ public class ContestService {
         Contest contest = contestRepository.findById(contestId).orElseThrow(ContestNotFoundException::new);
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
-        // 진행 중에도 참가할 수 있다(2026-11-13, 행사장에서 늦게 오는 참가자). 종료된 대회만 막는다.
+        // 진행 중에도 참가할 수 있다(행사장에 늦게 오는 참가자). 종료된 대회만 막는다.
         if (contest.getStatus() == Contest.ContestStatus.ENDED) {
             throw new ContestAlreadyStartedException("종료된 대회에는 참가할 수 없습니다.");
         }

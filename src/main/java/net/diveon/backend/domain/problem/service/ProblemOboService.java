@@ -113,7 +113,7 @@ public class ProblemOboService {
                 int index=record.path("caseIndex").asInt(0)-1;
                 if(index>=0&&index<cases.size()&&cases.get(index).path("isSample").isBoolean()&&cases.get(index).path("isSample").booleanValue()){
                     var publicRecord=com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.objectNode();
-                    // inputText/expected: text-v1 example (2026-11-08); firstWrong: position of a wrong public output line (2026-11-09).
+                    // inputText/expected: text-v1 example; firstWrong: position of a wrong public output line.
                     for(String field:java.util.List.of("caseIndex","scenarioId","input","reference","reported","correct","traceValid","message","omitted","kind","stdout","inputText","expected","firstWrong"))
                         if(record.has(field))publicRecord.set(field,record.get(field).deepCopy());
                     publicCases.add(publicRecord);

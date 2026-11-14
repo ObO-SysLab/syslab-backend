@@ -33,7 +33,7 @@ public final class OboPublicContract {
     public static JsonNode describe(JsonNode document){
         if(document!=null&&"coding_diff".equals(document.path("mode").asText())){
             var response=new ObjectMapper().createObjectNode().put("kind","diagram").put("modelVersion",1);
-            // Baekjoon-style plain output (2026-11-08): publish the line shape only (no IDs, labels, values or expected output).
+            // Baekjoon-style plain output: publish the line shape only (no IDs, labels, values or expected output).
             var format=document.path("codingDiff").path("outputFormat");
             if(format.isObject()){
                 for(var node:document.path("codingDiff").path("nodes")){

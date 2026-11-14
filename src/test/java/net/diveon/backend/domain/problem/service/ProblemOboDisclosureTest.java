@@ -111,7 +111,7 @@ class ProblemOboDisclosureTest {
         assertFalse(response.obo().has("testcases"));assertFalse(response.obo().has("answer"));
         assertEquals(1,response.publicCases().size());assertFalse(response.publicCases().toString().contains("secret"));
         assertFalse(response.publicCases().get(0).has("internalDebug"));
-        // Fields the learner result needs pass through (text-v1 example 2026-11-08, wrong-line position 2026-11-09).
+        // Fields the learner result needs pass through (text-v1 example, wrong-line position).
         assertEquals("7 3 FIFO\n7 0",response.publicCases().get(0).path("inputText").asText());
         assertEquals("7 Miss 7 - -",response.publicCases().get(0).path("expected").asText());
         assertEquals(1,response.publicCases().get(0).path("firstWrong").asInt());
